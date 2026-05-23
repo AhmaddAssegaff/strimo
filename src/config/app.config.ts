@@ -5,11 +5,11 @@ export const CONFIG_NAME = 'app' as const;
 
 const appConfig = registerAs(CONFIG_NAME, () => ({
   APP_PORT: process.env.APP_PORT,
-  NODE_ENV: process.env.NODE_ENV,
-  API_GLOBAL_PREFIX: process.env.API_GLOBAL_PREFIX,
-  ENABLE_VERSION: process.env.ENABLE_VERSION,
-  VERSION_PREFIX: process.env.VERSION_PREFIX,
-  DEFAULT_VERSION: process.env.DEFAULT_VERSION,
+  APP_NODE_ENV: process.env.APP_NODE_ENV,
+  APP_GLOBAL_PREFIX: process.env.APP_GLOBAL_PREFIX,
+  APP_ENABLE_VERSION: process.env.APP_ENABLE_VERSION,
+  APP_VERSION_PREFIX: process.env.APP_VERSION_PREFIX,
+  APP_DEFAULT_VERSION: process.env.APP_DEFAULT_VERSION,
 }));
 
 type AppConfig = ReturnType<typeof appConfig>;
@@ -20,10 +20,10 @@ export const appValidationSchema = {
   NODE_ENV: Joi.string()
     .valid('development', 'staging', 'production')
     .required(),
-  API_GLOBAL_PREFIX: Joi.string().required(),
-  ENABLE_VERSION: Joi.boolean().required(),
-  VERSION_PREFIX: Joi.string().required(),
-  DEFAULT_VERSION: Joi.string().required(),
+  APP_GLOBAL_PREFIX: Joi.string().required(),
+  APP_ENABLE_VERSION: Joi.boolean().required(),
+  APP_VERSION_PREFIX: Joi.string().required(),
+  APP_DEFAULT_VERSION: Joi.string().required(),
 };
 
 export const CONSTANTS_APP_KEYS: {
@@ -33,11 +33,11 @@ export const CONSTANTS_APP_KEYS: {
 } = {
   APP: {
     APP_PORT: 'app.APP_PORT',
-    NODE_ENV: 'app.NODE_ENV',
-    API_GLOBAL_PREFIX: 'app.API_GLOBAL_PREFIX',
-    ENABLE_VERSION: 'app.ENABLE_VERSION',
-    VERSION_PREFIX: 'app.VERSION_PREFIX',
-    DEFAULT_VERSION: 'app.DEFAULT_VERSION',
+    APP_NODE_ENV: 'app.APP_NODE_ENV',
+    APP_GLOBAL_PREFIX: 'app.APP_GLOBAL_PREFIX',
+    APP_DEFAULT_VERSION: 'app.APP_DEFAULT_VERSION',
+    APP_ENABLE_VERSION: 'app.APP_ENABLE_VERSION',
+    APP_VERSION_PREFIX: 'app.APP_VERSION_PREFIX',
   },
 } as const;
 
