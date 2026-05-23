@@ -17,7 +17,7 @@ type AppKey = keyof AppConfig;
 
 export const appValidationSchema = {
   APP_PORT: Joi.number().required(),
-  NODE_ENV: Joi.string()
+  APP_NODE_ENV: Joi.string()
     .valid('development', 'staging', 'production')
     .required(),
   APP_GLOBAL_PREFIX: Joi.string().required(),
