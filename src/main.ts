@@ -3,13 +3,14 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { CONSTANTS } from './config';
 import { VersioningType } from '@nestjs/common';
+import { createDocument } from './swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = app.get(ConfigService);
 
-  // const APP_NODE_ENV = config.getOrThrow<string>(CONSTANTS.APP.APP_NODE_ENV);
+  const APP_NODE_ENV = config.getOrThrow<string>(CONSTANTS.APP.APP_NODE_ENV);
   const PORT = config.getOrThrow<string>(CONSTANTS.APP.APP_PORT);
   const DEFAULT_VERSION = config.getOrThrow<string>(
     CONSTANTS.APP.APP_DEFAULT_VERSION,
@@ -31,6 +32,10 @@ async function bootstrap() {
       defaultVersion: DEFAULT_VERSION,
       prefix: VERSION_PREFIX,
     });
+  }
+
+  if (APP_NODE_ENV === 'development') {
+    createDocument(app);
   }
 
   await app.listen(PORT);
