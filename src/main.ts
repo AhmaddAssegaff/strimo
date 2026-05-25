@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { CONSTANTS } from './config';
-import { VersioningType } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { createDocument } from './swagger';
 
 async function bootstrap() {
@@ -37,6 +37,14 @@ async function bootstrap() {
   if (APP_NODE_ENV === 'development') {
     createDocument(app);
   }
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   await app.listen(PORT);
 }
