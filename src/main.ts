@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { CONSTANTS } from './config';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { createDocument } from './swagger';
 
 async function bootstrap() {
@@ -46,6 +46,8 @@ async function bootstrap() {
     }),
   );
 
+  Logger.log(`Running in ${APP_NODE_ENV} mode`, 'Bootstrap');
+  Logger.log(`Application listening on port ${PORT}`, 'Bootstrap');
   await app.listen(PORT);
 }
 bootstrap();
