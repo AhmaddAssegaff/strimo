@@ -8,6 +8,7 @@ const smtpConfig = registerAs(CONFIG_NAME, () => ({
   SMTP_PORT: process.env.SMTP_PORT,
   SMTP_USER: process.env.SMTP_USER,
   SMTP_PASS: process.env.SMTP_PASS,
+  SMTP_FROM: process.env.SMTP_FROM,
 }));
 
 type SmtpConfig = ReturnType<typeof smtpConfig>;
@@ -18,6 +19,7 @@ export const SmtpValidationSchema = {
   SMTP_PORT: Joi.number().required(),
   SMTP_USER: Joi.string().required(),
   SMTP_PASS: Joi.string().required(),
+  SMTP_FROM: Joi.string().required(),
 };
 
 export const CONSTANTS_SMTP_KEYS: {
@@ -30,6 +32,7 @@ export const CONSTANTS_SMTP_KEYS: {
     SMTP_PORT: 'smtp.SMTP_PORT',
     SMTP_USER: 'smtp.SMTP_USER',
     SMTP_PASS: 'smtp.SMTP_PASS',
+    SMTP_FROM: 'smtp.SMTP_FROM',
   },
 } as const;
 
