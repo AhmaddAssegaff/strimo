@@ -5,12 +5,14 @@ import * as app from './app.config';
 import * as swagger from './swagger.config';
 import * as db from './database.config';
 import * as typeOrm from './typeorm.config';
+import * as smtp from './smtp.config';
 
 export const configs = [
   app.default,
   swagger.default,
   db.default,
   typeOrm.default,
+  smtp.default,
 ] satisfies ConfigFactory[];
 
 export const validationSchema = Joi.object({
@@ -18,6 +20,7 @@ export const validationSchema = Joi.object({
   ...swagger.swaggerValidationSchema,
   ...db.dbValidationSchema,
   ...typeOrm.TypeOrmValidationSchema,
+  ...smtp.SmtpValidationSchema,
 });
 
 export const CONSTANTS = {
@@ -25,6 +28,7 @@ export const CONSTANTS = {
   ...swagger.CONSTANTS_SWAGGER_KEYS,
   ...db.CONSTANTS_DB_KEYS,
   ...typeOrm.CONSTANTS_TYPEORM_KEYS,
+  ...smtp.CONSTANTS_SMTP_KEYS,
 } as const;
 
 export default configs;
