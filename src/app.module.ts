@@ -6,6 +6,7 @@ import { DatabaseModule } from './modules/common/database.module';
 import { MailModule } from './modules/common/mailer.module';
 import { RedisModule } from './modules/common/redis.module';
 import { QueueModule } from './modules/common/queue.module';
+import { MinioModule } from './modules/common/minio.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { QueueModule } from './modules/common/queue.module';
     MailModule,
     RedisModule,
     QueueModule,
+    MinioModule,
   ],
   controllers: [AppController],
   providers: [AppService],
