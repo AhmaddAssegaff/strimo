@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CONSTANTS } from '../../config/index';
+import { CONSTANTS } from '~config/index';
 
 @Global()
 @Module({
@@ -24,4 +24,4 @@ import { CONSTANTS } from '../../config/index';
     }),
   ],
 })
-export class DatabaseModule {}
+export class PostgresModule {}

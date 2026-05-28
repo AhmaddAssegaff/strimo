@@ -1,15 +1,19 @@
-import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
+import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CONSTANTS } from '../../config';
+import Redis from 'ioredis';
+import { CONSTANTS } from '~config/index';
+import { RedisService } from '~redis/redis.service';
+import { CACHE_REDIS_CLIENT } from '~redis/redis.constants';
 
+@Global()
 @Module({
-  imports: [
-    BullModule.forRootAsync({
-      imports: [ConfigModule],
+  imports: [ConfigModule],
+  providers: [
+    {
+      provide: CACHE_REDIS_CLIENT,
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        connection: {
+      useFactory: (config: ConfigService) =>
+        new Redis({
           host: config.getOrThrow<string>(CONSTANTS.REDIS.REDIS_HOST),
           port: config.getOrThrow<number>(CONSTANTS.REDIS.REDIS_PORT),
           password: config.getOrThrow<string>(CONSTANTS.REDIS.REDIS_PASSWORD),
@@ -26,13 +30,14 @@ import { CONSTANTS } from '../../config';
                 CONSTANTS.REDIS.REDIS_MAX_RECONNECT_DELAY_MS,
               ),
             ),
-          maxRetriesPerRequest: null,
+
+          maxRetriesPerRequest: 3,
           enableReadyCheck: true,
           lazyConnect: true,
-        },
-      }),
-    }),
+        }),
+    },
+    RedisService,
   ],
-  exports: [QueueModule],
+  exports: [CACHE_REDIS_CLIENT, RedisService],
 })
-export class QueueModule {}
+export class RedisModule {}

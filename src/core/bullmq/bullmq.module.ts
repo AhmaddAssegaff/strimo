@@ -1,20 +1,15 @@
-import { Global, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import Redis from 'ioredis';
-import { CONSTANTS } from '../../config';
-import { RedisService } from './redis.service';
+import { CONSTANTS } from '~config/index';
 
-export const CACHE_REDIS_CLIENT = Symbol('CACHE_REDIS_CLIENT');
-
-@Global()
 @Module({
-  imports: [ConfigModule],
-  providers: [
-    {
-      provide: CACHE_REDIS_CLIENT,
+  imports: [
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) =>
-        new Redis({
+      useFactory: (config: ConfigService) => ({
+        connection: {
           host: config.getOrThrow<string>(CONSTANTS.REDIS.REDIS_HOST),
           port: config.getOrThrow<number>(CONSTANTS.REDIS.REDIS_PORT),
           password: config.getOrThrow<string>(CONSTANTS.REDIS.REDIS_PASSWORD),
@@ -31,14 +26,13 @@ export const CACHE_REDIS_CLIENT = Symbol('CACHE_REDIS_CLIENT');
                 CONSTANTS.REDIS.REDIS_MAX_RECONNECT_DELAY_MS,
               ),
             ),
-
-          maxRetriesPerRequest: 3,
+          maxRetriesPerRequest: null,
           enableReadyCheck: true,
           lazyConnect: true,
-        }),
-    },
-    RedisService,
+        },
+      }),
+    }),
   ],
-  exports: [CACHE_REDIS_CLIENT, RedisService],
+  exports: [BullmqModule],
 })
-export class RedisModule {}
+export class BullmqModule {}

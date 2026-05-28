@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { CONSTANTS } from '../../config/index';
+import { CONSTANTS } from '~config/index';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
@@ -29,4 +29,4 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
   ],
 })
-export class MailModule {}
+export class SmtpModule {}

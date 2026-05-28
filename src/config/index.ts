@@ -7,6 +7,7 @@ import * as db from './database.config';
 import * as typeOrm from './typeorm.config';
 import * as smtp from './smtp.config';
 import * as redis from './redis.config';
+import * as minio from './minio.config';
 
 export const configs = [
   app.default,
@@ -15,6 +16,7 @@ export const configs = [
   typeOrm.default,
   smtp.default,
   redis.default,
+  minio.default,
 ] satisfies ConfigFactory[];
 
 export const validationSchema = Joi.object({
@@ -24,6 +26,7 @@ export const validationSchema = Joi.object({
   ...typeOrm.TypeOrmValidationSchema,
   ...smtp.SmtpValidationSchema,
   ...redis.RedisValidationSchema,
+  ...minio.MinioValidationSchema,
 });
 
 export const CONSTANTS = {
@@ -33,6 +36,7 @@ export const CONSTANTS = {
   ...typeOrm.CONSTANTS_TYPEORM_KEYS,
   ...smtp.CONSTANTS_SMTP_KEYS,
   ...redis.CONSTANTS_REDIS_KEYS,
+  ...minio.CONSTANTS_MINIO_KEYS,
 } as const;
 
 export default configs;

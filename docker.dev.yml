@@ -31,6 +31,20 @@ services:
     volumes:
       - redis_data:/data
 
+  minio:
+    image: quay.io/minio/minio
+    container_name: minio-pos
+    ports:
+      - "${MINIO_API_PORT}:9000"
+      - "${MINIO_DASHBOARD_CONSOLE_PORT}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
