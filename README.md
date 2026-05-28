@@ -29,6 +29,7 @@ Assign users to be head manager or cashier in specific branch or outlet.
 
 ```bash
 $ pnpm install
+$ docker compose -f docker.dev.yml up -d
 ```
 
 ## Compile and run the project
