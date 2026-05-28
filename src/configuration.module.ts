@@ -1,4 +1,4 @@
-import { configs, validationSchema } from './config/index';
+import { configs, validationSchema } from '~config/index';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 

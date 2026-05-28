@@ -1,9 +1,8 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Client } from 'minio';
-import { CONSTANTS } from '../../config';
-
-export const MINIO_TOKEN = Symbol('MINIO_TOKEN');
+import { CONSTANTS } from '~config/index';
+import { MINIO_TOKEN } from '~minio/minio.constants';
 
 @Global()
 @Module({

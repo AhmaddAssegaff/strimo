@@ -1,8 +1,8 @@
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SWAGGER_CONFIG } from './config/swagger.config';
-import { CONSTANTS } from './config/index';
+import { SWAGGER_CONFIG } from '~config/swagger.config';
+import { CONSTANTS } from '~config/index';
 
 export function createDocument(app: INestApplication) {
   const config = app.get(ConfigService);

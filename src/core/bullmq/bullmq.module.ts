@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CONSTANTS } from '../../config';
+import { CONSTANTS } from '~config/index';
 
 @Module({
   imports: [
