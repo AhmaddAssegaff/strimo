@@ -1,20 +1,20 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigurationModule } from './modules/common/configuration.module';
-import { DatabaseModule } from './modules/common/database.module';
-import { MailModule } from './modules/common/mailer.module';
-import { RedisModule } from './modules/common/redis.module';
-import { QueueModule } from './modules/common/queue.module';
-import { MinioModule } from './modules/common/minio.module';
+import { ConfigurationModule } from './configuration.module';
+import { PostgresModule } from './core/postgres/postgres.module';
+import { SmtpModule } from './core/smtp/smtp.module';
+import { RedisModule } from './core/redis/redis.module';
+import { BullmqModule } from './core/bullmq/bullmq.module';
+import { MinioModule } from './core/minio/minio.module';
 
 @Module({
   imports: [
     ConfigurationModule,
-    DatabaseModule,
-    MailModule,
+    PostgresModule,
+    SmtpModule,
     RedisModule,
-    QueueModule,
+    BullmqModule,
     MinioModule,
   ],
   controllers: [AppController],

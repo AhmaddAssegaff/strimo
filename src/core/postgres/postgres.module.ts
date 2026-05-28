@@ -24,4 +24,4 @@ import { CONSTANTS } from '../../config/index';
     }),
   ],
 })
-export class DatabaseModule {}
+export class PostgresModule {}

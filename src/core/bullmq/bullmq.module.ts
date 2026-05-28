@@ -33,6 +33,6 @@ import { CONSTANTS } from '../../config';
       }),
     }),
   ],
-  exports: [QueueModule],
+  exports: [BullmqModule],
 })
-export class QueueModule {}
+export class BullmqModule {}
