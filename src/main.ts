@@ -1,3 +1,6 @@
+import { OtelSDK } from '~app/core/open-telemetry/instrumentation';
+OtelSDK.start();
+
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
