@@ -24,4 +24,4 @@ import { CONSTANTS } from '~config/index';
     }),
   ],
 })
-export class PostgresModule {}
+export class TypeormModule {}

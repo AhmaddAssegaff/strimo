@@ -46,6 +46,7 @@ async function bootstrap() {
     }),
   );
 
+  app.enableShutdownHooks();
   Logger.log(`Running in ${APP_NODE_ENV} mode`, 'Bootstrap');
   Logger.log(`Application listening on port ${PORT}`, 'Bootstrap');
   await app.listen(PORT);
