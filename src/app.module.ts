@@ -7,6 +7,7 @@ import { SmtpModule } from '~core/smtp/smtp.module';
 import { RedisModule } from '~core/redis/redis.module';
 import { BullmqModule } from '~core/bullmq/bullmq.module';
 import { MinioModule } from '~core/minio/minio.module';
+import { PinoModule } from '~core/pino/pino.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { MinioModule } from '~core/minio/minio.module';
     RedisModule,
     BullmqModule,
     MinioModule,
+    PinoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
