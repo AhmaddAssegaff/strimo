@@ -31,8 +31,8 @@
       "~core/*": [
         "src/core/*"
       ],
-      "~postgres/*": [
-        "src/core/postgres/*"
+      "~typeorm/*": [
+        "src/core/typeorm/*"
       ],
       "~minio/*": [
         "src/core/minio/*"
