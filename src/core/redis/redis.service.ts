@@ -1,13 +1,26 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnApplicationShutdown,
+} from '@nestjs/common';
 import Redis from 'ioredis';
 import { CACHE_REDIS_CLIENT } from '~redis/redis.constants';
 
 @Injectable()
-export class RedisService {
+export class RedisService implements OnApplicationShutdown {
   constructor(
     @Inject(CACHE_REDIS_CLIENT)
     private readonly redis: Redis,
   ) {}
+
+  async onApplicationShutdown(signal?: string) {
+    if (signal === 'SIGTERM') {
+      Logger.log('Application shutting down');
+    }
+
+    await this.redis.quit();
+  }
 
   async get(key: string): Promise<string | null> {
     try {
