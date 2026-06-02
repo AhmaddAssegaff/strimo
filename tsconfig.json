@@ -28,6 +28,9 @@
       "~config/*": [
         "src/config/*"
       ],
+      "~modules/*": [
+        "src/modules/*"
+      ],
       "~core/*": [
         "src/core/*"
       ],

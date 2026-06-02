@@ -8,6 +8,7 @@ import { RedisModule } from '~core/redis/redis.module';
 import { BullmqModule } from '~core/bullmq/bullmq.module';
 import { MinioModule } from '~core/minio/minio.module';
 import { PinoModule } from '~core/pino/pino.module';
+import { UserModule } from '~modules/user/user.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PinoModule } from '~core/pino/pino.module';
     BullmqModule,
     MinioModule,
     PinoModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
