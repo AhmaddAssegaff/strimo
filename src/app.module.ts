@@ -9,6 +9,7 @@ import { BullmqModule } from '~core/bullmq/bullmq.module';
 import { MinioModule } from '~core/minio/minio.module';
 import { PinoModule } from '~core/pino/pino.module';
 import { UserModule } from '~modules/user/user.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UserModule } from '~modules/user/user.module';
     MinioModule,
     PinoModule,
     UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

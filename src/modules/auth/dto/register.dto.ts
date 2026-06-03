@@ -1,0 +1,46 @@
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsPhoneNumber,
+  IsString,
+  MinLength,
+} from 'class-validator';
+import { User } from '~app/modules/user/entities/user.entity';
+
+export class registerDto implements Partial<User> {
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  @ApiProperty({
+    description: 'User email',
+    example: 'Ahmad@gmail.com',
+  })
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(8)
+  @ApiProperty({
+    description: 'User password',
+    example: 'Ahmad123',
+  })
+  password: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(8)
+  @ApiProperty({
+    description: 'username user',
+    example: 'Ahmad assegaff',
+  })
+  username: string;
+
+  @IsNotEmpty()
+  @IsPhoneNumber('ID')
+  @ApiProperty({
+    description: 'phone number user',
+    example: '+6281234567890',
+  })
+  phone_number: string;
+}
