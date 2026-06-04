@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { registerDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
@@ -62,9 +58,6 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<loginResponseInterface> {
     const user = await this.userService.findOneUserByEmail(loginDto.email);
 
-    if (!user) {
-      throw new NotFoundException('email not found');
-    }
     if (user.status !== Status.active) {
       throw new ForbiddenException('Account is deactivated');
     }
@@ -105,9 +98,6 @@ export class AuthService {
   ): Promise<refreshResponseInterface> {
     const user = await this.userService.findOneUserById(payloadUser.sub);
 
-    if (!user) {
-      throw new NotFoundException('email not found');
-    }
     if (user.status !== Status.active) {
       throw new ForbiddenException('Account is deactivated');
     }
