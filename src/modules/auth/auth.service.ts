@@ -70,7 +70,7 @@ export class AuthService {
 
     return {
       tokens: {
-        accessToken: this.signRefreshToken(payload),
+        accessToken: this.signAccessToken(payload),
         refreshToken: this.signRefreshToken(payload),
       },
     };
