@@ -22,7 +22,7 @@ export class JwtAccessStrategy extends PassportStrategy(
     });
   }
 
-  validate(payload: JwtAuthPayload): Promise<AuthenticatedUser> {
+  validate(payload: JwtAuthPayload): AuthenticatedUser {
     return {
       sub: payload.sub,
       role: payload.role,
