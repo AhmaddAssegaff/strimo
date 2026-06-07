@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { registerDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
@@ -12,6 +16,7 @@ import type {
   loginResponseInterface,
 } from './jwt.interface';
 import { Status } from '../user/entities/user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +24,7 @@ export class AuthService {
   private readonly accessExpiresIn: number;
   private readonly refreshSecret: string;
   private readonly refreshExpiresIn: number;
+  private readonly passwordHashlength: number;
 
   constructor(
     private readonly jwtService: JwtService,
@@ -37,6 +43,7 @@ export class AuthService {
     this.refreshExpiresIn = this.config.getOrThrow(
       CONSTANTS.AUTH.AUTH_JWT_REFRESH_TOKEN_EXPIRES_IN,
     );
+    this.passwordHashlength = 10;
   }
 
   private signAccessToken(payload: JwtAuthPayload): string {
@@ -57,9 +64,17 @@ export class AuthService {
 
   async login(loginDto: LoginDto): Promise<loginResponseInterface> {
     const user = await this.userService.findOneUserByEmail(loginDto.email);
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
 
     if (user.status !== Status.active) {
       throw new ForbiddenException('Account is deactivated');
+    }
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const payload: JwtAuthPayload = {
@@ -77,7 +92,15 @@ export class AuthService {
   }
 
   async register(registerDto: registerDto): Promise<registerResponseInterface> {
-    const user = await this.userService.createUser(registerDto);
+    const hashedPassword = await bcrypt.hash(
+      registerDto.password,
+      this.passwordHashlength,
+    );
+
+    const user = await this.userService.createUser({
+      ...registerDto,
+      password: hashedPassword,
+    });
 
     const payload: JwtAuthPayload = {
       sub: user.id,
@@ -110,7 +133,7 @@ export class AuthService {
 
     return {
       token: {
-        accessToken: this.signRefreshToken(payload),
+        accessToken: this.signAccessToken(payload),
       },
     };
   }
