@@ -61,7 +61,9 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto): Promise<loginResponseInterface> {
-    const user = await this.userService.findOneUserByEmail(loginDto.email);
+    const user = await this.userService.findUserCredensialByEmail(
+      loginDto.email,
+    );
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
       user.password,
@@ -109,7 +111,7 @@ export class AuthService {
   async refreshToken(
     payloadUser: JwtAuthPayload,
   ): Promise<refreshResponseInterface> {
-    const user = await this.userService.findOneUserById(payloadUser.sub);
+    const user = await this.userService.findUserCredensialById(payloadUser.sub);
 
     if (user.status !== Status.active) {
       throw new ForbiddenException('Account is deactivated');

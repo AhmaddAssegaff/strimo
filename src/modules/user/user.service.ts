@@ -5,9 +5,12 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
+import { Roles, User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { UpdateStatusUserDto } from './dto/update-status-user.dto';
+import { FindUserManagerDto } from './dto/find-manager.dto';
+import { FindUserCashierDto } from './dto/find-cashier.dto';
 
 @Injectable()
 export class UserService {
@@ -17,6 +20,44 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
+
+  async findUserCredensialById(id: string) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        role: true,
+        status: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('user not found');
+    }
+
+    return user;
+  }
+
+  async findUserCredensialByEmail(email: string) {
+    const user = await this.userRepository.findOne({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        role: true,
+        status: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('user not found');
+    }
+
+    return user;
+  }
 
   async createUser(createUserDto: CreateUserDto) {
     const existingUser = await this.userRepository.findOne({
@@ -45,9 +86,12 @@ export class UserService {
     return result;
   }
 
-  async findOneUserById(id: string) {
-    const user = await this.userRepository.findOneBy({
-      id,
+  async findUserCashierById(id: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: id,
+        role: Roles.cashier,
+      },
     });
 
     if (!user) {
@@ -57,9 +101,12 @@ export class UserService {
     return user;
   }
 
-  async findOneUserByEmail(email: string) {
-    const user = await this.userRepository.findOneBy({
-      email,
+  async findUserManagerById(id: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: id,
+        role: Roles.manager,
+      },
     });
 
     if (!user) {
@@ -67,5 +114,69 @@ export class UserService {
     }
 
     return user;
+  }
+
+  async findUsersManager(findUserManagerDto: FindUserManagerDto) {
+    const { page, limit } = findUserManagerDto;
+
+    return await this.userRepository.find({
+      where: {
+        role: Roles.manager,
+      },
+      order: {
+        created_at: 'DESC',
+      },
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+  }
+
+  async findUsersCashier(findUserCashierDto: FindUserCashierDto) {
+    const { page, limit } = findUserCashierDto;
+
+    return await this.userRepository.find({
+      where: {
+        role: Roles.cashier,
+      },
+      order: {
+        created_at: 'DESC',
+      },
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+  }
+
+  async updateUserManagerStatus(
+    id: string,
+    updateUserStatusDto: UpdateStatusUserDto,
+  ) {
+    const user = await this.userRepository.findOne({
+      where: { id, role: Roles.manager },
+    });
+
+    if (!user) {
+      throw new NotFoundException('user not found');
+    }
+
+    return await this.userRepository.update(id, {
+      status: updateUserStatusDto.status,
+    });
+  }
+
+  async updateUserCashierStatus(
+    id: string,
+    updateUserStatusDto: UpdateStatusUserDto,
+  ) {
+    const user = await this.userRepository.findOne({
+      where: { id, role: Roles.cashier },
+    });
+
+    if (!user) {
+      throw new NotFoundException('user not found');
+    }
+
+    return await this.userRepository.update(id, {
+      status: updateUserStatusDto.status,
+    });
   }
 }
