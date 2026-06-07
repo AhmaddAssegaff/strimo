@@ -24,7 +24,6 @@ export class AuthService {
   private readonly accessExpiresIn: number;
   private readonly refreshSecret: string;
   private readonly refreshExpiresIn: number;
-  private readonly passwordHashlength: number;
 
   constructor(
     private readonly jwtService: JwtService,
@@ -43,7 +42,6 @@ export class AuthService {
     this.refreshExpiresIn = this.config.getOrThrow(
       CONSTANTS.AUTH.AUTH_JWT_REFRESH_TOKEN_EXPIRES_IN,
     );
-    this.passwordHashlength = 10;
   }
 
   private signAccessToken(payload: JwtAuthPayload): string {
@@ -92,15 +90,7 @@ export class AuthService {
   }
 
   async register(registerDto: registerDto): Promise<registerResponseInterface> {
-    const hashedPassword = await bcrypt.hash(
-      registerDto.password,
-      this.passwordHashlength,
-    );
-
-    const user = await this.userService.createUser({
-      ...registerDto,
-      password: hashedPassword,
-    });
+    const user = await this.userService.createUser(registerDto);
 
     const payload: JwtAuthPayload = {
       sub: user.id,
