@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { UpdateStatusUserDto } from './dto/update-status-user.dto';
 import { FindUserManagerDto } from './dto/find-manager.dto';
 import { FindUserCashierDto } from './dto/find-cashier.dto';
+import { AuthenticatedUser } from '../auth/jwt.interface';
 
 @Injectable()
 export class UserService {
@@ -57,6 +58,11 @@ export class UserService {
     }
 
     return user;
+  }
+
+  async findUserProfile(user: AuthenticatedUser) {
+    const { sub } = user;
+    return await this.userRepository.findOneBy({ id: sub });
   }
 
   async createUser(createUserDto: CreateUserDto) {

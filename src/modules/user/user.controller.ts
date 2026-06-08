@@ -19,12 +19,19 @@ import { UpdateStatusUserDto } from './dto/update-status-user.dto';
 import { FindUserManagerDto } from './dto/find-manager.dto';
 import { FindUserCashierDto } from './dto/find-cashier.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { CurrentUser } from '../auth/decorator/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/jwt.interface';
 
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAccessGuard, RolesGuard)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Get('profile')
+  getUserProfile(@CurrentUser() user: AuthenticatedUser) {
+    return this.userService.findUserProfile(user);
+  }
 
   @userRoles(Roles.owner)
   @Post()
