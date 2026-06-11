@@ -31,6 +31,7 @@ export class UserService {
         password: true,
         role: true,
         status: true,
+        is_email_verified: true,
       },
     });
 
@@ -50,6 +51,7 @@ export class UserService {
         password: true,
         role: true,
         status: true,
+        is_email_verified: true,
       },
     });
 
@@ -58,6 +60,13 @@ export class UserService {
     }
 
     return user;
+  }
+
+  async updateVerifyStatus(userId: string) {
+    return await this.userRepository.update(
+      { id: userId },
+      { is_email_verified: true },
+    );
   }
 
   async findUserProfile(user: AuthenticatedUser) {

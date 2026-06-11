@@ -1,4 +1,11 @@
-import { Controller, Post, Body, HttpCode, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  UseGuards,
+  Get,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { registerDto } from './dto/register.dto';
@@ -11,6 +18,8 @@ import type {
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtRefreshGuard } from './guard/jwt-refresh.guard';
 import { CurrentUser } from './decorator/current-user.decorator';
+import { JwtAccessGuard } from './guard/jwt-access.guard';
+import { VerifyAccountConfirmDto } from './dto/verify-account.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -37,5 +46,18 @@ export class AuthController {
     @CurrentUser() user: JwtAuthPayload,
   ): Promise<refreshResponseInterface> {
     return this.authService.refreshToken(user);
+  }
+
+  @Get('verify-account')
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtAccessGuard)
+  async requestVerifyAccount(@CurrentUser() user: JwtAuthPayload) {
+    return this.authService.requestEmailVerification(user);
+  }
+
+  @HttpCode(200)
+  @Post('verify-account/confirm')
+  async confirmVerifyAccount(@Body() dto: VerifyAccountConfirmDto) {
+    return this.authService.confirmEmailVerification(dto.token);
   }
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   UnauthorizedException,
@@ -17,6 +18,8 @@ import type {
 } from './jwt.interface';
 import { Status } from '../user/entities/user.entity';
 import * as bcrypt from 'bcrypt';
+import { RedisService } from '~app/core/redis/redis.service';
+import { SmtpService } from '~app/core/smtp/smtp.service';
 
 @Injectable()
 export class AuthService {
@@ -24,11 +27,15 @@ export class AuthService {
   private readonly accessExpiresIn: number;
   private readonly refreshSecret: string;
   private readonly refreshExpiresIn: number;
+  private readonly OTPttl: number;
+  private readonly generateOTP: number;
 
   constructor(
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly userService: UserService,
+    private readonly redisService: RedisService,
+    private readonly smtpService: SmtpService,
   ) {
     this.accessSecret = this.config.getOrThrow(
       CONSTANTS.AUTH.AUTH_JWT_ACCESS_TOKEN_SECRET,
@@ -42,6 +49,8 @@ export class AuthService {
     this.refreshExpiresIn = this.config.getOrThrow(
       CONSTANTS.AUTH.AUTH_JWT_REFRESH_TOKEN_EXPIRES_IN,
     );
+    this.OTPttl = 60 * 15;
+    this.generateOTP = Math.floor(100000 + Math.random() * 900000);
   }
 
   private signAccessToken(payload: JwtAuthPayload): string {
@@ -127,6 +136,56 @@ export class AuthService {
       token: {
         accessToken: this.signAccessToken(payload),
       },
+    };
+  }
+
+  async requestEmailVerification(payloadUser: JwtAuthPayload) {
+    const user = await this.userService.findUserCredensialById(payloadUser.sub);
+
+    if (user.status !== Status.active) {
+      throw new ForbiddenException('Account is deactivated');
+    }
+
+    if (user.is_email_verified) {
+      throw new BadRequestException('Email already verified');
+    }
+
+    console.log({
+      verified: user.is_email_verified,
+      type: typeof user.is_email_verified,
+    });
+    const otpCode = this.generateOTP.toString();
+
+    await this.redisService.set(
+      `verify-account:${otpCode}`,
+      user.id,
+      this.OTPttl,
+    );
+
+    await this.smtpService.sendVerifyOtp(user.email, otpCode);
+
+    return {
+      message: 'Kode verifikasi telah dikirim ke email Anda.',
+    };
+  }
+
+  async confirmEmailVerification(token: string) {
+    const redisKey = `verify-account:${token}`;
+
+    const userId = await this.redisService.get<string>(redisKey);
+
+    if (!userId) {
+      throw new BadRequestException(
+        'Kode verifikasi salah atau telah kedaluwarsa',
+      );
+    }
+
+    await this.userService.updateVerifyStatus(userId);
+
+    await this.redisService.del(redisKey);
+
+    return {
+      message: 'Akun Anda berhasil diverifikasi!',
     };
   }
 }

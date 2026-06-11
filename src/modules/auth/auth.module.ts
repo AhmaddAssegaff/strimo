@@ -6,10 +6,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { ConfigModule } from '@nestjs/config';
+import { SmtpService } from '~app/core/smtp/smtp.service';
 
 @Module({
   imports: [ConfigModule, UserModule, JwtModule],
   controllers: [AuthController],
-  providers: [AuthService, JwtAccessStrategy, JwtRefreshStrategy],
+  providers: [AuthService, JwtAccessStrategy, JwtRefreshStrategy, SmtpService],
 })
 export class AuthModule {}
