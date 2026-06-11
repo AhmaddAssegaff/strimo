@@ -22,24 +22,50 @@ export class RedisService implements OnApplicationShutdown {
     await this.redis.quit();
   }
 
-  async get(key: string): Promise<string | null> {
+  async get<T>(key: string): Promise<T | null> {
     try {
-      return await this.redis.get(key);
+      const value = await this.redis.get(key);
+
+      if (!value) {
+        return null;
+      }
+
+      return JSON.parse(value) as T;
     } catch {
       return null;
     }
   }
 
-  async set(key: string, value: string, ttlSeconds?: number) {
+  async set<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
+    const serialized = JSON.stringify(value);
+
     if (ttlSeconds) {
-      await this.redis.set(key, value, 'EX', ttlSeconds);
+      await this.redis.set(key, serialized, 'EX', ttlSeconds);
       return;
     }
 
-    await this.redis.set(key, value);
+    await this.redis.set(key, serialized);
   }
 
   async del(key: string) {
     return this.redis.del(key);
+  }
+
+  async lazyLoadCache<T>(
+    cacheKey: string,
+    load: () => Promise<T>,
+    opts?: { ttlSeconds?: number },
+  ): Promise<T> {
+    const cached = await this.get<T>(cacheKey);
+
+    if (cached !== null) {
+      return cached;
+    }
+
+    const result = await load();
+
+    void this.set(cacheKey, result, opts?.ttlSeconds);
+
+    return result;
   }
 }
