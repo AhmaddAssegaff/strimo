@@ -9,6 +9,7 @@ import * as smtp from './smtp.config';
 import * as redis from './redis.config';
 import * as minio from './minio.config';
 import * as auth from './auth.config';
+import * as google from './google-oaut.config';
 
 export const configs = [
   app.default,
@@ -19,6 +20,7 @@ export const configs = [
   redis.default,
   minio.default,
   auth.default,
+  google.default,
 ] satisfies ConfigFactory[];
 
 export const validationSchema = Joi.object({
@@ -30,6 +32,7 @@ export const validationSchema = Joi.object({
   ...redis.RedisValidationSchema,
   ...minio.MinioValidationSchema,
   ...auth.AuthValidationSchema,
+  ...google.GoogleValidationSchema,
 });
 
 export const CONSTANTS = {
@@ -41,6 +44,7 @@ export const CONSTANTS = {
   ...redis.CONSTANTS_REDIS_KEYS,
   ...minio.CONSTANTS_MINIO_KEYS,
   ...auth.CONSTANTS_AUTH_KEYS,
+  ...google.CONSTANTS_GOOGLE_KEYS,
 } as const;
 
 export default configs;
