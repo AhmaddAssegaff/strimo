@@ -1,6 +1,6 @@
 import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
-import { Status } from '../entities/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { Status } from '~app/modules/user/entities/user.entity';
 
 export class UpdateStatusUserDto {
   @IsEnum(Status, {

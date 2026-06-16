@@ -5,12 +5,9 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Roles, User } from './entities/user.entity';
+import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { UpdateStatusUserDto } from './dto/update-status-user.dto';
-import { FindUserManagerDto } from './dto/find-manager.dto';
-import { FindUserCashierDto } from './dto/find-cashier.dto';
 import { AuthenticatedUser } from '../auth/jwt.interface';
 
 @Injectable()
@@ -53,7 +50,12 @@ export class UserService {
         status: true,
         is_email_verified: true,
       },
+      relations: {
+        accounts: true,
+      },
     });
+
+    console.log(user);
 
     if (!user) {
       throw new NotFoundException('user not found');
@@ -99,99 +101,5 @@ export class UserService {
     const { password: _password, ...result } = savedUser;
 
     return result;
-  }
-
-  async findUserCashierById(id: string) {
-    const user = await this.userRepository.findOne({
-      where: {
-        id: id,
-        role: Roles.cashier,
-      },
-    });
-
-    if (!user) {
-      throw new NotFoundException('user not found');
-    }
-
-    return user;
-  }
-
-  async findUserManagerById(id: string) {
-    const user = await this.userRepository.findOne({
-      where: {
-        id: id,
-        role: Roles.manager,
-      },
-    });
-
-    if (!user) {
-      throw new NotFoundException('user not found');
-    }
-
-    return user;
-  }
-
-  async findUsersManager(findUserManagerDto: FindUserManagerDto) {
-    const { page, limit } = findUserManagerDto;
-
-    return await this.userRepository.find({
-      where: {
-        role: Roles.manager,
-      },
-      order: {
-        created_at: 'DESC',
-      },
-      take: limit,
-      skip: (page - 1) * limit,
-    });
-  }
-
-  async findUsersCashier(findUserCashierDto: FindUserCashierDto) {
-    const { page, limit } = findUserCashierDto;
-
-    return await this.userRepository.find({
-      where: {
-        role: Roles.cashier,
-      },
-      order: {
-        created_at: 'DESC',
-      },
-      take: limit,
-      skip: (page - 1) * limit,
-    });
-  }
-
-  async updateUserManagerStatus(
-    id: string,
-    updateUserStatusDto: UpdateStatusUserDto,
-  ) {
-    const user = await this.userRepository.findOne({
-      where: { id, role: Roles.manager },
-    });
-
-    if (!user) {
-      throw new NotFoundException('user not found');
-    }
-
-    return await this.userRepository.update(id, {
-      status: updateUserStatusDto.status,
-    });
-  }
-
-  async updateUserCashierStatus(
-    id: string,
-    updateUserStatusDto: UpdateStatusUserDto,
-  ) {
-    const user = await this.userRepository.findOne({
-      where: { id, role: Roles.cashier },
-    });
-
-    if (!user) {
-      throw new NotFoundException('user not found');
-    }
-
-    return await this.userRepository.update(id, {
-      status: updateUserStatusDto.status,
-    });
   }
 }
