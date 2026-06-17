@@ -3,6 +3,8 @@ import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SWAGGER_CONFIG } from '~config/swagger.config';
 import { CONSTANTS } from '~config/index';
+import { mkdirSync, writeFileSync } from 'fs';
+import { stringify } from 'yaml';
 
 export function createDocument(app: INestApplication) {
   const config = app.get(ConfigService);
@@ -41,6 +43,9 @@ export function createDocument(app: INestApplication) {
   const options = builder.build();
 
   const document = SwaggerModule.createDocument(app, options);
+
+  mkdirSync('docs-openapi', { recursive: true });
+  writeFileSync('openapi/openapi.yaml', stringify(document));
 
   SwaggerModule.setup(SWAGGER_PATH, app, document, {
     swaggerOptions: {

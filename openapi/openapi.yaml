@@ -1,0 +1,296 @@
+openapi: 3.0.0
+paths:
+  /api/v1:
+    get:
+      operationId: AppController_getHello_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags:
+        - App
+  /api/v1/user/profile:
+    get:
+      operationId: UserController_getUserProfile_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      security:
+        - access-token: []
+      tags:
+        - User
+  /api/v1/auth/oauth/google:
+    get:
+      operationId: AuthController_google_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags: &a1
+        - Auth
+  /api/v1/auth/oauth/google/callback:
+    get:
+      operationId: AuthController_googleCallback_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags: *a1
+  /api/v1/auth/login:
+    post:
+      operationId: AuthController_login_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginDto"
+      responses:
+        "200":
+          description: ""
+      tags: *a1
+  /api/v1/auth/reqister:
+    post:
+      operationId: AuthController_registter_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/registerDto"
+      responses:
+        "201":
+          description: ""
+      tags: *a1
+  /api/v1/auth/refresh-token:
+    post:
+      operationId: AuthController_refreshToken_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      security:
+        - refresh-token: []
+      tags: *a1
+  /api/v1/auth/verify-account:
+    get:
+      operationId: AuthController_requestVerifyAccount_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      security:
+        - access-token: []
+      tags: *a1
+  /api/v1/auth/verify-account/confirm:
+    post:
+      operationId: AuthController_confirmVerifyAccount_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyAccountConfirmDto"
+      responses:
+        "200":
+          description: ""
+      tags: *a1
+  /api/v1/user:
+    post:
+      operationId: UserManagementController_postUser_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserDto"
+      responses:
+        "201":
+          description: ""
+      tags: &a2
+        - UserManagement
+  /api/v1/user/manager:
+    get:
+      operationId: UserManagementController_getUsersManager_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags: *a2
+  /api/v1/user/cashier:
+    get:
+      operationId: UserManagementController_getUsersCashier_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags: *a2
+  /api/v1/user/manager/{id}:
+    get:
+      operationId: UserManagementController_findUserManagerById_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+      tags: *a2
+  /api/v1/user/cashier/{id}:
+    get:
+      operationId: UserManagementController_findUserCashierById_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+      tags: *a2
+  /api/v1/user/manager/status/{id}:
+    patch:
+      operationId: UserManagementController_patchUserManagerStatus_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStatusUserDto"
+      responses:
+        "200":
+          description: ""
+      tags: *a2
+  /api/v1/user/cashier/status/{id}:
+    patch:
+      operationId: UserManagementController_patchUserCashierStatus_v1
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStatusUserDto"
+      responses:
+        "200":
+          description: ""
+      tags: *a2
+info:
+  title: Backend docs
+  description: docs POS
+  version: "1.0"
+  contact: {}
+tags: []
+servers: []
+components:
+  securitySchemes:
+    access-token:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+      name: Authorization
+      in: header
+    refresh-token:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+      name: Authorization
+      in: header
+  schemas:
+    LoginDto:
+      type: object
+      properties:
+        email:
+          type: string
+          description: User email
+          example: Ahmad@gmail.com
+        password:
+          type: string
+          description: User password
+          example: Ahmad123
+      required:
+        - email
+        - password
+    registerDto:
+      type: object
+      properties:
+        email:
+          type: string
+          description: User email
+          example: Ahmad@gmail.com
+        password:
+          type: string
+          description: User password
+          example: Ahmad123
+        username:
+          type: string
+          description: username user
+          example: Ahmad assegaff
+        phone_number:
+          type: string
+          description: phone number user
+          example: "+6281234567890"
+      required:
+        - email
+        - password
+        - username
+        - phone_number
+    VerifyAccountConfirmDto:
+      type: object
+      properties:
+        token:
+          type: string
+          description: User OTP
+          example: "572769"
+      required:
+        - token
+    CreateUserDto:
+      type: object
+      properties:
+        email:
+          type: string
+          description: User email
+          example: Ahmad@gmail.com
+        password:
+          type: string
+          description: User password
+          example: Ahmad123
+        username:
+          type: string
+          description: username user
+          example: Ahmad assegaff
+      required:
+        - email
+        - password
+        - username
+    UpdateStatusUserDto:
+      type: object
+      properties:
+        status:
+          type: string
+          description: New User status
+          enum:
+            - active
+            - deactive
+          example: deactive
+      required:
+        - status
