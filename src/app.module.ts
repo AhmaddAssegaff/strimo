@@ -8,9 +8,10 @@ import { RedisModule } from '~core/redis/redis.module';
 import { BullmqModule } from '~core/bullmq/bullmq.module';
 import { MinioModule } from '~core/minio/minio.module';
 import { PinoModule } from '~core/pino/pino.module';
-import { UserModule } from '~modules/user/user.module';
-import { AuthModule } from '~modules/auth/auth.module';
-import { UserManagementModule } from '~modules/user-management/user-management.module';
+// import { UserModule } from '~modules/user/user.module';
+// import { AuthModule } from '~modules/auth/auth.module';
+// import { UserManagementModule } from '~modules/user-management/user-management.module';
+import { PrismaModule } from './core/prisma/prisma.module';
 
 @Module({
   imports: [
@@ -21,9 +22,10 @@ import { UserManagementModule } from '~modules/user-management/user-management.m
     BullmqModule,
     MinioModule,
     PinoModule,
-    UserModule,
-    AuthModule,
-    UserManagementModule,
+    // UserModule,
+    // AuthModule,
+    // UserManagementModule,
+    PrismaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
