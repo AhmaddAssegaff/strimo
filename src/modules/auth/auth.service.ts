@@ -16,10 +16,10 @@ import type {
   refreshResponseInterface,
   loginResponseInterface,
 } from './jwt.interface';
-import { Status } from '../user/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { RedisService } from '~app/core/redis/redis.service';
 import { SmtpService } from '~app/core/smtp/smtp.service';
+import { USER_STATUS } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -75,10 +75,10 @@ export class AuthService {
     );
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
-      user.password,
+      user.password || '',
     );
 
-    if (user.status !== Status.active) {
+    if (user.status !== USER_STATUS.active) {
       throw new ForbiddenException('Account is deactivated');
     }
 
@@ -122,7 +122,7 @@ export class AuthService {
   ): Promise<refreshResponseInterface> {
     const user = await this.userService.findUserCredensialById(payloadUser.sub);
 
-    if (user.status !== Status.active) {
+    if (user.status !== USER_STATUS.active) {
       throw new ForbiddenException('Account is deactivated');
     }
 
@@ -142,7 +142,7 @@ export class AuthService {
   async requestEmailVerification(payloadUser: JwtAuthPayload) {
     const user = await this.userService.findUserCredensialById(payloadUser.sub);
 
-    if (user.status !== Status.active) {
+    if (user.status !== USER_STATUS.active) {
       throw new ForbiddenException('Account is deactivated');
     }
 

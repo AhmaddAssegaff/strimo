@@ -6,9 +6,11 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
-import { User } from '~app/modules/user/entities/user.entity';
+import { Prisma } from '@prisma/client';
 
-export class registerDto implements Partial<User> {
+type UserCreateData = Prisma.usersCreateInput;
+
+export class registerDto implements Partial<UserCreateData> {
   @IsNotEmpty()
   @IsString()
   @IsEmail()

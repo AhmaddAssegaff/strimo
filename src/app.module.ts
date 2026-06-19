@@ -10,7 +10,6 @@ import { MinioModule } from '~core/minio/minio.module';
 import { PinoModule } from '~core/pino/pino.module';
 // import { UserModule } from '~modules/user/user.module';
 // import { AuthModule } from '~modules/auth/auth.module';
-// import { UserManagementModule } from '~modules/user-management/user-management.module';
 import { PrismaModule } from './core/prisma/prisma.module';
 
 @Module({

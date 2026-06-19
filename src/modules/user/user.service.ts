@@ -3,33 +3,30 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { PrismaService } from '~app/core/prisma/prisma.service';
+import { CreateUserDto } from './dto/create-user.dto';
 import { AuthenticatedUser } from '../auth/jwt.interface';
 
 @Injectable()
 export class UserService {
-  private readonly passwordHashlength = 10;
+  private readonly passwordHashLength = 10;
 
-  constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
+
+  private readonly userCredentialSelect = {
+    id: true,
+    email: true,
+    password: true,
+    role: true,
+    status: true,
+    is_email_verified: true,
+  } as const;
 
   async findUserCredensialById(id: string) {
-    const user = await this.userRepository.findOne({
+    const user = await this.prisma.users.findUnique({
       where: { id },
-      select: {
-        id: true,
-        email: true,
-        password: true,
-        role: true,
-        status: true,
-        is_email_verified: true,
-      },
+      select: this.userCredentialSelect,
     });
 
     if (!user) {
@@ -40,22 +37,20 @@ export class UserService {
   }
 
   async findUserCredensialByEmail(email: string) {
-    const user = await this.userRepository.findOne({
+    const user = await this.prisma.users.findUnique({
       where: { email },
       select: {
-        id: true,
-        email: true,
-        password: true,
-        role: true,
-        status: true,
-        is_email_verified: true,
-      },
-      relations: {
-        accounts: true,
+        ...this.userCredentialSelect,
+
+        accounts: {
+          select: {
+            id: true,
+            provider: true,
+            provider_id: true,
+          },
+        },
       },
     });
-
-    console.log(user);
 
     if (!user) {
       throw new NotFoundException('user not found');
@@ -65,19 +60,45 @@ export class UserService {
   }
 
   async updateVerifyStatus(userId: string) {
-    return await this.userRepository.update(
-      { id: userId },
-      { is_email_verified: true },
-    );
+    return await this.prisma.users.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        is_email_verified: true,
+      },
+    });
   }
 
   async findUserProfile(user: AuthenticatedUser) {
     const { sub } = user;
-    return await this.userRepository.findOneBy({ id: sub });
+
+    const foundUser = await this.prisma.users.findUnique({
+      where: {
+        id: sub,
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        profile_picture: true,
+        phone_number: true,
+        role: true,
+        status: true,
+        is_email_verified: true,
+        created_at: true,
+      },
+    });
+
+    if (!foundUser) {
+      throw new NotFoundException('user not found');
+    }
+
+    return foundUser;
   }
 
   async createUser(createUserDto: CreateUserDto) {
-    const existingUser = await this.userRepository.findOne({
+    const existingUser = await this.prisma.users.findUnique({
       where: {
         email: createUserDto.email,
       },
@@ -89,17 +110,30 @@ export class UserService {
 
     const hashedPassword = await bcrypt.hash(
       createUserDto.password,
-      this.passwordHashlength,
+      this.passwordHashLength,
     );
 
-    const user = this.userRepository.create({
-      ...createUserDto,
-      password: hashedPassword,
+    return await this.prisma.users.create({
+      data: {
+        ...createUserDto,
+        password: hashedPassword,
+
+        accounts: {
+          create: {
+            provider: 'local',
+          },
+        },
+      },
+
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+        status: true,
+        is_email_verified: true,
+        created_at: true,
+      },
     });
-
-    const savedUser = await this.userRepository.save(user);
-    const { password: _password, ...result } = savedUser;
-
-    return result;
   }
 }

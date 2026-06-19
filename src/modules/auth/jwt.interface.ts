@@ -1,12 +1,12 @@
+import { USER_ROLES } from '@prisma/client';
 import { Request } from 'express';
-import { Roles } from '../user/entities/user.entity';
 
 /**
  * token JWT (signed)
  */
 export interface JwtAuthPayload {
   sub: string;
-  role: Roles;
+  role: USER_ROLES;
   email: string;
   iat?: number;
   exp?: number;
@@ -18,7 +18,7 @@ export interface JwtAuthPayload {
  */
 export interface AuthenticatedUser {
   sub: string;
-  role: Roles;
+  role: USER_ROLES;
   email: string;
 }
 
