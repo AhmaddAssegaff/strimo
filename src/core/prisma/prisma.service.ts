@@ -3,6 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { ConfigService } from '@nestjs/config';
 import { CONSTANTS } from '~app/config';
 import { PrismaClient } from '@prisma/client';
+import { traceContext } from '@prisma/sqlcommenter-trace-context';
 
 @Injectable()
 export class PrismaService
@@ -14,7 +15,10 @@ export class PrismaService
       connectionString: config.getOrThrow(CONSTANTS.DB.DATABASE_URL),
     });
 
-    super({ adapter });
+    super({
+      adapter,
+      comments: [traceContext()],
+    });
   }
 
   async onModuleInit() {

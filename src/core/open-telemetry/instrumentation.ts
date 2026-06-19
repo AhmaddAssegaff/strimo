@@ -13,6 +13,7 @@ import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core'
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import { PrismaInstrumentation } from '@prisma/instrumentation';
 
 export const OtelSDK = new NodeSDK({
   traceExporter: new OTLPTraceExporter(),
@@ -43,6 +44,7 @@ export const OtelSDK = new NodeSDK({
       },
     }),
     new NestInstrumentation(),
+    new PrismaInstrumentation(),
     getNodeAutoInstrumentations({
       '@opentelemetry/instrumentation-fs': { enabled: false },
       '@opentelemetry/instrumentation-net': { enabled: false },
