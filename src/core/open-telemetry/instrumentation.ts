@@ -10,7 +10,6 @@ import {
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino';
 import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
-import { TypeormInstrumentation } from '@opentelemetry/instrumentation-typeorm';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
@@ -44,9 +43,6 @@ export const OtelSDK = new NodeSDK({
       },
     }),
     new NestInstrumentation(),
-    new TypeormInstrumentation({
-      suppressInternalInstrumentation: true,
-    }),
     getNodeAutoInstrumentations({
       '@opentelemetry/instrumentation-fs': { enabled: false },
       '@opentelemetry/instrumentation-net': { enabled: false },
