@@ -22,23 +22,31 @@ paths:
         - User
   /api/v1/auth/oauth/google:
     get:
-      operationId: AuthController_google_v1
+      description: Redirect the user to Google OAuth consent screen.
+      operationId: AuthController_googleOauth_v1
       parameters: []
       responses:
-        "200":
-          description: ""
+        "302":
+          description: Redirect to Google OAuth page
+      summary: Login with Google
       tags: &a1
-        - Auth
+        - Authentication
   /api/v1/auth/oauth/google/callback:
     get:
-      operationId: AuthController_googleCallback_v1
+      description: Handle Google OAuth callback and return JWT access token and
+        refresh token.
+      operationId: AuthController_googleOauthCallback_v1
       parameters: []
       responses:
         "200":
-          description: ""
+          description: OAuth login successful
+        "401":
+          description: OAuth authentication failed
+      summary: Google OAuth callback
       tags: *a1
   /api/v1/auth/login:
     post:
+      description: Authenticate user using email and password and return JWT tokens.
       operationId: AuthController_login_v1
       parameters: []
       requestBody:
@@ -49,11 +57,17 @@ paths:
               $ref: "#/components/schemas/LoginDto"
       responses:
         "200":
-          description: ""
+          description: Login successful
+        "401":
+          description: Invalid credentials
+        "403":
+          description: Account is deactivated
+      summary: Login
       tags: *a1
-  /api/v1/auth/reqister:
+  /api/v1/auth/register:
     post:
-      operationId: AuthController_registter_v1
+      description: Create a new local account using email and password.
+      operationId: AuthController_register_v1
       parameters: []
       requestBody:
         required: true
@@ -63,30 +77,46 @@ paths:
               $ref: "#/components/schemas/registerDto"
       responses:
         "201":
-          description: ""
+          description: Account created successfully
+        "409":
+          description: Email already exists
+      summary: Register
       tags: *a1
   /api/v1/auth/refresh-token:
     post:
+      description: Generate a new access token using a valid refresh token.
       operationId: AuthController_refreshToken_v1
       parameters: []
       responses:
         "200":
-          description: ""
+          description: Access token refreshed successfully
+        "401":
+          description: Invalid refresh token
       security:
         - refresh-token: []
+      summary: Refresh access token
       tags: *a1
   /api/v1/auth/verify-account:
     get:
+      description: Send an OTP verification code to the authenticated user email address.
       operationId: AuthController_requestVerifyAccount_v1
       parameters: []
       responses:
         "200":
-          description: ""
+          description: Verification code sent successfully
+        "400":
+          description: Email already verified
+        "401":
+          description: Unauthorized
+        "403":
+          description: Account is deactivated
       security:
         - access-token: []
+      summary: Request email verification
       tags: *a1
   /api/v1/auth/verify-account/confirm:
     post:
+      description: Verify account using OTP code received through email.
       operationId: AuthController_confirmVerifyAccount_v1
       parameters: []
       requestBody:
@@ -97,103 +127,11 @@ paths:
               $ref: "#/components/schemas/VerifyAccountConfirmDto"
       responses:
         "200":
-          description: ""
+          description: Email verified successfully
+        "400":
+          description: Invalid or expired OTP code
+      summary: Confirm email verification
       tags: *a1
-  /api/v1/user:
-    post:
-      operationId: UserManagementController_postUser_v1
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateUserDto"
-      responses:
-        "201":
-          description: ""
-      tags: &a2
-        - UserManagement
-  /api/v1/user/manager:
-    get:
-      operationId: UserManagementController_getUsersManager_v1
-      parameters: []
-      responses:
-        "200":
-          description: ""
-      tags: *a2
-  /api/v1/user/cashier:
-    get:
-      operationId: UserManagementController_getUsersCashier_v1
-      parameters: []
-      responses:
-        "200":
-          description: ""
-      tags: *a2
-  /api/v1/user/manager/{id}:
-    get:
-      operationId: UserManagementController_findUserManagerById_v1
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "200":
-          description: ""
-      tags: *a2
-  /api/v1/user/cashier/{id}:
-    get:
-      operationId: UserManagementController_findUserCashierById_v1
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "200":
-          description: ""
-      tags: *a2
-  /api/v1/user/manager/status/{id}:
-    patch:
-      operationId: UserManagementController_patchUserManagerStatus_v1
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateStatusUserDto"
-      responses:
-        "200":
-          description: ""
-      tags: *a2
-  /api/v1/user/cashier/status/{id}:
-    patch:
-      operationId: UserManagementController_patchUserCashierStatus_v1
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateStatusUserDto"
-      responses:
-        "200":
-          description: ""
-      tags: *a2
 info:
   title: Backend docs
   description: docs POS
@@ -263,34 +201,3 @@ components:
           example: "572769"
       required:
         - token
-    CreateUserDto:
-      type: object
-      properties:
-        email:
-          type: string
-          description: User email
-          example: Ahmad@gmail.com
-        password:
-          type: string
-          description: User password
-          example: Ahmad123
-        username:
-          type: string
-          description: username user
-          example: Ahmad assegaff
-      required:
-        - email
-        - password
-        - username
-    UpdateStatusUserDto:
-      type: object
-      properties:
-        status:
-          type: string
-          description: New User status
-          enum:
-            - active
-            - deactive
-          example: deactive
-      required:
-        - status
