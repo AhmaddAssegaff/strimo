@@ -14,19 +14,17 @@ export class UserService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  private readonly userCredentialSelect = {
-    id: true,
-    email: true,
-    password: true,
-    role: true,
-    status: true,
-    is_email_verified: true,
-  } as const;
-
   async findUserCredensialById(id: string) {
     const user = await this.prisma.users.findUnique({
       where: { id },
-      select: this.userCredentialSelect,
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        role: true,
+        status: true,
+        is_email_verified: true,
+      },
     });
 
     if (!user) {
@@ -40,8 +38,12 @@ export class UserService {
     const user = await this.prisma.users.findUnique({
       where: { email },
       select: {
-        ...this.userCredentialSelect,
-
+        id: true,
+        email: true,
+        password: true,
+        role: true,
+        status: true,
+        is_email_verified: true,
         accounts: {
           select: {
             id: true,
