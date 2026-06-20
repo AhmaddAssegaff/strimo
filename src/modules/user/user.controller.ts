@@ -4,7 +4,7 @@ import { JwtAccessGuard } from '../auth/guard/jwt-access.guard';
 import { RolesGuard } from '../auth/guard/user-roles.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorator/current-user.decorator';
-import type { AuthenticatedUser } from '../auth/jwt.interface';
+import type { AuthenticatedUser } from '../auth/auth.interface';
 
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAccessGuard, RolesGuard)

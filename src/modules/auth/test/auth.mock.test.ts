@@ -1,5 +1,5 @@
 import { AuthService } from '../auth.service';
-import { loginResponseInterface } from '../jwt.interface';
+import { loginResponseInterface } from '../auth.interface';
 
 export type MockAuthService = jest.Mocked<
   Pick<

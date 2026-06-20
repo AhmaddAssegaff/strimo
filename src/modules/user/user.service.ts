@@ -6,7 +6,8 @@ import {
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { AuthenticatedUser } from '../auth/jwt.interface';
+import { AuthenticatedUser, userOauthGoogle } from '../auth/auth.interface';
+import { USER_ACCOUNTS_PROVIDER, USER_ROLES } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -15,7 +16,7 @@ export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findUserCredensialById(id: string) {
-    const user = await this.prisma.users.findUnique({
+    return await this.prisma.users.findUnique({
       where: { id },
       select: {
         id: true,
@@ -26,16 +27,10 @@ export class UserService {
         is_email_verified: true,
       },
     });
-
-    if (!user) {
-      throw new NotFoundException('user not found');
-    }
-
-    return user;
   }
 
   async findUserCredensialByEmail(email: string) {
-    const user = await this.prisma.users.findUnique({
+    return await this.prisma.users.findUnique({
       where: { email },
       select: {
         id: true,
@@ -53,12 +48,6 @@ export class UserService {
         },
       },
     });
-
-    if (!user) {
-      throw new NotFoundException('user not found');
-    }
-
-    return user;
   }
 
   async updateVerifyStatus(userId: string) {
@@ -73,11 +62,9 @@ export class UserService {
   }
 
   async findUserProfile(user: AuthenticatedUser) {
-    const { sub } = user;
-
-    const foundUser = await this.prisma.users.findUnique({
+    const usr = await this.prisma.users.findUnique({
       where: {
-        id: sub,
+        id: user.sub,
       },
       select: {
         id: true,
@@ -92,14 +79,41 @@ export class UserService {
       },
     });
 
-    if (!foundUser) {
+    if (!usr) {
       throw new NotFoundException('user not found');
     }
 
-    return foundUser;
+    return usr;
   }
 
-  async createUser(createUserDto: CreateUserDto) {
+  async createNewAccount(provider: USER_ACCOUNTS_PROVIDER, userId: string) {
+    return await this.prisma.user_account.create({
+      data: {
+        provider: provider,
+        user_id: userId,
+      },
+    });
+  }
+
+  async createUserOauth(user: userOauthGoogle) {
+    return await this.prisma.users.create({
+      data: {
+        email: user.email,
+        username: user.name,
+        role: USER_ROLES.cashier,
+        profile_picture: user.picture,
+        is_email_verified: true,
+        accounts: {
+          create: {
+            provider_id: user.googleId,
+            provider: 'google',
+          },
+        },
+      },
+    });
+  }
+
+  async createUserLocal(createUserDto: CreateUserDto) {
     const existingUser = await this.prisma.users.findUnique({
       where: {
         email: createUserDto.email,
@@ -119,7 +133,7 @@ export class UserService {
       data: {
         ...createUserDto,
         password: hashedPassword,
-
+        role: USER_ROLES.cashier,
         accounts: {
           create: {
             provider: 'local',

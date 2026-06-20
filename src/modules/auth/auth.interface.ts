@@ -1,6 +1,13 @@
 import { USER_ROLES } from '@prisma/client';
 import { Request } from 'express';
 
+export interface userOauthGoogle {
+  googleId: string;
+  email: string;
+  name: string;
+  picture: string;
+}
+
 /**
  * token JWT (signed)
  */
