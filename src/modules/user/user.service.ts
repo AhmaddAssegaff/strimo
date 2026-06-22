@@ -86,31 +86,64 @@ export class UserService {
     return usr;
   }
 
-  async createNewAccount(provider: USER_ACCOUNTS_PROVIDER, userId: string) {
+  async createNewAccount(
+    provider: USER_ACCOUNTS_PROVIDER,
+    userId: string,
+    providerId: string,
+  ) {
     return await this.prisma.user_account.create({
       data: {
         provider: provider,
         user_id: userId,
+        provider_id: providerId,
       },
     });
   }
 
-  async createUserOauth(user: userOauthGoogle) {
-    return await this.prisma.users.create({
-      data: {
-        email: user.email,
-        username: user.name,
-        role: USER_ROLES.cashier,
-        profile_picture: user.picture,
-        is_email_verified: true,
-        accounts: {
-          create: {
-            provider_id: user.googleId,
-            provider: 'google',
+  async createUserOauth(userData: userOauthGoogle) {
+    const user = await this.prisma.$transaction(async (tx) => {
+      const newUser = await tx.users.upsert({
+        where: {
+          email: userData.email,
+        },
+        create: {
+          email: userData.email,
+          username: userData.name,
+          role: USER_ROLES.cashier,
+          profile_picture: userData.picture,
+          is_email_verified: true,
+        },
+        update: {
+          is_email_verified: true,
+        },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+        },
+      });
+
+      await tx.user_account.upsert({
+        where: {
+          provider_provider_id: {
+            provider: USER_ACCOUNTS_PROVIDER.google,
+            provider_id: userData.googleId,
           },
         },
-      },
+        create: {
+          user_id: newUser.id,
+          provider: USER_ACCOUNTS_PROVIDER.google,
+          provider_id: userData.googleId,
+        },
+        update: {
+          provider_id: userData.googleId,
+        },
+      });
+
+      return newUser;
     });
+
+    return user;
   }
 
   async createUserLocal(createUserDto: CreateUserDto) {

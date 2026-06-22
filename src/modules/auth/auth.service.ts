@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -22,7 +21,7 @@ import type {
 import * as bcrypt from 'bcrypt';
 import { RedisService } from '~app/core/redis/redis.service';
 import { SmtpService } from '~app/core/smtp/smtp.service';
-import { USER_ACCOUNTS_PROVIDER, USER_STATUS } from '@prisma/client';
+import { USER_STATUS } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -73,36 +72,7 @@ export class AuthService {
   }
 
   async googleOauth(user: userOauthGoogle) {
-    let usr = await this.userService.findUserCredensialByEmail(user.email);
-
-    const hasGoogleProvider = usr?.accounts.some(
-      (user_account) => user_account.provider === USER_ACCOUNTS_PROVIDER.google,
-    );
-    const hasLocalProvider = usr?.accounts.some(
-      (user_account) => user_account.provider === USER_ACCOUNTS_PROVIDER.local,
-    );
-    const isEmailVerified = usr?.is_email_verified == false;
-
-    if (!usr) {
-      await this.userService.createUserOauth(user);
-
-      usr = await this.userService.findUserCredensialByEmail(user.email);
-    }
-
-    if (!usr) {
-      throw new InternalServerErrorException('Failed to create oauth user');
-    }
-
-    if (!hasGoogleProvider && hasLocalProvider) {
-      await this.userService.createNewAccount(
-        USER_ACCOUNTS_PROVIDER.google,
-        usr.id,
-      );
-    }
-    if (isEmailVerified) {
-      await this.userService.updateVerifyStatus(usr.id);
-      console.log('updatre');
-    }
+    const usr = await this.userService.createUserOauth(user);
 
     const payload: JwtAuthPayload = {
       sub: usr.id,
