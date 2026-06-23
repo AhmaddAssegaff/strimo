@@ -18,7 +18,7 @@ import type {
   loginResponseInterface,
   userOauthGoogle,
 } from './auth.interface';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { RedisService } from '~app/core/redis/redis.service';
 import { SmtpService } from '~app/core/smtp/smtp.service';
 import { USER_STATUS } from '@prisma/client';
