@@ -67,7 +67,7 @@
     "@prisma/client": "^7.8.0",
     "@prisma/instrumentation": "^7.8.0",
     "@prisma/sqlcommenter-trace-context": "^7.8.0",
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "ioredis": "^5.11.0",
