@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { Prisma } from '@prisma/client';
 
-type UserCreateData = Prisma.usersCreateInput;
+type UserCreateData = Prisma.UserCreateInput;
 
 export class registerDto implements Partial<UserCreateData> {
   @IsNotEmpty()

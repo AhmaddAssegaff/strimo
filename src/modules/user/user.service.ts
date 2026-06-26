@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AuthenticatedUser, userOauthGoogle } from '../auth/auth.interface';
@@ -16,7 +16,7 @@ export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findUserCredensialById(id: string) {
-    return await this.prisma.users.findUnique({
+    return await this.prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -24,13 +24,13 @@ export class UserService {
         password: true,
         role: true,
         status: true,
-        is_email_verified: true,
+        isEmailVerified: true,
       },
     });
   }
 
   async findUserCredensialByEmail(email: string) {
-    return await this.prisma.users.findUnique({
+    return await this.prisma.user.findUnique({
       where: { email },
       select: {
         id: true,
@@ -38,12 +38,12 @@ export class UserService {
         password: true,
         role: true,
         status: true,
-        is_email_verified: true,
+        isEmailVerified: true,
         accounts: {
           select: {
             id: true,
             provider: true,
-            provider_id: true,
+            providerId: true,
           },
         },
       },
@@ -51,18 +51,18 @@ export class UserService {
   }
 
   async updateVerifyStatus(userId: string) {
-    return await this.prisma.users.update({
+    return await this.prisma.user.update({
       where: {
         id: userId,
       },
       data: {
-        is_email_verified: true,
+        isEmailVerified: true,
       },
     });
   }
 
   async findUserProfile(user: AuthenticatedUser) {
-    const usr = await this.prisma.users.findUnique({
+    const usr = await this.prisma.user.findUnique({
       where: {
         id: user.sub,
       },
@@ -70,12 +70,12 @@ export class UserService {
         id: true,
         email: true,
         username: true,
-        profile_picture: true,
-        phone_number: true,
+        profilePicture: true,
+        phoneNumber: true,
         role: true,
         status: true,
-        is_email_verified: true,
-        created_at: true,
+        isEmailVerified: true,
+        createdAt: true,
       },
     });
 
@@ -91,18 +91,18 @@ export class UserService {
     userId: string,
     providerId: string,
   ) {
-    return await this.prisma.user_account.create({
+    return await this.prisma.userAccount.create({
       data: {
         provider: provider,
-        user_id: userId,
-        provider_id: providerId,
+        userId: userId,
+        providerId: providerId,
       },
     });
   }
 
   async createUserOauth(userData: userOauthGoogle) {
     const user = await this.prisma.$transaction(async (tx) => {
-      const newUser = await tx.users.upsert({
+      const newUser = await tx.user.upsert({
         where: {
           email: userData.email,
         },
@@ -110,11 +110,11 @@ export class UserService {
           email: userData.email,
           username: userData.name,
           role: USER_ROLES.cashier,
-          profile_picture: userData.picture,
-          is_email_verified: true,
+          profilePicture: userData.picture,
+          isEmailVerified: true,
         },
         update: {
-          is_email_verified: true,
+          isEmailVerified: true,
         },
         select: {
           id: true,
@@ -123,20 +123,20 @@ export class UserService {
         },
       });
 
-      await tx.user_account.upsert({
+      await tx.userAccount.upsert({
         where: {
-          provider_provider_id: {
+          provider_providerId: {
             provider: USER_ACCOUNTS_PROVIDER.google,
-            provider_id: userData.googleId,
+            providerId: userData.googleId,
           },
         },
         create: {
-          user_id: newUser.id,
+          userId: newUser.id,
           provider: USER_ACCOUNTS_PROVIDER.google,
-          provider_id: userData.googleId,
+          providerId: userData.googleId,
         },
         update: {
-          provider_id: userData.googleId,
+          providerId: userData.googleId,
         },
       });
 
@@ -147,7 +147,7 @@ export class UserService {
   }
 
   async createUserLocal(createUserDto: CreateUserDto) {
-    const existingUser = await this.prisma.users.findUnique({
+    const existingUser = await this.prisma.user.findUnique({
       where: {
         email: createUserDto.email,
       },
@@ -162,7 +162,7 @@ export class UserService {
       this.passwordHashLength,
     );
 
-    return await this.prisma.users.create({
+    return await this.prisma.user.create({
       data: {
         ...createUserDto,
         password: hashedPassword,
@@ -180,8 +180,8 @@ export class UserService {
         username: true,
         role: true,
         status: true,
-        is_email_verified: true,
-        created_at: true,
+        isEmailVerified: true,
+        createdAt: true,
       },
     });
   }

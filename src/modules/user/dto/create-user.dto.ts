@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
 import { IsNotEmpty, IsString, IsEmail, MinLength } from 'class-validator';
 
-type UserCreateData = Prisma.usersCreateInput;
+type UserCreateData = Prisma.UserCreateInput;
 
 export class CreateUserDto implements Partial<UserCreateData> {
   @IsNotEmpty()

@@ -29,34 +29,36 @@ enum USER_ACCOUNTS_PROVIDER {
   google
 }
 
-model users {
-  id                String      @id @default(uuid())
-  profile_picture   String?
-  email             String      @unique
-  password          String?
-  username          String
-  phone_number      String?
-  role              USER_ROLES  @default(cashier)
-  status            USER_STATUS @default(active)
-  is_email_verified Boolean     @default(false)
-  created_at        DateTime    @default(now())
-  updated_at        DateTime    @updatedAt
-  deleted_at        DateTime?
+model User {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profilePicture  String?     @map("profile_picture")
+  email           String      @unique
+  password        String?
+  username        String
+  phoneNumber     String?     @map("phone_number")
+  role            USER_ROLES  @default(cashier)
+  status          USER_STATUS @default(active)
+  isEmailVerified Boolean     @default(false) @map("is_email_verified")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  deletedAt       DateTime?   @map("deleted_at")
 
-  accounts user_account[]
+  accounts UserAccount[]
 
   @@map("users")
 }
 
-model user_account {
-  id          String                 @id @default(uuid())
-  user_id     String
-  user        users                  @relation(fields: [user_id], references: [id])
-  provider    USER_ACCOUNTS_PROVIDER
-  provider_id String?
-  created_at  DateTime               @default(now())
-  deleted_at  DateTime?
+model UserAccount {
+  id         String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String                 @map("user_id")
+  provider   USER_ACCOUNTS_PROVIDER
+  providerId String?                @map("provider_id")
+  createdAt  DateTime               @default(now()) @map("created_at")
+  updatedAt  DateTime               @updatedAt @map("updated_at")
+  deletedAt  DateTime?              @map("deleted_at")
 
-  @@unique([provider, provider_id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerId])
   @@map("user_accounts")
 }

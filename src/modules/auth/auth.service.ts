@@ -171,13 +171,13 @@ export class AuthService {
       throw new NotFoundException('user not found');
     } else if (user.status !== USER_STATUS.active) {
       throw new ForbiddenException('Account is deactivated');
-    } else if (user.is_email_verified) {
+    } else if (user.isEmailVerified) {
       throw new BadRequestException('Email already verified');
     }
 
     console.log({
-      verified: user.is_email_verified,
-      type: typeof user.is_email_verified,
+      verified: user.isEmailVerified,
+      type: typeof user.isEmailVerified,
     });
     const otpCode = this.generateOTP.toString();
 
