@@ -11,6 +11,7 @@ export function createDocument(app: INestApplication) {
   const SWAGGER_PATH = config.getOrThrow<string>(
     CONSTANTS.SWAGGER.SWAGGER_DOCS_URL,
   );
+  const APP_NODE_ENV = config.getOrThrow<string>(CONSTANTS.APP.APP_NODE_ENV);
 
   const builder = new DocumentBuilder()
     .setTitle(SWAGGER_CONFIG.title)
@@ -44,8 +45,10 @@ export function createDocument(app: INestApplication) {
 
   const document = SwaggerModule.createDocument(app, options);
 
-  mkdirSync('docs-openapi', { recursive: true });
-  writeFileSync('openapi/openapi.yaml', stringify(document));
+  if (APP_NODE_ENV === 'development') {
+    mkdirSync('docs-openapi', { recursive: true });
+    writeFileSync('docs-openapi/openapi.yaml', stringify(document));
+  }
 
   SwaggerModule.setup(SWAGGER_PATH, app, document, {
     swaggerOptions: {
