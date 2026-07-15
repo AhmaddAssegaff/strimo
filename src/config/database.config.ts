@@ -9,6 +9,7 @@ const dbConfig = registerAs(CONFIG_NAME, () => ({
   DATABASE_USER: process.env.DATABASE_USER,
   DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
   DATABASE_NAME: process.env.DATABASE_NAME,
+  DATABASE_URL: process.env.DATABASE_URL,
 }));
 
 type DbConfig = ReturnType<typeof dbConfig>;
@@ -20,6 +21,7 @@ export const dbValidationSchema = {
   DATABASE_USER: Joi.string().required(),
   DATABASE_PASSWORD: Joi.string().required(),
   DATABASE_NAME: Joi.string().required(),
+  DATABASE_URL: Joi.string().required(),
 };
 
 export const CONSTANTS_DB_KEYS: {
@@ -33,6 +35,7 @@ export const CONSTANTS_DB_KEYS: {
     DATABASE_USER: 'db.DATABASE_USER',
     DATABASE_PASSWORD: 'db.DATABASE_PASSWORD',
     DATABASE_NAME: 'db.DATABASE_NAME',
+    DATABASE_URL: 'db.DATABASE_URL',
   },
 } as const;
 

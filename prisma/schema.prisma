@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  // output       = "../generated/prisma"
+  // moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum USER_ROLES {
+  owner
+  manager
+  cashier
+}
+
+enum USER_STATUS {
+  active
+  deactive
+}
+
+enum USER_ACCOUNTS_PROVIDER {
+  local
+  google
+}
+
+model User {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profilePicture  String?     @map("profile_picture")
+  email           String      @unique
+  password        String?
+  username        String
+  phoneNumber     String?     @map("phone_number")
+  role            USER_ROLES  @default(cashier)
+  status          USER_STATUS @default(active)
+  isEmailVerified Boolean     @default(false) @map("is_email_verified")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  deletedAt       DateTime?   @map("deleted_at")
+
+  accounts UserAccount[]
+
+  @@map("users")
+}
+
+model UserAccount {
+  id         String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String                 @map("user_id")
+  provider   USER_ACCOUNTS_PROVIDER
+  providerId String?                @map("provider_id")
+  createdAt  DateTime               @default(now()) @map("created_at")
+  updatedAt  DateTime               @updatedAt @map("updated_at")
+  deletedAt  DateTime?              @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerId])
+  @@map("user_accounts")
+}

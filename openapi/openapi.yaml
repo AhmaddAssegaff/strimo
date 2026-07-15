@@ -1,0 +1,203 @@
+openapi: 3.0.0
+paths:
+  /api/v1:
+    get:
+      operationId: AppController_getHello_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags:
+        - App
+  /api/v1/user/profile:
+    get:
+      operationId: UserController_getUserProfile_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      security:
+        - access-token: []
+      tags:
+        - User
+  /api/v1/auth/oauth/google:
+    get:
+      description: Redirect the user to Google OAuth consent screen.
+      operationId: AuthController_googleOauth_v1
+      parameters: []
+      responses:
+        "302":
+          description: Redirect to Google OAuth page
+      summary: Login with Google
+      tags: &a1
+        - Authentication
+  /api/v1/auth/oauth/google/callback:
+    get:
+      description: Handle Google OAuth callback and return JWT access token and
+        refresh token.
+      operationId: AuthController_googleOauthCallback_v1
+      parameters: []
+      responses:
+        "200":
+          description: OAuth login successful
+        "401":
+          description: OAuth authentication failed
+      summary: Google OAuth callback
+      tags: *a1
+  /api/v1/auth/login:
+    post:
+      description: Authenticate user using email and password and return JWT tokens.
+      operationId: AuthController_login_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginDto"
+      responses:
+        "200":
+          description: Login successful
+        "401":
+          description: Invalid credentials
+        "403":
+          description: Account is deactivated
+      summary: Login
+      tags: *a1
+  /api/v1/auth/register:
+    post:
+      description: Create a new local account using email and password.
+      operationId: AuthController_register_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/registerDto"
+      responses:
+        "201":
+          description: Account created successfully
+        "409":
+          description: Email already exists
+      summary: Register
+      tags: *a1
+  /api/v1/auth/refresh-token:
+    post:
+      description: Generate a new access token using a valid refresh token.
+      operationId: AuthController_refreshToken_v1
+      parameters: []
+      responses:
+        "200":
+          description: Access token refreshed successfully
+        "401":
+          description: Invalid refresh token
+      security:
+        - refresh-token: []
+      summary: Refresh access token
+      tags: *a1
+  /api/v1/auth/verify-account:
+    get:
+      description: Send an OTP verification code to the authenticated user email address.
+      operationId: AuthController_requestVerifyAccount_v1
+      parameters: []
+      responses:
+        "200":
+          description: Verification code sent successfully
+        "400":
+          description: Email already verified
+        "401":
+          description: Unauthorized
+        "403":
+          description: Account is deactivated
+      security:
+        - access-token: []
+      summary: Request email verification
+      tags: *a1
+  /api/v1/auth/verify-account/confirm:
+    post:
+      description: Verify account using OTP code received through email.
+      operationId: AuthController_confirmVerifyAccount_v1
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyAccountConfirmDto"
+      responses:
+        "200":
+          description: Email verified successfully
+        "400":
+          description: Invalid or expired OTP code
+      summary: Confirm email verification
+      tags: *a1
+info:
+  title: Backend docs
+  description: docs POS
+  version: "1.0"
+  contact: {}
+tags: []
+servers: []
+components:
+  securitySchemes:
+    access-token:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+      name: Authorization
+      in: header
+    refresh-token:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+      name: Authorization
+      in: header
+  schemas:
+    LoginDto:
+      type: object
+      properties:
+        email:
+          type: string
+          description: User email
+          example: Ahmad@gmail.com
+        password:
+          type: string
+          description: User password
+          example: Ahmad123
+      required:
+        - email
+        - password
+    registerDto:
+      type: object
+      properties:
+        email:
+          type: string
+          description: User email
+          example: Ahmad@gmail.com
+        password:
+          type: string
+          description: User password
+          example: Ahmad123
+        username:
+          type: string
+          description: username user
+          example: Ahmad assegaff
+        phone_number:
+          type: string
+          description: phone number user
+          example: "+6281234567890"
+      required:
+        - email
+        - password
+        - username
+        - phone_number
+    VerifyAccountConfirmDto:
+      type: object
+      properties:
+        token:
+          type: string
+          description: User OTP
+          example: "572769"
+      required:
+        - token
