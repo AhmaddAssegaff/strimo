@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Client } from 'minio';
 import { CONSTANTS } from '~config/index';
 import { MINIO_TOKEN } from '~minio/minio.constants';
+import { MinioService } from './minio.service';
 
 @Global()
 @Module({
@@ -25,7 +26,8 @@ import { MINIO_TOKEN } from '~minio/minio.constants';
         });
       },
     },
+    MinioService,
   ],
-  exports: [MINIO_TOKEN],
+  exports: [MINIO_TOKEN, MinioService],
 })
 export class MinioModule {}
