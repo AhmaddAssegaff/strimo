@@ -28,4 +28,8 @@ export class PrismaService
   async onModuleDestroy() {
     await this.$disconnect();
   }
+
+  async ping(): Promise<void> {
+    await this.$queryRaw`SELECT 1`;
+  }
 }
