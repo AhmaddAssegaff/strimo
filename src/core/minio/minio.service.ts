@@ -15,6 +15,10 @@ export class MinioService {
     }
   }
 
+  async ping(): Promise<void> {
+    await this.minioClient.listBuckets();
+  }
+
   async uploadFile(
     bucketName: string,
     objectName: string,
