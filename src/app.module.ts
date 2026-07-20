@@ -10,6 +10,7 @@ import { PinoModule } from '~core/pino/pino.module';
 import { UserModule } from '~modules/user/user.module';
 import { AuthModule } from '~modules/auth/auth.module';
 import { PrismaModule } from './core/prisma/prisma.module';
+import { HealthModule } from '~app/health/health.module';
 
 @Module({
   imports: [
@@ -22,8 +23,9 @@ import { PrismaModule } from './core/prisma/prisma.module';
     UserModule,
     AuthModule,
     PrismaModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
