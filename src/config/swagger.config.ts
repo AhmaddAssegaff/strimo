@@ -33,7 +33,7 @@ export interface SwaggerConfig {
 
 export const SWAGGER_CONFIG: SwaggerConfig = {
   title: 'Backend docs',
-  description: 'docs POS',
+  description: 'docs strimo',
   version: '1.0',
   tags: [],
 };
