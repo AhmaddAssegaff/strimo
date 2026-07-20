@@ -9,6 +9,7 @@ import * as redis from './redis.config';
 import * as minio from './minio.config';
 import * as auth from './auth.config';
 import * as google from './google-oaut.config';
+import * as health from './health.config';
 
 export const configs = [
   app.default,
@@ -19,6 +20,7 @@ export const configs = [
   minio.default,
   auth.default,
   google.default,
+  health.default,
 ] satisfies ConfigFactory[];
 
 export const validationSchema = Joi.object({
@@ -30,6 +32,7 @@ export const validationSchema = Joi.object({
   ...minio.MinioValidationSchema,
   ...auth.AuthValidationSchema,
   ...google.GoogleValidationSchema,
+  ...health.HealthValidationSchema,
 });
 
 export const CONSTANTS = {
@@ -41,6 +44,7 @@ export const CONSTANTS = {
   ...minio.CONSTANTS_MINIO_KEYS,
   ...auth.CONSTANTS_AUTH_KEYS,
   ...google.CONSTANTS_GOOGLE_KEYS,
+  ...health.CONSTANTS_HEALTH_KEYS,
 } as const;
 
 export default configs;
