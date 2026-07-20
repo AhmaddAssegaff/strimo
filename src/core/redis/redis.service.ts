@@ -22,6 +22,10 @@ export class RedisService implements OnApplicationShutdown {
     await this.redis.quit();
   }
 
+  async ping(): Promise<string> {
+    return this.redis.ping();
+  }
+
   async get<T>(key: string): Promise<T | null> {
     try {
       const value = await this.redis.get(key);
