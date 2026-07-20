@@ -1,0 +1,97 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres-pos
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    restart: unless-stopped
+    ports:
+      - '${DATABASE_PORT}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../etc/postgresql/postgresql.conf:/etc/postgresql/postgresql.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin-pos
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    restart: unless-stopped
+    ports:
+      - '${PGADMIN_PORT}:80'
+    depends_on:
+      - postgres
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-pos
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    ports:
+      - '${REDIS_PORT}:6379'
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: quay.io/minio/minio
+    container_name: minio-pos
+    ports:
+      - '${MINIO_API_PORT}:9000'
+      - '${MINIO_DASHBOARD_CONSOLE_PORT}:9001'
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nestjs-app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: nestjs-app
+    restart: unless-stopped
+    ports:
+      - '${APP_PORT}:3000'
+    env_file:
+      - ../.env
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/v1/health/ready']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:

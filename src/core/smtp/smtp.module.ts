@@ -17,7 +17,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
             user: config.getOrThrow<string>(CONSTANTS.SMTP.SMTP_USER),
             pass: config.getOrThrow<string>(CONSTANTS.SMTP.SMTP_PASS),
           },
-          secure: true,
+          secure: false,
           tls: {
             rejectUnauthorized: true,
           },

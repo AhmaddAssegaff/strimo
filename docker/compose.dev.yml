@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
     ports:
-      - "${DATABASE_PORT}:5432"
+      - '${DATABASE_PORT}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -18,7 +18,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
-      - "${PGADMIN_PORT}:80"
+      - '${PGADMIN_PORT}:80'
     depends_on:
       - postgres
 
@@ -27,7 +27,7 @@ services:
     container_name: redis-pos
     command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
     ports:
-      - "${REDIS_PORT}:6379"
+      - '${REDIS_PORT}:6379'
     volumes:
       - redis_data:/data
 
@@ -35,14 +35,38 @@ services:
     image: quay.io/minio/minio
     container_name: minio-pos
     ports:
-      - "${MINIO_API_PORT}:9000"
-      - "${MINIO_DASHBOARD_CONSOLE_PORT}:9001"
+      - '${MINIO_API_PORT}:9000'
+      - '${MINIO_DASHBOARD_CONSOLE_PORT}:9001'
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+
+  nestjs-app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: development
+    container_name: nestjs-app
+    ports:
+      - '${APP_PORT}:3000'
+    env_file:
+      - ../.env
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/v1/health/live']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
 
 volumes:
   postgres_data:

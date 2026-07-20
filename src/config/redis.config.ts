@@ -5,13 +5,14 @@ export const CONFIG_NAME = 'redis' as const;
 
 const redisConfig = registerAs(CONFIG_NAME, () => ({
   REDIS_HOST: process.env.REDIS_HOST,
-  REDIS_PORT: process.env.REDIS_PORT,
+  REDIS_PORT: Number(process.env.REDIS_PORT),
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-  REDIS_CONNECT_TIMEOUT_MS: process.env.REDIS_CONNECT_TIMEOUT_MS,
-  REDIS_MAX_RECONNECT_DELAY_MS: process.env.REDIS_MAX_RECONNECT_DELAY_MS,
-  REDIS_RECONNECT_MULTIPLIER: process.env.REDIS_MAX_RECONNECT_DELAY_MS,
+  REDIS_CONNECT_TIMEOUT_MS: Number(process.env.REDIS_CONNECT_TIMEOUT_MS),
+  REDIS_MAX_RECONNECT_DELAY_MS: Number(
+    process.env.REDIS_MAX_RECONNECT_DELAY_MS,
+  ),
+  REDIS_RECONNECT_MULTIPLIER: Number(process.env.REDIS_RECONNECT_MULTIPLIER),
 }));
-
 type RedisConfig = ReturnType<typeof redisConfig>;
 type RedisKey = keyof RedisConfig;
 

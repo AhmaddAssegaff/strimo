@@ -18,7 +18,18 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prepare": "husky"
+    "prepare": "husky",
+    "openapi:check": "npx redocly lint openapi/openapi.yaml",
+    "prisma:validate": "prisma validate",
+    "prisma:format": "prisma format",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:reset": "prisma migrate reset",
+    "prisma:push": "prisma db push",
+    "prisma:pull": "prisma db pull",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:studio": "prisma studio"
   },
   "lint-staged": {
     "src/**/*.ts": [
@@ -35,8 +46,11 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
-    "@nestjs/typeorm": "^11.0.1",
+    "@nestjs/swagger": "^11.4.4",
+    "@nestjs/terminus": "^11.1.1",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/auto-instrumentations-node": "^0.76.0",
     "@opentelemetry/context-async-hooks": "^2.7.1",
@@ -47,22 +61,28 @@
     "@opentelemetry/instrumentation-ioredis": "^0.66.0",
     "@opentelemetry/instrumentation-nestjs-core": "^0.64.0",
     "@opentelemetry/instrumentation-pino": "^0.64.0",
-    "@opentelemetry/instrumentation-typeorm": "^0.18.0",
     "@opentelemetry/resources": "^2.7.1",
     "@opentelemetry/sdk-metrics": "^2.7.1",
     "@opentelemetry/sdk-node": "^0.218.0",
     "@opentelemetry/semantic-conventions": "^1.41.1",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "@prisma/instrumentation": "^7.8.0",
+    "@prisma/sqlcommenter-trace-context": "^7.8.0",
+    "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "ioredis": "^5.11.0",
     "joi": "^18.2.1",
     "minio": "^8.0.7",
     "nestjs-pino": "^4.6.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-jwt": "^4.0.1",
     "pg": "^8.21.0",
     "pino": "^10.3.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1",
-    "typeorm": "^1.0.0"
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.1",
@@ -71,11 +91,14 @@
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/swagger": "^11.4.4",
     "@nestjs/testing": "^11.0.1",
+    "@redocly/cli": "^2.33.2",
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
+    "@types/passport-google-oauth20": "^2.0.17",
+    "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -85,6 +108,7 @@
     "jest": "^30.0.0",
     "lint-staged": "^17.0.5",
     "prettier": "^3.4.2",
+    "prisma": "^7.8.0",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
@@ -92,23 +116,7 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "typescript-eslint": "^8.20.0",
+    "yaml": "^2.9.0"
   }
 }
