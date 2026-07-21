@@ -263,8 +263,10 @@ paths:
                       additionalProperties: true
       tags: *a5
 info:
-  title: Backend docs
-  description: docs strimo
+  title: Backend docs strimo
+  description: Strimo Backend service for a scalable video streaming platform
+    supporting HLS/DASH adaptive bitrate streaming, FFmpeg transcoding, media
+    processing queues, and independent delivery of audio and video streams.
   version: "1.0"
   contact: {}
 tags: []
