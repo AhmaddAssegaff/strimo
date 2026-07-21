@@ -1,21 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
-import { MockAuthService, mockLoginResponse } from './auth.mock.test';
-import { LoginDto } from '../dto/login.dto';
-import { UnauthorizedException } from '@nestjs/common';
+import { MockAuthServiceMethod } from './auth.mock.test';
+import { JwtAuthPayload, userOauthGoogle } from '../auth.interface';
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let mockAuthService: MockAuthService;
+  let mockAuthService: MockAuthServiceMethod;
 
   beforeEach(async () => {
     mockAuthService = {
-      login: jest.fn(),
-      register: jest.fn(),
+      googleOauth: jest.fn(),
       refreshToken: jest.fn(),
-      requestEmailVerification: jest.fn(),
-      confirmEmailVerification: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -31,46 +27,41 @@ describe('AuthController', () => {
     controller = module.get<AuthController>(AuthController);
   });
 
-  describe('login', () => {
-    it('should call authService.login with dto and only call authService.login', async () => {
-      const dto: LoginDto = { email: 'email@gmail.com', password: 'password' };
-      await controller.login(dto);
-
-      expect(mockAuthService.login).toHaveBeenCalledWith(dto);
-      expect(mockAuthService.login).toHaveBeenCalledTimes(1);
-
-      expect(mockAuthService.register).not.toHaveBeenCalled();
-      expect(mockAuthService.refreshToken).not.toHaveBeenCalled();
-      expect(mockAuthService.requestEmailVerification).not.toHaveBeenCalled();
-      expect(mockAuthService.confirmEmailVerification).not.toHaveBeenCalled();
+  describe('googleOauth', () => {
+    it('should not throw', () => {
+      expect(() => controller.googleOauth()).not.toThrow();
     });
+  });
 
-    it('should return access token and refresh token', async () => {
-      const dto: LoginDto = { email: 'email@gmail.com', password: 'password' };
-      const expectedResult: mockLoginResponse = {
-        tokens: {
-          accessToken: 'accessToken',
-          refreshToken: 'refreshToken',
-        },
+  describe('googleOauthCallback', () => {
+    it('should call authService.googleOauth', () => {
+      const user: userOauthGoogle = {
+        email: 'email',
+        googleId: 'googleId',
+        name: 'username',
+        picture: 'url profile pic',
       };
 
-      mockAuthService.login.mockResolvedValue(expectedResult);
-      const result = await controller.login(dto);
+      controller.googleOauthCallback(user);
 
-      expect(result).toEqual(expectedResult);
+      expect(mockAuthService.googleOauth).toHaveBeenCalledTimes(1);
+      expect(mockAuthService.googleOauth).toHaveBeenCalledWith(user);
     });
+  });
 
-    it('should throw UnauthorizedException', async () => {
-      const dto: LoginDto = {
-        email: 'email@gmail.com',
-        password: 'password',
+  describe('refreshToken', () => {
+    it('should call authService.refreshToken', () => {
+      const user: JwtAuthPayload = {
+        email: 'user@email.com',
+        sub: '354d512d-c665-4d39-8b7a-dea81f05b801',
+        exp: 123,
+        iat: 123,
       };
 
-      mockAuthService.login.mockRejectedValue(new UnauthorizedException());
+      controller.refreshToken(user);
 
-      await expect(controller.login(dto)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      expect(mockAuthService.refreshToken).toHaveBeenCalledTimes(1);
+      expect(mockAuthService.refreshToken).toHaveBeenCalledWith(user);
     });
   });
 });
