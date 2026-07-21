@@ -1,4 +1,3 @@
-import { USER_ROLES } from '@prisma/client';
 import { Request } from 'express';
 
 export interface userOauthGoogle {
@@ -13,7 +12,6 @@ export interface userOauthGoogle {
  */
 export interface JwtAuthPayload {
   sub: string;
-  role: USER_ROLES;
   email: string;
   iat?: number;
   exp?: number;
@@ -25,7 +23,6 @@ export interface JwtAuthPayload {
  */
 export interface AuthenticatedUser {
   sub: string;
-  role: USER_ROLES;
   email: string;
 }
 

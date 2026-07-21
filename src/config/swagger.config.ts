@@ -32,8 +32,9 @@ export interface SwaggerConfig {
 }
 
 export const SWAGGER_CONFIG: SwaggerConfig = {
-  title: 'Backend docs',
-  description: 'docs POS',
+  title: 'Backend docs strimo',
+  description:
+    'Strimo Backend service for a scalable video streaming platform supporting HLS/DASH adaptive bitrate streaming, FFmpeg transcoding, media processing queues, and independent delivery of audio and video streams.',
   version: '1.0',
   tags: [],
 };

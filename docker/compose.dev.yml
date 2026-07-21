@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16
-    container_name: postgres-pos
+    container_name: postgres-strimo
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
@@ -13,7 +13,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin-pos
+    container_name: pgadmin-strimo
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
@@ -24,7 +24,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: redis-pos
+    container_name: redis-strimo
     command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
     ports:
       - '${REDIS_PORT}:6379'
@@ -33,7 +33,7 @@ services:
 
   minio:
     image: quay.io/minio/minio
-    container_name: minio-pos
+    container_name: minio-strimo
     ports:
       - '${MINIO_API_PORT}:9000'
       - '${MINIO_DASHBOARD_CONSOLE_PORT}:9001'
@@ -49,7 +49,7 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: development
-    container_name: nestjs-app
+    container_name: nestjs-strimo
     ports:
       - '${APP_PORT}:3000'
     env_file:
@@ -60,13 +60,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
 
 volumes:
   postgres_data:
