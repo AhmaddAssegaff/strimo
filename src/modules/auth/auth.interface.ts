@@ -41,16 +41,13 @@ export interface accessToken {
 /**
  * Response auth to client
  */
-export interface registerResponseInterface {
-  tokens: AuthTokenPair;
-}
-
-export interface loginResponseInterface {
-  tokens: AuthTokenPair;
-}
 
 export interface refreshResponseInterface {
   token: accessToken;
+}
+
+export interface oauthGoogleResponseInterface {
+  tokens: AuthTokenPair;
 }
 
 /**

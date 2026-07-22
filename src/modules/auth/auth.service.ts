@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { CONSTANTS } from '~app/config';
 import type {
   JwtAuthPayload,
+  oauthGoogleResponseInterface,
   refreshResponseInterface,
   userOauthGoogle,
 } from './auth.interface';
@@ -51,7 +52,9 @@ export class AuthService {
     });
   }
 
-  async googleOauth(user: userOauthGoogle) {
+  async googleOauth(
+    user: userOauthGoogle,
+  ): Promise<oauthGoogleResponseInterface> {
     const usr = await this.userService.createUserOauth(user);
 
     const payload: JwtAuthPayload = {

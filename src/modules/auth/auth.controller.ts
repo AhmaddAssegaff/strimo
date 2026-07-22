@@ -9,6 +9,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtRefreshGuard } from './guard/jwt-refresh.guard';
 import { CurrentUser } from './decorator/current-user.decorator';
 import { GoogleAuthGuard } from './guard/oauth-google.guard';
+import { oauthGoogleResponseInterface } from './auth.interface';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -21,7 +22,9 @@ export class AuthController {
 
   @Get('oauth/google/callback')
   @UseGuards(GoogleAuthGuard)
-  googleOauthCallback(@CurrentUser() user: userOauthGoogle) {
+  googleOauthCallback(
+    @CurrentUser() user: userOauthGoogle,
+  ): Promise<oauthGoogleResponseInterface> {
     return this.authService.googleOauth(user);
   }
 
