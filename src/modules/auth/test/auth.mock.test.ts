@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UserService } from '~app/modules/user/user.service';
 import { CONSTANTS } from '~app/config';
 
-export type MockAuthServiceMethod = jest.Mocked<
+export type MockAuthService = jest.Mocked<
   Pick<AuthService, 'googleOauth' | 'refreshToken'>
 >;
 

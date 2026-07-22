@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
-import { MockAuthServiceMethod } from './auth.mock.test';
+import { MockAuthService } from './auth.mock.test';
 import { JwtAuthPayload, userOauthGoogle } from '../auth.interface';
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let mockAuthService: MockAuthServiceMethod;
+  let mockAuthService: MockAuthService;
 
   beforeEach(async () => {
     mockAuthService = {
