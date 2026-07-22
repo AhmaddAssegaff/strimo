@@ -13,35 +13,19 @@ datasource db {
   provider = "postgresql"
 }
 
-enum USER_ROLES {
-  owner
-  manager
-  cashier
-}
-
-enum USER_STATUS {
-  active
-  deactive
-}
-
 enum USER_ACCOUNTS_PROVIDER {
-  local
   google
 }
 
 model User {
-  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  profilePicture  String?     @map("profile_picture")
-  email           String      @unique
-  password        String?
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profilePicture  String?   @map("profile_picture")
+  email           String    @unique
   username        String
-  phoneNumber     String?     @map("phone_number")
-  role            USER_ROLES  @default(cashier)
-  status          USER_STATUS @default(active)
-  isEmailVerified Boolean     @default(false) @map("is_email_verified")
-  createdAt       DateTime    @default(now()) @map("created_at")
-  updatedAt       DateTime    @updatedAt @map("updated_at")
-  deletedAt       DateTime?   @map("deleted_at")
+  isEmailVerified Boolean   @default(false) @map("is_email_verified")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
 
   accounts UserAccount[]
 
@@ -50,7 +34,7 @@ model User {
 
 model UserAccount {
   id         String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId     String                 @map("user_id")
+  userId     String                 @map("user_id") @db.Uuid
   provider   USER_ACCOUNTS_PROVIDER
   providerId String?                @map("provider_id")
   createdAt  DateTime               @default(now()) @map("created_at")

@@ -1,0 +1,288 @@
+openapi: 3.0.0
+paths:
+  /api/v1:
+    get:
+      operationId: AppController_getHello_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags:
+        - App
+  /api/v1/user/profile:
+    get:
+      operationId: UserController_getUserProfile_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      security:
+        - access-token: []
+      tags:
+        - User
+  /api/v1/auth/oauth/google:
+    get:
+      operationId: AuthController_googleOauth_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags: &a1
+        - Authentication
+  /api/v1/auth/oauth/google/callback:
+    get:
+      operationId: AuthController_googleOauthCallback_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags: *a1
+  /api/v1/auth/refresh-token:
+    post:
+      operationId: AuthController_refreshToken_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      security:
+        - bearer: []
+      tags: *a1
+  /api/v1/health/live:
+    get:
+      operationId: HealthController_liveness_v1
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags: &a5
+        - Health
+  /api/v1/health/ready:
+    get:
+      operationId: HealthController_readiness_v1
+      parameters: []
+      responses:
+        "200":
+          description: The Health Check is successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  info:
+                    type: object
+                    example: &a2
+                      database: &a3
+                        status: up
+                    additionalProperties:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                      additionalProperties: true
+                    nullable: true
+                  error:
+                    type: object
+                    example: {}
+                    additionalProperties:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                      additionalProperties: true
+                    nullable: true
+                  details:
+                    type: object
+                    example: *a2
+                    additionalProperties:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                      additionalProperties: true
+        "503":
+          description: The Health Check is not successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  info:
+                    type: object
+                    example: *a2
+                    additionalProperties:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                      additionalProperties: true
+                    nullable: true
+                  error:
+                    type: object
+                    example:
+                      redis: &a4
+                        status: down
+                        message: Could not connect
+                    additionalProperties:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                      additionalProperties: true
+                    nullable: true
+                  details:
+                    type: object
+                    example:
+                      database: *a3
+                      redis: *a4
+                    additionalProperties:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                      additionalProperties: true
+      tags: *a5
+  /api/v1/health:
+    get:
+      operationId: HealthController_check_v1
+      parameters: []
+      responses:
+        "200":
+          description: The Health Check is successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  info:
+                    type: object
+                    example: &a6
+                      database: &a7
+                        status: up
+                    additionalProperties:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                      additionalProperties: true
+                    nullable: true
+                  error:
+                    type: object
+                    example: {}
+                    additionalProperties:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                      additionalProperties: true
+                    nullable: true
+                  details:
+                    type: object
+                    example: *a6
+                    additionalProperties:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                      additionalProperties: true
+        "503":
+          description: The Health Check is not successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  info:
+                    type: object
+                    example: *a6
+                    additionalProperties:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                      additionalProperties: true
+                    nullable: true
+                  error:
+                    type: object
+                    example:
+                      redis: &a8
+                        status: down
+                        message: Could not connect
+                    additionalProperties:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                      additionalProperties: true
+                    nullable: true
+                  details:
+                    type: object
+                    example:
+                      database: *a7
+                      redis: *a8
+                    additionalProperties:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                      additionalProperties: true
+      tags: *a5
+info:
+  title: Backend docs strimo
+  description: Strimo Backend service for a scalable video streaming platform
+    supporting HLS/DASH adaptive bitrate streaming, FFmpeg transcoding, media
+    processing queues, and independent delivery of audio and video streams.
+  version: "1.0"
+  contact: {}
+tags: []
+servers: []
+components:
+  securitySchemes:
+    access-token:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+      name: Authorization
+      in: header
+    refresh-token:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+      name: Authorization
+      in: header
+  schemas: {}

@@ -28,7 +28,7 @@
     "prisma:migrate:reset": "prisma migrate reset",
     "prisma:push": "prisma db push",
     "prisma:pull": "prisma db pull",
-    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:seed": "prisma db seed",
     "prisma:studio": "prisma studio"
   },
   "lint-staged": {
