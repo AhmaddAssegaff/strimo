@@ -2,10 +2,24 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import { AuthenticatedUser, userOauthGoogle } from '../auth/auth.interface';
 import { USER_ACCOUNTS_PROVIDER } from '@prisma/client';
+import { MinioService } from '~app/core/minio/minio.service';
+import { UpdateUserProfile } from './dto/update-user';
+import { ConfigService } from '@nestjs/config';
+import { CONSTANTS } from '~app/config';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly userProfileBucketName: string;
+
+  constructor(
+    private readonly minio: MinioService,
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {
+    this.userProfileBucketName = this.config.getOrThrow(
+      CONSTANTS.BUCKETS_MINIO.MINIO_USER_PROFILE_BUCKET_NAME,
+    );
+  }
 
   async findUserProfile(user: AuthenticatedUser) {
     const usr = await this.prisma.user.findUnique({
@@ -78,5 +92,54 @@ export class UserService {
 
       return user;
     });
+  }
+
+  async updateUserProfile(
+    updateUserProfile: UpdateUserProfile,
+    currentUser: AuthenticatedUser,
+  ) {
+    const user = await this.prisma.user.update({
+      where: {
+        id: currentUser.sub,
+      },
+      data: {
+        username: updateUserProfile.username,
+      },
+    });
+
+    return {
+      ...user,
+      profilePicture: await this.minio.getFileUrl(
+        this.userProfileBucketName,
+        user.profilePicture!,
+      ),
+    };
+  }
+
+  async updateUserProfilePicture(
+    file: Express.Multer.File,
+    currentUser: AuthenticatedUser,
+  ) {
+    const ext = file.originalname.split('.').pop();
+    const objectName = `${currentUser.sub}/profile.${ext}`;
+
+    await this.minio.uploadFile(this.userProfileBucketName, objectName, file);
+
+    const user = await this.prisma.user.update({
+      where: {
+        id: currentUser.sub,
+      },
+      data: {
+        profilePicture: objectName,
+      },
+    });
+
+    return {
+      ...user,
+      profilePicture: await this.minio.getFileUrl(
+        this.userProfileBucketName,
+        objectName,
+      ),
+    };
   }
 }
