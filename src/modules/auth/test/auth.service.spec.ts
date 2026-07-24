@@ -4,67 +4,53 @@ import {
   MockConfigService,
   MockUserService,
   MockJwtService,
-  MockConfigAuthString,
 } from './auth.mock.test';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '~app/modules/user/user.service';
 import { JwtAuthPayload, userOauthGoogle } from '../auth.interface';
+import {
+  createConfigServiceMock,
+  createJwtServiceMock,
+  createUserServiceMoce,
+} from './auth.factory.test';
 
 describe('AuthService', () => {
-  let service: AuthService;
+  let authService: AuthService;
 
-  let mockConfigService: MockConfigService;
-  let mockJwtService: MockJwtService;
-  let mockUserService: MockUserService;
+  let config: MockConfigService;
+  let jwt: MockJwtService;
+  let userService: MockUserService;
 
   beforeEach(async () => {
-    mockConfigService = {
-      getOrThrow: jest.fn(),
-    };
-    mockJwtService = {
-      sign: jest.fn(),
-    };
-    mockUserService = {
-      createUserOauth: jest.fn(),
-      findUserCredensialById: jest.fn(),
-    };
-
-    mockConfigService.getOrThrow.mockImplementation((key) => {
-      const value =
-        MockConfigAuthString[key as keyof typeof MockConfigAuthString];
-
-      if (value === undefined) {
-        throw new Error(`Unexpected key: ${String(key)}`);
-      }
-
-      return value;
-    });
+    config = createConfigServiceMock();
+    jwt = createJwtServiceMock();
+    userService = createUserServiceMoce();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         {
           provide: ConfigService,
-          useValue: mockConfigService,
+          useValue: config,
         },
         {
           provide: JwtService,
-          useValue: mockJwtService,
+          useValue: jwt,
         },
         {
           provide: UserService,
-          useValue: mockUserService,
+          useValue: userService,
         },
       ],
     }).compile();
 
-    service = module.get<AuthService>(AuthService);
+    authService = module.get<AuthService>(AuthService);
   });
 
   describe('AuthService config', () => {
     it('should load jwt config', () => {
-      expect(mockConfigService.getOrThrow).toHaveBeenCalledTimes(4);
+      expect(config.getOrThrow).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -77,21 +63,21 @@ describe('AuthService', () => {
         picture: 'profile picture',
       };
 
-      mockUserService.createUserOauth.mockResolvedValue({
+      userService.createUserOauth.mockResolvedValue({
         id: 'user-id',
         email: 'email',
       });
 
-      mockJwtService.sign
+      jwt.sign
         .mockReturnValueOnce('access-token')
         .mockReturnValueOnce('refresh-token');
 
-      await service.googleOauth(user);
+      await authService.googleOauth(user);
 
-      expect(mockUserService.createUserOauth).toHaveBeenCalledTimes(1);
-      expect(mockUserService.createUserOauth).toHaveBeenCalledWith(user);
+      expect(userService.createUserOauth).toHaveBeenCalledTimes(1);
+      expect(userService.createUserOauth).toHaveBeenCalledWith(user);
 
-      expect(mockJwtService.sign).toHaveBeenCalledTimes(2);
+      expect(jwt.sign).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -104,20 +90,18 @@ describe('AuthService', () => {
         iat: 123,
       };
 
-      mockUserService.findUserCredensialById.mockResolvedValue({
+      userService.findUserCredensialById.mockResolvedValue({
         email: 'email',
         id: 'f57623d6-051e-4657-b8bd-9ac210fdbd7e',
         isEmailVerified: true,
       });
-      mockJwtService.sign.mockReturnValueOnce('access-token');
+      jwt.sign.mockReturnValueOnce('access-token');
 
-      await service.refreshToken(user);
+      await authService.refreshToken(user);
 
-      expect(mockUserService.findUserCredensialById).toHaveBeenCalledTimes(1);
-      expect(mockUserService.findUserCredensialById).toHaveBeenCalledWith(
-        user.sub,
-      );
-      expect(mockJwtService.sign).toHaveBeenCalledTimes(1);
+      expect(userService.findUserCredensialById).toHaveBeenCalledTimes(1);
+      expect(userService.findUserCredensialById).toHaveBeenCalledWith(user.sub);
+      expect(jwt.sign).toHaveBeenCalledTimes(1);
     });
   });
 });

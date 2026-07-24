@@ -7,9 +7,9 @@ import type {
 } from './auth.interface';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtRefreshGuard } from './guard/jwt-refresh.guard';
-import { CurrentUser } from './decorator/current-user.decorator';
 import { GoogleAuthGuard } from './guard/oauth-google.guard';
 import { oauthGoogleResponseInterface } from './auth.interface';
+import { CurrentUser } from '~app/core/decorators/current-user.decorators';
 
 @ApiTags('Authentication')
 @Controller('auth')

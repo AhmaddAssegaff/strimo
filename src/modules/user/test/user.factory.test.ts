@@ -22,7 +22,7 @@ export function createMockPrismaUserService(): MockPrismaUserService {
   };
 }
 
-export function createMockConfigService(): MockConfigService {
+export function createConfigServiceMock(): MockConfigService {
   const configMap: Record<string, any> = {
     ...MockConfigUserService,
   };

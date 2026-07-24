@@ -7,23 +7,23 @@ import { createMockUserService } from './user.factory.test';
 import { UpdateUserProfile } from '../dto/update-user';
 
 describe('UserController', () => {
-  let controller: UserController;
-  let service: MockUserService;
+  let userController: UserController;
+  let userService: MockUserService;
 
   beforeEach(async () => {
-    service = createMockUserService();
+    userService = createMockUserService();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UserController],
       providers: [
         {
           provide: UserService,
-          useValue: service,
+          useValue: userService,
         },
       ],
     }).compile();
 
-    controller = module.get<UserController>(UserController);
+    userController = module.get<UserController>(UserController);
   });
 
   describe('getUserProfile', () => {
@@ -33,10 +33,10 @@ describe('UserController', () => {
         sub: 'a2802656-fe30-4a25-b469-859fb9bbb50d',
       };
 
-      await controller.getUserProfile(user);
+      await userController.getUserProfile(user);
 
-      expect(service.findUserProfile).toHaveBeenCalledTimes(1);
-      expect(service.findUserProfile).toHaveBeenCalledWith(user);
+      expect(userService.findUserProfile).toHaveBeenCalledTimes(1);
+      expect(userService.findUserProfile).toHaveBeenCalledWith(user);
     });
   });
 
@@ -51,10 +51,10 @@ describe('UserController', () => {
         username: 'new username',
       };
 
-      await controller.updateProfile(dto, user);
+      await userController.updateProfile(dto, user);
 
-      expect(service.updateUserProfile).toHaveBeenCalledTimes(1);
-      expect(service.updateUserProfile).toHaveBeenCalledWith(dto, user);
+      expect(userService.updateUserProfile).toHaveBeenCalledTimes(1);
+      expect(userService.updateUserProfile).toHaveBeenCalledWith(dto, user);
     });
   });
 
@@ -67,10 +67,13 @@ describe('UserController', () => {
 
       const file = {} as Express.Multer.File;
 
-      await controller.updateProfilePicture(file, user);
+      await userController.updateProfilePicture(file, user);
 
-      expect(service.updateUserProfilePicture).toHaveBeenCalledTimes(1);
-      expect(service.updateUserProfilePicture).toHaveBeenCalledWith(file, user);
+      expect(userService.updateUserProfilePicture).toHaveBeenCalledTimes(1);
+      expect(userService.updateUserProfilePicture).toHaveBeenCalledWith(
+        file,
+        user,
+      );
     });
   });
 });
