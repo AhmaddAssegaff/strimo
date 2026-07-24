@@ -9,7 +9,7 @@ import {
   MockPrismaUserService,
 } from './user.mock.test';
 import {
-  createMockConfigService,
+  createConfigServiceMock,
   createMockMinioService,
   createMockPrismaUserService,
 } from './user.factory.test';
@@ -18,7 +18,7 @@ import { NotFoundException } from '@nestjs/common';
 import { UserProfileResult } from '../interface/user.interface';
 
 describe('UserService', () => {
-  let service: UserService;
+  let userService: UserService;
 
   let prisma: MockPrismaUserService;
   let config: MockConfigService;
@@ -26,7 +26,7 @@ describe('UserService', () => {
 
   beforeEach(async () => {
     prisma = createMockPrismaUserService();
-    config = createMockConfigService();
+    config = createConfigServiceMock();
     minio = createMockMinioService();
 
     const module: TestingModule = await Test.createTestingModule({
@@ -47,7 +47,7 @@ describe('UserService', () => {
       ],
     }).compile();
 
-    service = module.get<UserService>(UserService);
+    userService = module.get<UserService>(UserService);
   });
 
   describe('findUserProfile', () => {
@@ -68,7 +68,7 @@ describe('UserService', () => {
     it('should return user profile when user exists', async () => {
       prisma.user.findUnique.mockResolvedValue(userProfileResult);
 
-      const usr = await service.findUserProfile(currentUser);
+      const usr = await userService.findUserProfile(currentUser);
 
       expect(prisma.user.findUnique).toHaveBeenCalledTimes(1);
       expect(usr).toBeDefined();
@@ -78,7 +78,7 @@ describe('UserService', () => {
     it('should throw NotFoundException when user does not exist', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.findUserProfile(currentUser)).rejects.toThrow(
+      await expect(userService.findUserProfile(currentUser)).rejects.toThrow(
         NotFoundException,
       );
     });
