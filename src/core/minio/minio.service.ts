@@ -22,18 +22,17 @@ export class MinioService {
   async uploadFile(
     bucketName: string,
     objectName: string,
-    fileBuffer: Buffer,
-    mimeType: string,
+    file: Express.Multer.File,
   ): Promise<string> {
     await this.ensureBucket(bucketName);
 
     await this.minioClient.putObject(
       bucketName,
       objectName,
-      fileBuffer,
-      fileBuffer.length,
+      file.buffer,
+      file.buffer.length,
       {
-        'Content-Type': mimeType,
+        'Content-Type': file.mimetype,
       },
     );
 
