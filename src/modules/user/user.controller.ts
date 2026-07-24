@@ -16,7 +16,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateUserProfile } from './dto/update-user';
 import { UPLOAD_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
 import { FileUploadPipe } from '~app/core/pipes/file-upload/file-upload.pipe';
-import { UserProfileResult } from './interface/user.interface';
+import {
+  UpdateUserProfileResult,
+  UserProfileResult,
+} from './interface/user.interface';
 
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAccessGuard)
@@ -35,7 +38,7 @@ export class UserController {
   updateProfile(
     @Body() body: UpdateUserProfile,
     @CurrentUser() user: AuthenticatedUser,
-  ) {
+  ): Promise<UpdateUserProfileResult> {
     return this.userService.updateUserProfile(body, user);
   }
 
@@ -45,7 +48,7 @@ export class UserController {
     @UploadedFile(FileUploadPipe(UPLOAD_RULES.profilePicture))
     file: Express.Multer.File,
     @CurrentUser() user: AuthenticatedUser,
-  ) {
+  ): Promise<UpdateUserProfileResult> {
     return this.userService.updateUserProfilePicture(file, user);
   }
 }

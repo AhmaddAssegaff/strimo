@@ -6,7 +6,12 @@ import { MinioService } from '~app/core/minio/minio.service';
 import { UpdateUserProfile } from './dto/update-user';
 import { ConfigService } from '@nestjs/config';
 import { CONSTANTS } from '~app/config';
-import { UserProfileResult } from './interface/user.interface';
+import {
+  CreateUserOauthResult,
+  FindUserCredensialByIdResult,
+  UpdateUserProfileResult,
+  UserProfileResult,
+} from './interface/user.interface';
 
 @Injectable()
 export class UserService {
@@ -46,7 +51,9 @@ export class UserService {
     return user;
   }
 
-  async findUserCredensialById(id: string) {
+  async findUserCredensialById(
+    id: string,
+  ): Promise<FindUserCredensialByIdResult | null> {
     return await this.prisma.user.findUnique({
       where: { id },
       select: {
@@ -57,7 +64,9 @@ export class UserService {
     });
   }
 
-  async createUserOauth(userData: userOauthGoogle) {
+  async createUserOauth(
+    userData: userOauthGoogle,
+  ): Promise<CreateUserOauthResult> {
     return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.upsert({
         where: {
@@ -100,7 +109,7 @@ export class UserService {
   async updateUserProfile(
     updateUserProfile: UpdateUserProfile,
     currentUser: AuthenticatedUser,
-  ) {
+  ): Promise<UpdateUserProfileResult> {
     const user = await this.prisma.user.update({
       where: {
         id: currentUser.sub,
@@ -122,7 +131,7 @@ export class UserService {
   async updateUserProfilePicture(
     file: Express.Multer.File,
     currentUser: AuthenticatedUser,
-  ) {
+  ): Promise<UpdateUserProfileResult> {
     const ext = file.originalname.split('.').pop();
     const objectName = `${currentUser.sub}/profile.${ext}`;
 
