@@ -16,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateUserProfile } from './dto/update-user';
 import { UPLOAD_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
 import { FileUploadPipe } from '~app/core/pipes/file-upload/file-upload.pipe';
+import { UserProfileResult } from './interface/user.interface';
 
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAccessGuard)
@@ -24,7 +25,9 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('profile')
-  getUserProfile(@CurrentUser() user: AuthenticatedUser) {
+  getUserProfile(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<UserProfileResult> {
     return this.userService.findUserProfile(user);
   }
 

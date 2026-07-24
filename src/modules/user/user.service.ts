@@ -6,6 +6,7 @@ import { MinioService } from '~app/core/minio/minio.service';
 import { UpdateUserProfile } from './dto/update-user';
 import { ConfigService } from '@nestjs/config';
 import { CONSTANTS } from '~app/config';
+import { UserProfileResult } from './interface/user.interface';
 
 @Injectable()
 export class UserService {
@@ -21,10 +22,12 @@ export class UserService {
     );
   }
 
-  async findUserProfile(user: AuthenticatedUser) {
-    const usr = await this.prisma.user.findUnique({
+  async findUserProfile(
+    currentUser: AuthenticatedUser,
+  ): Promise<UserProfileResult> {
+    const user = await this.prisma.user.findUnique({
       where: {
-        id: user.sub,
+        id: currentUser.sub,
       },
       select: {
         id: true,
@@ -36,11 +39,11 @@ export class UserService {
       },
     });
 
-    if (!usr) {
+    if (!user) {
       throw new NotFoundException('user not found');
     }
 
-    return usr;
+    return user;
   }
 
   async findUserCredensialById(id: string) {
