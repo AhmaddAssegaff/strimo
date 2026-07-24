@@ -46,7 +46,6 @@ export class UserController {
     file: Express.Multer.File,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    console.log(file);
     return this.userService.updateUserProfilePicture(file, user);
   }
 }
