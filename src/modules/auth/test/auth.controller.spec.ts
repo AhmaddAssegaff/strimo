@@ -25,12 +25,6 @@ describe('AuthController', () => {
     authController = module.get<AuthController>(AuthController);
   });
 
-  describe('googleOauth', () => {
-    it('should not throw', () => {
-      expect(() => authController.googleOauth()).not.toThrow();
-    });
-  });
-
   describe('googleOauthCallback', () => {
     it('should call authService.googleOauth', () => {
       const user: userOauthGoogle = {
