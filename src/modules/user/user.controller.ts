@@ -13,7 +13,7 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import type { AuthenticatedUser } from '../auth/auth.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateUserProfile } from './dto/update-user';
-import { UPLOAD_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
+import { FILE_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
 import { FileUploadPipe } from '~app/core/pipes/file-upload/file-upload.pipe';
 import {
   UpdateUserProfileResult,
@@ -45,7 +45,7 @@ export class UserController {
   @Patch('profile/profile-picture')
   @UseInterceptors(FileInterceptor('file'))
   updateProfilePicture(
-    @UploadedFile(FileUploadPipe(UPLOAD_RULES.profilePicture))
+    @UploadedFile(FileUploadPipe(FILE_RULES.profilePicture))
     file: Express.Multer.File,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<UpdateUserProfileResult> {
