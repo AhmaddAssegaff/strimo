@@ -3,33 +3,31 @@ import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
 import { MockAuthService } from './auth.mock.test';
 import { JwtAuthPayload, userOauthGoogle } from '../auth.interface';
+import { createAuthServiceMock } from './auth.factory.test';
 
 describe('AuthController', () => {
-  let controller: AuthController;
-  let mockAuthService: MockAuthService;
+  let authController: AuthController;
+  let authService: MockAuthService;
 
   beforeEach(async () => {
-    mockAuthService = {
-      googleOauth: jest.fn(),
-      refreshToken: jest.fn(),
-    };
+    authService = createAuthServiceMock();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
         {
           provide: AuthService,
-          useValue: mockAuthService,
+          useValue: authService,
         },
       ],
     }).compile();
 
-    controller = module.get<AuthController>(AuthController);
+    authController = module.get<AuthController>(AuthController);
   });
 
   describe('googleOauth', () => {
     it('should not throw', () => {
-      expect(() => controller.googleOauth()).not.toThrow();
+      expect(() => authController.googleOauth()).not.toThrow();
     });
   });
 
@@ -42,10 +40,10 @@ describe('AuthController', () => {
         picture: 'url profile pic',
       };
 
-      controller.googleOauthCallback(user);
+      authController.googleOauthCallback(user);
 
-      expect(mockAuthService.googleOauth).toHaveBeenCalledTimes(1);
-      expect(mockAuthService.googleOauth).toHaveBeenCalledWith(user);
+      expect(authService.googleOauth).toHaveBeenCalledTimes(1);
+      expect(authService.googleOauth).toHaveBeenCalledWith(user);
     });
   });
 
@@ -58,10 +56,10 @@ describe('AuthController', () => {
         iat: 123,
       };
 
-      controller.refreshToken(user);
+      authController.refreshToken(user);
 
-      expect(mockAuthService.refreshToken).toHaveBeenCalledTimes(1);
-      expect(mockAuthService.refreshToken).toHaveBeenCalledWith(user);
+      expect(authService.refreshToken).toHaveBeenCalledTimes(1);
+      expect(authService.refreshToken).toHaveBeenCalledWith(user);
     });
   });
 });
