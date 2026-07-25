@@ -1,6 +1,6 @@
 ### Update Profile
 PATCH {{host}}/api/v1/user/profile
-Authorization: Bearer {{access-token}}
+Authorization: Bearer {{variables.access-token}}
 Content-Type: application/json
 
 {
@@ -9,7 +9,7 @@ Content-Type: application/json
 
 ### Update Profile Picture webp
 PATCH {{host}}/api/v1/user/profile/profile-picture
-Authorization: Bearer {{access-token}}
+Authorization: Bearer {{variables.access-token}}
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary
@@ -21,7 +21,7 @@ Content-Type: image/webp
 
 ### Update Profile Picture png
 PATCH {{host}}/api/v1/user/profile/profile-picture
-Authorization: Bearer {{access-token}}
+Authorization: Bearer {{variables.access-token}}
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary
@@ -33,7 +33,7 @@ Content-Type: image/png
 
 ### Update Profile Picture jpeg
 PATCH {{host}}/api/v1/user/profile/profile-picture
-Authorization: Bearer {{access-token}}
+Authorization: Bearer {{variables.access-token}}
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary
