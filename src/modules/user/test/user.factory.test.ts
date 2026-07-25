@@ -4,6 +4,7 @@ import {
   MockPrismaUserService,
   MockUserService,
   MockConfigUserService,
+  MockPhotoProfileProcessorService,
 } from './user.mock.test';
 
 export function createMockUserService(): MockUserService {
@@ -15,11 +16,24 @@ export function createMockUserService(): MockUserService {
 }
 
 export function createMockPrismaUserService(): MockPrismaUserService {
-  return {
+  const mock = {
+    $transaction: jest.fn(),
     user: {
       findUnique: jest.fn(),
+      upsert: jest.fn(),
+      update: jest.fn(),
+    },
+    userAccount: {
+      create: jest.fn(),
+      findFirst: jest.fn(),
     },
   };
+
+  mock.$transaction.mockImplementation(
+    <T>(cb: (tx: typeof mock) => Promise<T> | T): Promise<T> | T => cb(mock),
+  );
+
+  return mock;
 }
 
 export function createConfigServiceMock(): MockConfigService {
@@ -46,5 +60,12 @@ export function createMockMinioService(): MockMinioUserService {
   return {
     uploadFile: jest.fn(),
     getFileUrl: jest.fn(),
+  };
+}
+
+export function createMockPhotoProfileProcessorService(): MockPhotoProfileProcessorService {
+  return {
+    adjustAspectRatio: jest.fn(),
+    convertToWebp: jest.fn(),
   };
 }

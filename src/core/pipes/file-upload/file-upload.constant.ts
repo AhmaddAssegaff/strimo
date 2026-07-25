@@ -27,7 +27,7 @@ export interface FileRule {
   minHeight?: number;
 }
 
-export const UPLOAD_RULES = {
+export const FILE_RULES = {
   profilePicture: {
     maxSize: MB(2),
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
@@ -38,7 +38,8 @@ export const UPLOAD_RULES = {
     fileTypeErrorMessage: 'Profile picture must be a JPEG, PNG, or WebP image.',
 
     aspectRatio: ASPECT_RATIOS.SQUARE,
-    minWidth: 200,
+    minWidth: 512,
+    minHeight: 512,
   },
 
   avatar: {
@@ -89,4 +90,4 @@ export const UPLOAD_RULES = {
   },
 } satisfies Record<string, FileRule>;
 
-export type UploadRuleKey = keyof typeof UPLOAD_RULES;
+export type UploadRuleKey = keyof typeof FILE_RULES;

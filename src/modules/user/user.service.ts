@@ -12,6 +12,7 @@ import {
   UpdateUserProfileResult,
   UserProfileResult,
 } from './interface/user.interface';
+import { PhotoProfileProcessorService } from './image-processor.service';
 
 @Injectable()
 export class UserService {
@@ -21,6 +22,7 @@ export class UserService {
     private readonly minio: MinioService,
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly photoProfile: PhotoProfileProcessorService,
   ) {
     this.userProfileBucketName = this.config.getOrThrow(
       CONSTANTS.BUCKETS_MINIO.MINIO_USER_PROFILE_BUCKET_NAME,
@@ -119,12 +121,14 @@ export class UserService {
       },
     });
 
+    const presignedUrl = await this.minio.getFileUrl(
+      this.userProfileBucketName,
+      user.profilePicture!,
+    );
+
     return {
       ...user,
-      profilePicture: await this.minio.getFileUrl(
-        this.userProfileBucketName,
-        user.profilePicture!,
-      ),
+      profilePicture: presignedUrl,
     };
   }
 
@@ -132,10 +136,26 @@ export class UserService {
     file: Express.Multer.File,
     currentUser: AuthenticatedUser,
   ): Promise<UpdateUserProfileResult> {
-    const ext = file.originalname.split('.').pop();
-    const objectName = `${currentUser.sub}/profile.${ext}`;
+    const resizedBuffer = await this.photoProfile.adjustAspectRatio(
+      file.buffer,
+    );
+    const webpBuffer = await this.photoProfile.convertToWebp(resizedBuffer);
 
-    await this.minio.uploadFile(this.userProfileBucketName, objectName, file);
+    const webpFile: Express.Multer.File = {
+      ...file,
+      buffer: webpBuffer,
+      size: webpBuffer.length,
+      mimetype: 'image/webp',
+      originalname: 'profile.webp',
+    };
+
+    const objectName = `${currentUser.sub}/profile`;
+
+    await this.minio.uploadFile(
+      this.userProfileBucketName,
+      objectName,
+      webpFile,
+    );
 
     const user = await this.prisma.user.update({
       where: {
@@ -146,12 +166,14 @@ export class UserService {
       },
     });
 
+    const presignedUrl = await this.minio.getFileUrl(
+      this.userProfileBucketName,
+      objectName,
+    );
+
     return {
       ...user,
-      profilePicture: await this.minio.getFileUrl(
-        this.userProfileBucketName,
-        objectName,
-      ),
+      profilePicture: presignedUrl,
     };
   }
 }
