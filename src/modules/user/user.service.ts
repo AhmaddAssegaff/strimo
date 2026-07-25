@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '~app/core/prisma/prisma.service';
-import sharp from 'sharp';
 import { AuthenticatedUser, userOauthGoogle } from '../auth/auth.interface';
 import { USER_ACCOUNTS_PROVIDER } from '@prisma/client';
 import { MinioService } from '~app/core/minio/minio.service';
@@ -13,7 +12,7 @@ import {
   UpdateUserProfileResult,
   UserProfileResult,
 } from './interface/user.interface';
-import { FILE_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
+import { PhotoProfileProcessorService } from './image-processor.service';
 
 @Injectable()
 export class UserService {
@@ -23,29 +22,11 @@ export class UserService {
     private readonly minio: MinioService,
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly photoProfile: PhotoProfileProcessorService,
   ) {
     this.userProfileBucketName = this.config.getOrThrow(
       CONSTANTS.BUCKETS_MINIO.MINIO_USER_PROFILE_BUCKET_NAME,
     );
-  }
-
-  private async adjustAspectRatio(buffer: Buffer): Promise<Buffer> {
-    return sharp(buffer)
-      .resize({
-        width: FILE_RULES.profilePicture.minWidth,
-        height: FILE_RULES.profilePicture.minHeight,
-        fit: 'cover',
-        position: 'centre',
-      })
-      .toBuffer();
-  }
-
-  private async covertToWebp(buffer: Buffer): Promise<Buffer> {
-    return sharp(buffer)
-      .webp({
-        quality: 80,
-      })
-      .toBuffer();
   }
 
   async findUserProfile(
@@ -140,12 +121,14 @@ export class UserService {
       },
     });
 
+    const presignedUrl = await this.minio.getFileUrl(
+      this.userProfileBucketName,
+      user.profilePicture!,
+    );
+
     return {
       ...user,
-      profilePicture: await this.minio.getFileUrl(
-        this.userProfileBucketName,
-        user.profilePicture!,
-      ),
+      profilePicture: presignedUrl,
     };
   }
 
@@ -153,8 +136,10 @@ export class UserService {
     file: Express.Multer.File,
     currentUser: AuthenticatedUser,
   ): Promise<UpdateUserProfileResult> {
-    const resizedBuffer = await this.adjustAspectRatio(file.buffer);
-    const webpBuffer = await this.covertToWebp(resizedBuffer);
+    const resizedBuffer = await this.photoProfile.adjustAspectRatio(
+      file.buffer,
+    );
+    const webpBuffer = await this.photoProfile.convertToWebp(resizedBuffer);
 
     const webpFile: Express.Multer.File = {
       ...file,
@@ -181,12 +166,14 @@ export class UserService {
       },
     });
 
+    const presignedUrl = await this.minio.getFileUrl(
+      this.userProfileBucketName,
+      objectName,
+    );
+
     return {
       ...user,
-      profilePicture: await this.minio.getFileUrl(
-        this.userProfileBucketName,
-        objectName,
-      ),
+      profilePicture: presignedUrl,
     };
   }
 }
