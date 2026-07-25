@@ -17,6 +17,12 @@ enum USER_ACCOUNTS_PROVIDER {
   google
 }
 
+enum SUBSCRIPTION_NOTIFICATION_TYPE {
+  all
+  none
+  personalized
+}
+
 model User {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   profilePicture  String?   @map("profile_picture")
@@ -27,7 +33,9 @@ model User {
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
 
-  accounts UserAccount[]
+  accounts      UserAccount[]
+  channel       Channel?
+  subscriptions Subscription[]
 
   @@map("users")
 }
@@ -45,4 +53,40 @@ model UserAccount {
 
   @@unique([provider, providerId])
   @@map("user_accounts")
+}
+
+model Channel {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String    @unique @map("user_id") @db.Uuid
+  channelTitle       String    @map("channel_title")
+  channelDescription String    @map("channel_description")
+  avatar             String
+  banner             String
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  deletedAt          DateTime? @map("deleted_at")
+  isVerified         Boolean   @default(false) @map("is_verified")
+  videoCount         BigInt    @default(0) @map("video_count")
+  subscriberCount    BigInt    @default(0) @map("subscriber_count")
+
+  user          User           @relation(fields: [userId], references: [id])
+  subscriptions Subscription[]
+
+  @@map("channels")
+}
+
+model Subscription {
+  id               String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String                         @map("user_id") @db.Uuid
+  channelId        String                         @map("channel_id") @db.Uuid
+  createdAt        DateTime                       @default(now()) @map("created_at")
+  updatedAt        DateTime                       @updatedAt @map("updated_at")
+  deletedAt        DateTime?                      @map("deleted_at")
+  notificationType SUBSCRIPTION_NOTIFICATION_TYPE @default(all) @map("notification_type")
+
+  channel Channel @relation(fields: [channelId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, channelId])
+  @@map("subscriptions")
 }
