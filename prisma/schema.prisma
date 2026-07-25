@@ -88,5 +88,7 @@ model Subscription {
   user    User    @relation(fields: [userId], references: [id])
 
   @@unique([userId, channelId])
+  @@index([userId])
+  @@index([channelId])
   @@map("subscriptions")
 }
