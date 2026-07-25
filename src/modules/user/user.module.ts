@@ -4,9 +4,8 @@ import { PhotoProfileProcessorService } from './image-processor.service';
 import { UserController } from './user.controller';
 
 @Module({
-  imports: [PhotoProfileProcessorService],
   controllers: [UserController],
-  providers: [UserService],
-  exports: [UserService],
+  providers: [UserService, PhotoProfileProcessorService],
+  exports: [UserService, PhotoProfileProcessorService],
 })
 export class UserModule {}
