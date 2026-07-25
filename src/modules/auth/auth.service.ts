@@ -8,7 +8,7 @@ import type {
   oauthGoogleResponseInterface,
   refreshResponseInterface,
   userOauthGoogle,
-} from './auth.interface';
+} from './interface/auth.interface';
 
 @Injectable()
 export class AuthService {

@@ -10,7 +10,7 @@ import {
 import { UserService } from './user.service';
 import { JwtAccessGuard } from '../auth/guard/jwt-access.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import type { AuthenticatedUser } from '../auth/auth.interface';
+import type { AuthenticatedUser } from '../auth/interface/auth.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateUserProfile } from './dto/update-user';
 import { FILE_RULES } from '~app/core/pipes/file-upload/file-upload.constant';

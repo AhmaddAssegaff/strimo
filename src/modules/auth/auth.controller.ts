@@ -4,11 +4,11 @@ import type {
   refreshResponseInterface,
   JwtAuthPayload,
   userOauthGoogle,
-} from './auth.interface';
+} from './interface/auth.interface';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtRefreshGuard } from './guard/jwt-refresh.guard';
 import { GoogleAuthGuard } from './guard/oauth-google.guard';
-import { oauthGoogleResponseInterface } from './auth.interface';
+import { oauthGoogleResponseInterface } from './interface/auth.interface';
 import { CurrentUser } from '~app/core/decorators/current-user.decorators';
 
 @ApiTags('Authentication')

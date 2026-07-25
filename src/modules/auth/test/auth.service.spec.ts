@@ -8,7 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '~app/modules/user/user.service';
-import { JwtAuthPayload, userOauthGoogle } from '../auth.interface';
+import { JwtAuthPayload, userOauthGoogle } from '../interface/auth.interface';
 import {
   createConfigServiceMock,
   createJwtServiceMock,

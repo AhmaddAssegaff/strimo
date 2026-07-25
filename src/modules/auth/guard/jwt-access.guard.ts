@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { JWT_ACCESS_TOKEN_STRATEGY } from '../auth.constant';
+import { JWT_ACCESS_TOKEN_STRATEGY } from '../interface/auth.constant';
 
 @Injectable()
 export class JwtAccessGuard extends AuthGuard(JWT_ACCESS_TOKEN_STRATEGY) {}

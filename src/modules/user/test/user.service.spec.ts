@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   AuthenticatedUser,
   userOauthGoogle,
-} from '~app/modules/auth/auth.interface';
+} from '~app/modules/auth/interface/auth.interface';
 import {
   MockConfigService,
   MockMinioUserService,

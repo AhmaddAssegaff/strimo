@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from '../user.controller';
 import { UserService } from '../user.service';
 import { MockUserService } from './user.mock.test';
-import { AuthenticatedUser } from '~app/modules/auth/auth.interface';
+import { AuthenticatedUser } from '~app/modules/auth/interface/auth.interface';
 import { createMockUserService } from './user.factory.test';
 import { UpdateUserProfile } from '../dto/update-user';
 

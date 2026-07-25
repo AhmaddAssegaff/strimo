@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '~app/core/prisma/prisma.service';
-import { AuthenticatedUser, userOauthGoogle } from '../auth/auth.interface';
+import {
+  AuthenticatedUser,
+  userOauthGoogle,
+} from '../auth/interface/auth.interface';
 import { USER_ACCOUNTS_PROVIDER } from '@prisma/client';
 import { MinioService } from '~app/core/minio/minio.service';
 import { UpdateUserProfile } from './dto/update-user';
