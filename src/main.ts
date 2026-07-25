@@ -6,7 +6,6 @@ import { ConfigService } from '@nestjs/config';
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { AppModule } from '~app/app.module';
 import { CONSTANTS } from '~config/index';
-import { createDocument } from '~core/swagger/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -35,10 +34,6 @@ async function bootstrap() {
       defaultVersion: DEFAULT_VERSION,
       prefix: VERSION_PREFIX,
     });
-  }
-
-  if (APP_NODE_ENV === 'development') {
-    createDocument(app);
   }
 
   app.useGlobalPipes(

@@ -16,7 +16,7 @@ export type MockUserService = jest.Mocked<
   Pick<UserService, 'createUserOauth' | 'findUserCredensialById'>
 >;
 
-export const MockConfigAuthString = {
+export const MockConfigAuthService = {
   [CONSTANTS.AUTH.AUTH_JWT_ACCESS_TOKEN_SECRET]: 'access-secret',
   [CONSTANTS.AUTH.AUTH_JWT_ACCESS_TOKEN_EXPIRES_IN]: 900,
   [CONSTANTS.AUTH.AUTH_JWT_REFRESH_TOKEN_SECRET]: 'refresh-secret',
