@@ -23,13 +23,19 @@ export interface FileRule {
   fileTypeErrorMessage?: string;
 
   aspectRatio?: AspectRatio;
-  minWidth?: number;
-  minHeight?: number;
+
+  validateAspectRatio?: boolean;
+
+  minWidth: number;
+  minHeight: number;
+
+  maxWidth?: number;
+  maxHeight?: number;
 }
 
 export const FILE_RULES = {
   profilePicture: {
-    maxSize: MB(2),
+    maxSize: MB(3),
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     fileTypeRegex: /^image\/(jpeg|png|webp)$/,
 
@@ -43,7 +49,7 @@ export const FILE_RULES = {
   },
 
   avatar: {
-    maxSize: MB(2),
+    maxSize: MB(4),
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     fileTypeRegex: /^image\/(jpeg|png|webp)$/,
 
@@ -52,10 +58,12 @@ export const FILE_RULES = {
     fileTypeErrorMessage: 'Channel avatar must be a JPEG, PNG, or WebP image.',
 
     aspectRatio: ASPECT_RATIOS.SQUARE,
+    minHeight: 800,
+    minWidth: 800,
   },
 
   banner: {
-    maxSize: MB(5),
+    maxSize: MB(6),
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     fileTypeRegex: /^image\/(jpeg|png|webp)$/,
 
@@ -64,7 +72,8 @@ export const FILE_RULES = {
     fileTypeErrorMessage: 'Channel banner must be a JPEG, PNG, or WebP image.',
 
     aspectRatio: ASPECT_RATIOS.LANDSCAPE_16_9,
-    minWidth: 1200,
+    minWidth: 2560,
+    minHeight: 1440,
   },
 
   videoThumbnail: {
@@ -76,17 +85,26 @@ export const FILE_RULES = {
     maxFileSizeErrorMessage: 'Video thumbnail must not exceed 3 MB.',
     fileTypeErrorMessage: 'Video thumbnail must be a JPEG, PNG, or WebP image.',
 
-    aspectRatio: ASPECT_RATIOS.LANDSCAPE_16_9,
+    minWidth: 720,
+    minHeight: 720,
   },
 
   video: {
-    maxSize: MB(100),
-    allowedMimeTypes: ['video/mp4', 'video/webm', 'video/x-matroska'],
-    fileTypeRegex: /^video\/(mp4|webm|x-matroska)$/,
+    maxSize: MB(5000),
+    allowedMimeTypes: [
+      'video/mp4',
+      'video/webm',
+      'video/x-matroska',
+      'video/quicktime',
+    ],
+    fileTypeRegex: /^video\/(mp4|webm|x-matroska|quicktime)$/,
 
     fileIsRequired: true,
-    maxFileSizeErrorMessage: 'Video must not exceed 100 MB.',
+    maxFileSizeErrorMessage: 'Video must not exceed 5GB.',
     fileTypeErrorMessage: 'Video must be an MP4, WebM, or MKV file.',
+
+    minWidth: 1280,
+    minHeight: 720,
   },
 } satisfies Record<string, FileRule>;
 
