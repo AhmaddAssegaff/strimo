@@ -77,7 +77,7 @@ export const FILE_RULES = {
   },
 
   videoThumbnail: {
-    maxSize: MB(3),
+    maxSize: MB(6),
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     fileTypeRegex: /^image\/(jpeg|png|webp)$/,
 
