@@ -1,0 +1,9 @@
+### Create channel
+POST {{host}}/api/v1/channel
+Authorization: Bearer {{variables.access-token}}
+Content-Type: application/json
+
+{
+  "channelTitle": "Ahmad",
+  "channelDescription": "desc"
+}
