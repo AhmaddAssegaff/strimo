@@ -42,15 +42,19 @@ export class MinioService implements OnModuleInit {
     bucketName: string,
     objectName: string,
     localFilePath: string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     await this.ensureBucket(bucketName);
-
     const exists = await this.isObjectExists(bucketName, objectName);
+
     if (!exists) {
       await this.minioClient.fPutObject(bucketName, objectName, localFilePath, {
         'Content-Type': 'image/png',
       });
+    } else {
+      return false;
     }
+
+    return true;
   }
 
   async onModuleInit() {
@@ -59,19 +63,21 @@ export class MinioService implements OnModuleInit {
       const avatarPath = path.join(process.cwd(), DEFAULT_AVATAR_LOCAL_PATH);
       const bannerPath = path.join(process.cwd(), DEFAULT_BANNER_LOCAL_PATH);
 
-      await this.ensureDefaultObject(
+      const avatarCreated = await this.ensureDefaultObject(
         AVATAR_BUCKET_NAME,
         DEFAULT_AVATAR_OBJECT_KEY,
         avatarPath,
       );
 
-      await this.ensureDefaultObject(
+      const bannerCreated = await this.ensureDefaultObject(
         BANNER_BUCKET_NAME,
         DEFAULT_BANNER_OBJECT_KEY,
         bannerPath,
       );
 
-      this.logger.info('Default MinIO objects initialized');
+      if (avatarCreated || bannerCreated) {
+        this.logger.info('Default MinIO objects initialized');
+      }
     } catch {
       this.logger.warn(
         'MinIO is unavailable. Default objects were not initialized.',
