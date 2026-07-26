@@ -131,11 +131,23 @@ export class UserService {
     file: Express.Multer.File,
     currentUser: AuthenticatedUser,
   ): Promise<UpdateUserProfileResult> {
+    const oldProfilePicture = await this.prisma.user.findUniqueOrThrow({
+      where: {
+        id: currentUser.sub,
+      },
+      select: {
+        profilePicture: true,
+      },
+    });
+
+    if (!oldProfilePicture) {
+      throw new NotFoundException('Profile picture not found');
+    }
+
     const resizedBuffer = await this.photoProfile.adjustAspectRatio(
       file.buffer,
     );
     const webpBuffer = await this.photoProfile.convertToWebp(resizedBuffer);
-
     const webpFile: Express.Multer.File = {
       ...file,
       buffer: webpBuffer,
@@ -144,14 +156,12 @@ export class UserService {
       originalname: 'profile.webp',
     };
 
-    const objectName = `${currentUser.sub}/profile`;
-
+    const objectName = currentUser.sub;
     await this.minio.uploadFile(
       PROFILE_PICTURE_BUCKET_NAME,
       objectName,
       webpFile,
     );
-
     const user = await this.prisma.user.update({
       where: {
         id: currentUser.sub,
@@ -165,6 +175,10 @@ export class UserService {
       PROFILE_PICTURE_BUCKET_NAME,
       objectName,
     );
+
+    if (oldProfilePicture) {
+      await this.minio.deleteFile(PROFILE_PICTURE_BUCKET_NAME, objectName);
+    }
 
     return {
       ...user,
