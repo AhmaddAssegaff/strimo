@@ -7,8 +7,6 @@ import {
 import { USER_ACCOUNTS_PROVIDER } from '@prisma/client';
 import { MinioService } from '~app/core/minio/minio.service';
 import { UpdateUserProfile } from './dto/update-user';
-import { ConfigService } from '@nestjs/config';
-import { CONSTANTS } from '~app/config';
 import {
   CreateUserOauthResult,
   FindUserCredensialByIdResult,
@@ -16,21 +14,15 @@ import {
   UserProfileResult,
 } from './interface/user.interface';
 import { PhotoProfileProcessorService } from './image-processor.service';
+import { PROFILE_PICTURE_BUCKET_NAME } from '~core/minio/minio.constants';
 
 @Injectable()
 export class UserService {
-  private readonly userProfileBucketName: string;
-
   constructor(
     private readonly minio: MinioService,
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
     private readonly photoProfile: PhotoProfileProcessorService,
-  ) {
-    this.userProfileBucketName = this.config.getOrThrow(
-      CONSTANTS.BUCKETS_MINIO.MINIO_USER_PROFILE_BUCKET_NAME,
-    );
-  }
+  ) {}
 
   async findUserProfile(
     currentUser: AuthenticatedUser,
@@ -125,7 +117,7 @@ export class UserService {
     });
 
     const presignedUrl = await this.minio.getFileUrl(
-      this.userProfileBucketName,
+      PROFILE_PICTURE_BUCKET_NAME,
       user.profilePicture!,
     );
 
@@ -155,7 +147,7 @@ export class UserService {
     const objectName = `${currentUser.sub}/profile`;
 
     await this.minio.uploadFile(
-      this.userProfileBucketName,
+      PROFILE_PICTURE_BUCKET_NAME,
       objectName,
       webpFile,
     );
@@ -170,7 +162,7 @@ export class UserService {
     });
 
     const presignedUrl = await this.minio.getFileUrl(
-      this.userProfileBucketName,
+      PROFILE_PICTURE_BUCKET_NAME,
       objectName,
     );
 
