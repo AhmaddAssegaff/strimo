@@ -43,7 +43,7 @@ export class UserController {
   }
 
   @Patch('profile/profile-picture')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('profile-picture'))
   updateProfilePicture(
     @UploadedFile(FileUploadPipe(FILE_RULES.profilePicture))
     file: Express.Multer.File,

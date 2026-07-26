@@ -27,7 +27,7 @@ import {
   UserProfileResult,
 } from '../interface/user.interface';
 import { UpdateUserProfile } from '../dto/update-user';
-import { PhotoProfileProcessorService } from '../image-processor.service';
+import { ProfilePictureProcessorService } from '../profile-picture.proscessor.service';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -59,7 +59,7 @@ describe('UserService', () => {
           useValue: minio,
         },
         {
-          provide: PhotoProfileProcessorService,
+          provide: ProfilePictureProcessorService,
           useValue: photo,
         },
       ],

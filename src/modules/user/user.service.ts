@@ -13,7 +13,7 @@ import {
   UpdateUserProfileResult,
   UserProfileResult,
 } from './interface/user.interface';
-import { PhotoProfileProcessorService } from './image-processor.service';
+import { ProfilePictureProcessorService } from './profile-picture.proscessor.service';
 import { PROFILE_PICTURE_BUCKET_NAME } from '~core/minio/minio.constants';
 
 @Injectable()
@@ -21,7 +21,7 @@ export class UserService {
   constructor(
     private readonly minio: MinioService,
     private readonly prisma: PrismaService,
-    private readonly photoProfile: PhotoProfileProcessorService,
+    private readonly photoProfile: ProfilePictureProcessorService,
   ) {}
 
   async findUserProfile(
