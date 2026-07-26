@@ -56,18 +56,18 @@ model UserAccount {
 }
 
 model Channel {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId             String    @unique @map("user_id") @db.Uuid
-  channelTitle       String    @map("channel_title")
-  channelDescription String    @map("channel_description")
-  avatar             String
-  banner             String
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
-  deletedAt          DateTime? @map("deleted_at")
-  isVerified         Boolean   @default(false) @map("is_verified")
-  videoCount         BigInt    @default(0) @map("video_count")
-  subscriberCount    BigInt    @default(0) @map("subscriber_count")
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String    @unique @map("user_id") @db.Uuid
+  title           String    @map("channel_title")
+  description     String    @map("channel_description")
+  avatar          String
+  banner          String
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+  isVerified      Boolean   @default(false) @map("is_verified")
+  videoCount      Int       @default(0) @map("video_count")
+  subscriberCount Int       @default(0) @map("subscriber_count")
 
   user          User           @relation(fields: [userId], references: [id])
   subscriptions Subscription[]
