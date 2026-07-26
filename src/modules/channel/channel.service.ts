@@ -15,12 +15,16 @@ import {
 } from '~core/minio/minio.constants';
 import { MinioService } from '~app/core/minio/minio.service';
 import { UpdateChannelDto } from './dto/update-channel.dto';
+import { avatarProcessorService } from './avatar.processor.service';
+import { bannerProcessorService } from './banner.processor.service';
 
 @Injectable()
 export class ChannelService {
   constructor(
     private readonly minio: MinioService,
     private readonly prisma: PrismaService,
+    private readonly avatar: avatarProcessorService,
+    private readonly banner: bannerProcessorService,
   ) {}
 
   async findChannelById(id: string) {
@@ -109,6 +113,112 @@ export class ChannelService {
       ...updatedChannel,
       avatar: avatarUrl,
       banner: bannerUrl,
+    };
+  }
+
+  async updateChannelBanner(
+    user: AuthenticatedUser,
+    file: Express.Multer.File,
+  ): Promise<ChannelResult> {
+    const oldBanner = await this.prisma.channel.findUniqueOrThrow({
+      where: {
+        userId: user.sub,
+      },
+      select: {
+        avatar: true,
+      },
+    });
+
+    if (!oldBanner) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    const resizedBuffer = await this.banner.adjustAspectRatio(file.buffer);
+    const webpBuffer = await this.banner.convertToWebp(resizedBuffer);
+    const webpFile: Express.Multer.File = {
+      ...file,
+      buffer: webpBuffer,
+      size: webpBuffer.length,
+      mimetype: 'image/webp',
+      originalname: 'banner.webp',
+    };
+    const objectName = `${user.sub}`;
+
+    const updatedChannel = await this.prisma.channel.update({
+      where: {
+        userId: user.sub,
+      },
+      data: {
+        banner: objectName,
+      },
+    });
+
+    await this.minio.uploadFile(BANNER_BUCKET_NAME, objectName, webpFile);
+    const presignedUrl = await this.minio.getFileUrl(
+      BANNER_BUCKET_NAME,
+      objectName,
+    );
+
+    if (oldBanner) {
+      await this.minio.deleteFile(BANNER_BUCKET_NAME, oldBanner.avatar);
+    }
+
+    return {
+      ...updatedChannel,
+      banner: presignedUrl,
+    };
+  }
+
+  async updateChannelAvatar(
+    user: AuthenticatedUser,
+    file: Express.Multer.File,
+  ): Promise<ChannelResult> {
+    const oldAvatar = await this.prisma.channel.findUniqueOrThrow({
+      where: {
+        userId: user.sub,
+      },
+      select: {
+        avatar: true,
+      },
+    });
+
+    if (!oldAvatar) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    const resizedBuffer = await this.avatar.adjustAspectRatio(file.buffer);
+    const webpBuffer = await this.avatar.convertToWebp(resizedBuffer);
+    const webpFile: Express.Multer.File = {
+      ...file,
+      buffer: webpBuffer,
+      size: webpBuffer.length,
+      mimetype: 'image/webp',
+      originalname: 'avatar.webp',
+    };
+    const objectName = `${user.sub}`;
+
+    const updatedChannel = await this.prisma.channel.update({
+      where: {
+        userId: user.sub,
+      },
+      data: {
+        avatar: objectName,
+      },
+    });
+
+    await this.minio.uploadFile(AVATAR_BUCKET_NAME, objectName, webpFile);
+    const presignedUrl = await this.minio.getFileUrl(
+      AVATAR_BUCKET_NAME,
+      objectName,
+    );
+
+    if (oldAvatar) {
+      await this.minio.deleteFile(BANNER_BUCKET_NAME, oldAvatar.avatar);
+    }
+
+    return {
+      ...updatedChannel,
+      avatar: presignedUrl,
     };
   }
 }
