@@ -23,16 +23,29 @@ export class ChannelService {
     private readonly prisma: PrismaService,
   ) {}
 
+  async findChannelById(id: string) {
+    const channel = await this.prisma.channel.findUnique({
+      where: {
+        userId: id,
+      },
+    });
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found');
+    }
+
+    return channel;
+  }
+
   async createChannel(
     user: AuthenticatedUser,
     createChannelDto: CreateChannelDto,
   ): Promise<ChannelResult> {
-    const { sub } = user;
     const { channelTitle, channelDescription } = createChannelDto;
 
     const channel = await this.prisma.channel.findUnique({
       where: {
-        userId: sub,
+        userId: user.sub,
       },
     });
 
@@ -42,7 +55,7 @@ export class ChannelService {
 
     const newChannel = await this.prisma.channel.create({
       data: {
-        userId: sub,
+        userId: user.sub,
         title: channelTitle,
         description: channelDescription,
         avatar: DEFAULT_AVATAR_OBJECT_KEY,
@@ -65,12 +78,11 @@ export class ChannelService {
     user: AuthenticatedUser,
     updateChannelDto: UpdateChannelDto,
   ): Promise<ChannelResult> {
-    const { sub } = user;
     const { channelTitle, channelDescription } = updateChannelDto;
 
     const channel = await this.prisma.channel.findUnique({
       where: {
-        userId: sub,
+        userId: user.sub,
       },
     });
 
@@ -80,7 +92,7 @@ export class ChannelService {
 
     const updatedChannel = await this.prisma.channel.update({
       where: {
-        userId: sub,
+        userId: user.sub,
       },
       data: {
         description: channelDescription,
