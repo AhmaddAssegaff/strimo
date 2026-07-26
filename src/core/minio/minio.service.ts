@@ -10,11 +10,13 @@ import {
   DEFAULT_AVATAR_OBJECT_KEY,
   DEFAULT_BANNER_OBJECT_KEY,
 } from './minio.constants';
+import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class MinioService implements OnModuleInit {
   constructor(
     @Inject(MINIO_TOKEN) private readonly minioClient: Minio.Client,
+    private readonly logger: PinoLogger,
   ) {}
 
   private async ensureBucket(bucketName: string): Promise<void> {
@@ -52,21 +54,29 @@ export class MinioService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    await this.ping();
-    const avatarPath = path.join(process.cwd(), DEFAULT_AVATAR_LOCAL_PATH);
-    const bannerPath = path.join(process.cwd(), DEFAULT_BANNER_LOCAL_PATH);
+    try {
+      await this.ping();
+      const avatarPath = path.join(process.cwd(), DEFAULT_AVATAR_LOCAL_PATH);
+      const bannerPath = path.join(process.cwd(), DEFAULT_BANNER_LOCAL_PATH);
 
-    await this.ensureDefaultObject(
-      AVATAR_BUCKET_NAME,
-      DEFAULT_AVATAR_OBJECT_KEY,
-      avatarPath,
-    );
+      await this.ensureDefaultObject(
+        AVATAR_BUCKET_NAME,
+        DEFAULT_AVATAR_OBJECT_KEY,
+        avatarPath,
+      );
 
-    await this.ensureDefaultObject(
-      BANNER_BUCKET_NAME,
-      DEFAULT_BANNER_OBJECT_KEY,
-      bannerPath,
-    );
+      await this.ensureDefaultObject(
+        BANNER_BUCKET_NAME,
+        DEFAULT_BANNER_OBJECT_KEY,
+        bannerPath,
+      );
+
+      this.logger.info('Default MinIO objects initialized');
+    } catch {
+      this.logger.warn(
+        'MinIO is unavailable. Default objects were not initialized.',
+      );
+    }
   }
 
   async ping(): Promise<void> {
