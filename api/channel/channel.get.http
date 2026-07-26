@@ -1,0 +1,6 @@
+### Get My Channel
+GET {{host}}/api/v1/channel/me
+Authorization: Bearer {{variables.access-token}}
+
+### Get Channel by ID
+GET {{host}}/api/v1/channel/827cc206-4d82-4f68-a506-cab8e76b4ad5
