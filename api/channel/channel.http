@@ -1,0 +1,54 @@
+### Get My Channel
+GET {{host}}/api/v1/channel/me
+Authorization: Bearer {{variables.access-token}}
+
+### Get Channel by ID
+GET {{host}}/api/v1/channel/827cc206-4d82-4f68-a506-cab8e76b4ad5
+
+
+### Create channel
+POST {{host}}/api/v1/channel
+Authorization: Bearer {{variables.access-token}}
+Content-Type: application/json
+
+{
+  "channelTitle": "Ahmad",
+  "channelDescription": "desc"
+}
+
+
+### Update channel
+PUT {{host}}/api/v1/channel
+Authorization: Bearer {{variables.access-token}}
+Content-Type: application/json
+
+{
+  "channelTitle": "Ahmad",
+  "channelDescription": "desc"
+}
+
+# support webp, jpeg, png
+### Update Channel Avatar
+PATCH  {{host}}/api/v1/channel/avatar
+Authorization: Bearer {{variables.access-token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="avatar"; filename="~/strimo/assets/avatar-default.png"
+Content-Type: image/png
+
+< ~/strimo/assets/avatar-default.png
+
+# support webp, jpeg, png
+--boundary--
+### Update Channel Banner
+PATCH  {{host}}/api/v1/channel/banner
+Authorization: Bearer {{variables.access-token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="banner"; filename="~/strimo/assets/banner-default.png"
+Content-Type: image/png
+
+< ~/strimo/assets/banner-default.png
+

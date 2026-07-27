@@ -1,0 +1,26 @@
+### Get Profile
+GET {{host}}/api/v1/user/profile
+Authorization: Bearer {{variables.access-token}}
+
+
+### Update Profile
+PATCH {{host}}/api/v1/user/profile
+Authorization: Bearer {{variables.access-token}}
+Content-Type: application/json
+
+{
+  "username": "Ahmad"
+}
+
+# support webp, jpeg, png
+### Update Profile Picture webp
+PATCH {{host}}/api/v1/user/profile/profile-picture
+Authorization: Bearer {{variables.access-token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="profile-picture"; filename="path-file.webp"
+Content-Type: image/webp
+
+< path/to/your/file.webp
+--boundary--

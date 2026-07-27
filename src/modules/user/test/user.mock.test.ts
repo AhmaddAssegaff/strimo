@@ -1,8 +1,8 @@
 import { ConfigService } from '@nestjs/config';
 import { MinioService } from '~app/core/minio/minio.service';
 import { UserService } from '../user.service';
-import { PhotoProfileProcessorService } from '../image-processor.service';
-import { CONSTANTS } from '~app/config';
+import { ProfilePictureProcessorService } from '../profile-picture.proscessor.service';
+import { PROFILE_PICTURE_BUCKET_NAME } from '~core/minio/minio.constants';
 
 export type MockUserService = jest.Mocked<
   Pick<
@@ -31,9 +31,9 @@ export type MockPrismaUserService = {
 };
 
 export type MockPhotoProfileProcessorService = jest.Mocked<
-  Pick<PhotoProfileProcessorService, 'adjustAspectRatio' | 'convertToWebp'>
+  Pick<ProfilePictureProcessorService, 'adjustAspectRatio' | 'convertToWebp'>
 >;
 
 export const MockConfigUserService = {
-  [CONSTANTS.BUCKETS_MINIO.MINIO_USER_PROFILE_BUCKET_NAME]: 'bucket-name',
+  [PROFILE_PICTURE_BUCKET_NAME]: 'bucket-name',
 } as const;
