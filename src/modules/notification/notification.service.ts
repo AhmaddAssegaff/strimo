@@ -4,7 +4,7 @@ import { GetNotificationDto } from './dto/get-notifications.dto';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import { SmtpService } from '~app/core/smtp/smtp.service';
 import { AuthenticatedUser } from '../auth/interface/auth.interface';
-import { NotficationResult } from './interface/notification.interface';
+import { NotificationResult } from './interface/notification.interface';
 
 @Injectable()
 export class NotificationService {
@@ -16,9 +16,9 @@ export class NotificationService {
   async createNotificationCreatedChannel(
     createNotificationDto: CreateNotificationDto,
     user: AuthenticatedUser,
-  ): Promise<NotficationResult> {
+  ): Promise<NotificationResult> {
     const { title, message } = createNotificationDto;
-    const notification = this.prisma.notification.create({
+    const notification = await this.prisma.notification.create({
       data: {
         userId: user.sub,
         message: message,
@@ -33,7 +33,7 @@ export class NotificationService {
   async findNotifications(
     getNotificationDto: GetNotificationDto,
     user: AuthenticatedUser,
-  ): Promise<NotficationResult[]> {
+  ): Promise<NotificationResult[]> {
     const { limit, page } = getNotificationDto;
     const skip = (page - 1) * limit;
 
@@ -52,7 +52,7 @@ export class NotificationService {
     return notifications;
   }
 
-  async findNotificationById(id: string): Promise<NotficationResult> {
+  async findNotificationById(id: string): Promise<NotificationResult> {
     const notifications = await this.prisma.notification.findUnique({
       where: {
         id: id,

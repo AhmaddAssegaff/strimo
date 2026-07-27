@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 
-export type NotficationResult = Prisma.NotificationGetPayload<{
+export type NotificationResult = Prisma.NotificationGetPayload<{
   select: {
     id: true;
     userId: true;
