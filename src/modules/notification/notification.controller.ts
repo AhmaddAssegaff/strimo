@@ -11,6 +11,7 @@ import { GetNotificationDto } from './dto/get-notifications.dto';
 import { JwtAccessGuard } from '../auth/guard/jwt-access.guard';
 import { CurrentUser } from '~app/core/decorators/current-user.decorators';
 import type { AuthenticatedUser } from '../auth/interface/auth.interface';
+import { NotficationResult } from './interface/notification.interface';
 
 @UseGuards(JwtAccessGuard)
 @Controller('notification')
@@ -21,14 +22,14 @@ export class NotificationController {
   getAllNotifications(
     @Query() getNotificationDto: GetNotificationDto,
     @CurrentUser() user: AuthenticatedUser,
-  ) {
+  ): Promise<NotficationResult[]> {
     return this.notificationService.findNotifications(getNotificationDto, user);
   }
 
   @Get(':notificationId')
   getNotificationById(
     @Param('notificationId', ParseUUIDPipe) notificationId: string,
-  ) {
+  ): Promise<NotficationResult> {
     return this.notificationService.findNotificationById(notificationId);
   }
 }

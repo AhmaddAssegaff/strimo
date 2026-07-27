@@ -33,7 +33,7 @@ export class NotificationService {
   async findNotifications(
     getNotificationDto: GetNotificationDto,
     user: AuthenticatedUser,
-  ) {
+  ): Promise<NotficationResult[]> {
     const { limit, page } = getNotificationDto;
     const skip = (page - 1) * limit;
 
@@ -52,7 +52,7 @@ export class NotificationService {
     return notifications;
   }
 
-  async findNotificationById(id: string) {
+  async findNotificationById(id: string): Promise<NotficationResult> {
     const notifications = await this.prisma.notification.findUnique({
       where: {
         id: id,
