@@ -15,19 +15,21 @@ import {
 } from '~core/minio/minio.constants';
 import { MinioService } from '~app/core/minio/minio.service';
 import { UpdateChannelDto } from './dto/update-channel.dto';
-import { avatarProcessorService } from './avatar.processor.service';
-import { bannerProcessorService } from './banner.processor.service';
+import { AvatarProcessorService } from './avatar.processor.service';
+import { BannerProcessorService } from './banner.processor.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class ChannelService {
   constructor(
     private readonly minio: MinioService,
     private readonly prisma: PrismaService,
-    private readonly avatar: avatarProcessorService,
-    private readonly banner: bannerProcessorService,
+    private readonly notif: NotificationService,
+    private readonly avatar: AvatarProcessorService,
+    private readonly banner: BannerProcessorService,
   ) {}
 
-  async findChannelById(id: string) {
+  async findChannelById(id: string): Promise<ChannelResult> {
     const channel = await this.prisma.channel.findUnique({
       where: {
         userId: id,
@@ -45,7 +47,8 @@ export class ChannelService {
     user: AuthenticatedUser,
     createChannelDto: CreateChannelDto,
   ): Promise<ChannelResult> {
-    const { channelTitle, channelDescription } = createChannelDto;
+    const { title: channelTitle, description: channelDescription } =
+      createChannelDto;
 
     const channel = await this.prisma.channel.findUnique({
       where: {
@@ -66,6 +69,15 @@ export class ChannelService {
         banner: DEFAULT_BANNER_OBJECT_KEY,
       },
     });
+
+    await this.notif.createNotificationCreatedChannel(
+      {
+        title: 'Congratulations! Your Channel Is Ready',
+        message: 'Thank you for creating a channel on Strimo',
+      },
+      user,
+    );
+
     const [bannerUrl, avatarUrl] = await Promise.all([
       this.minio.getFileUrl(BANNER_BUCKET_NAME, newChannel.banner),
       this.minio.getFileUrl(AVATAR_BUCKET_NAME, newChannel.avatar),
@@ -82,7 +94,8 @@ export class ChannelService {
     user: AuthenticatedUser,
     updateChannelDto: UpdateChannelDto,
   ): Promise<ChannelResult> {
-    const { channelTitle, channelDescription } = updateChannelDto;
+    const { title: channelTitle, description: channelDescription } =
+      updateChannelDto;
 
     const channel = await this.prisma.channel.findUnique({
       where: {
@@ -120,7 +133,7 @@ export class ChannelService {
     user: AuthenticatedUser,
     file: Express.Multer.File,
   ): Promise<ChannelResult> {
-    const oldBanner = await this.prisma.channel.findUniqueOrThrow({
+    const oldBanner = await this.prisma.channel.findUnique({
       where: {
         userId: user.sub,
       },
@@ -130,7 +143,7 @@ export class ChannelService {
     });
 
     if (!oldBanner) {
-      throw new NotFoundException('Channel not found');
+      throw new NotFoundException('old banner not found');
     }
 
     const resizedBuffer = await this.banner.adjustAspectRatio(file.buffer);
@@ -154,7 +167,7 @@ export class ChannelService {
     });
 
     await this.minio.uploadFile(BANNER_BUCKET_NAME, objectName, webpFile);
-    const presignedUrl = await this.minio.getFileUrl(
+    const preSignedUrl = await this.minio.getFileUrl(
       BANNER_BUCKET_NAME,
       objectName,
     );
@@ -165,7 +178,7 @@ export class ChannelService {
 
     return {
       ...updatedChannel,
-      banner: presignedUrl,
+      banner: preSignedUrl,
     };
   }
 
@@ -173,7 +186,7 @@ export class ChannelService {
     user: AuthenticatedUser,
     file: Express.Multer.File,
   ): Promise<ChannelResult> {
-    const oldAvatar = await this.prisma.channel.findUniqueOrThrow({
+    const oldAvatar = await this.prisma.channel.findUnique({
       where: {
         userId: user.sub,
       },
@@ -213,7 +226,7 @@ export class ChannelService {
     );
 
     if (oldAvatar) {
-      await this.minio.deleteFile(BANNER_BUCKET_NAME, oldAvatar.avatar);
+      await this.minio.deleteFile(AVATAR_BUCKET_NAME, oldAvatar.avatar);
     }
 
     return {

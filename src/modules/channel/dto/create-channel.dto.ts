@@ -3,9 +3,9 @@ import { IsNotEmpty, IsString } from 'class-validator';
 export class CreateChannelDto {
   @IsNotEmpty()
   @IsString()
-  channelTitle: string;
+  title: string;
 
   @IsNotEmpty()
   @IsString()
-  channelDescription: string;
+  description: string;
 }

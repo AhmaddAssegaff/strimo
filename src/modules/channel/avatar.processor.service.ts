@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import { FILE_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
 
 @Injectable()
-export class avatarProcessorService {
+export class AvatarProcessorService {
   async adjustAspectRatio(
     buffer: Buffer,
     width = FILE_RULES.avatar.minWidth,

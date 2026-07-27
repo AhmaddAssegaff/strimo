@@ -3,7 +3,7 @@ import sharp from 'sharp';
 import { FILE_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
 
 @Injectable()
-export class bannerProcessorService {
+export class BannerProcessorService {
   async adjustAspectRatio(
     buffer: Buffer,
     width = FILE_RULES.banner.minWidth,
