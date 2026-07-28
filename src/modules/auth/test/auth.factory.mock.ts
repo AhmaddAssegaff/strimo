@@ -4,7 +4,7 @@ import {
   MockConfigService,
   MockConfigAuthService,
   MockJwtService,
-} from './auth.mock.test';
+} from './auth.type.mock';
 
 export function createAuthServiceMock(): MockAuthService {
   return {

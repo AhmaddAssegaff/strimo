@@ -11,13 +11,13 @@ import {
   MockMinioUserService,
   MockPhotoProfileProcessorService,
   MockPrismaUserService,
-} from './user.mock.test';
+} from './user.type.mock';
 import {
   createConfigServiceMock,
   createMockMinioService,
   createMockPhotoProfileProcessorService,
   createMockPrismaUserService,
-} from './user.factory.test';
+} from './user.factory.mock';
 import { MinioService } from '~app/core/minio/minio.service';
 import { NotFoundException } from '@nestjs/common';
 import {

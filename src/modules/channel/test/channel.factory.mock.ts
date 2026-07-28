@@ -5,7 +5,7 @@ import {
   MockMinioChannelService,
   MockNotificationChannelService,
   MockPrismaChannelService,
-} from './channel.mock.test';
+} from './channel.type.mock';
 
 export function createMockChannelService(): MockChannelService {
   return {

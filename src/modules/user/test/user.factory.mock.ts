@@ -5,7 +5,7 @@ import {
   MockUserService,
   MockConfigUserService,
   MockPhotoProfileProcessorService,
-} from './user.mock.test';
+} from './user.type.mock';
 
 export function createMockUserService(): MockUserService {
   return {

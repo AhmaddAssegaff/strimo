@@ -6,14 +6,14 @@ import {
   MockMinioChannelService,
   MockNotificationChannelService,
   MockPrismaChannelService,
-} from './channel.mock.test';
+} from './channel.type.mock';
 import {
   createMockAvatarProcessorService,
   createMockBannerProcessorService,
   createMockMinioChannelService,
   createMockNotificationChannelService,
   createMockPrismaChannelService,
-} from './channel.factory.test';
+} from './channel.factory.mock';
 import { ChannelResult } from '../interface/channel.interface';
 import { MinioService } from '~app/core/minio/minio.service';
 import { PrismaService } from '~app/core/prisma/prisma.service';

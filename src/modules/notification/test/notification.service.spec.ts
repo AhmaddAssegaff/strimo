@@ -3,13 +3,13 @@ import { NotificationService } from '../notification.service';
 import {
   MockPrismaNotificationService,
   MockSmtpService,
-} from './notification.mock.test';
+} from './notification.type.mock';
 import { SmtpService } from '~app/core/smtp/smtp.service';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import {
   createMockPrismaNotificationService,
   createMockSmtpService,
-} from './notification.factory.test';
+} from './notification.factory.mock';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { AuthenticatedUser } from '~app/modules/auth/interface/auth.interface';
 import { NotificationResult } from '../interface/notification.interface';
