@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
 import { MockAuthService } from './auth.mock.test';
-import { JwtAuthPayload, userOauthGoogle } from '../interface/auth.interface';
+import { JwtAuthPayload, UserOauthGoogle } from '../interface/auth.interface';
 import { createAuthServiceMock } from './auth.factory.test';
 
 describe('AuthController', () => {
@@ -27,7 +27,7 @@ describe('AuthController', () => {
 
   describe('googleOauthCallback', () => {
     it('should call authService.googleOauth', () => {
-      const user: userOauthGoogle = {
+      const user: UserOauthGoogle = {
         email: 'email',
         googleId: 'googleId',
         name: 'username',
