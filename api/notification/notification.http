@@ -1,0 +1,7 @@
+### Get User Notification
+GET {{host}}/api/v1/notification?page=1&limit=10
+Authorization: Bearer {{variables.access-token}}
+
+### Get Notification by id
+GET {{host}}/api/v1/notification/notificationId-uuid
+Authorization: Bearer {{variables.access-token}}

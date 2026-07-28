@@ -14,7 +14,7 @@ export type MockUserService = jest.Mocked<
 export type MockConfigService = jest.Mocked<Pick<ConfigService, 'getOrThrow'>>;
 
 export type MockMinioUserService = jest.Mocked<
-  Pick<MinioService, 'uploadFile' | 'getFileUrl'>
+  Pick<MinioService, 'uploadFile' | 'getFileUrl' | 'deleteFile'>
 >;
 
 export type MockPrismaUserService = {

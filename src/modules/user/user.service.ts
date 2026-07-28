@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import {
   AuthenticatedUser,
-  userOauthGoogle,
+  UserOauthGoogle,
 } from '../auth/interface/auth.interface';
 import { USER_ACCOUNTS_PROVIDER } from '@prisma/client';
 import { MinioService } from '~app/core/minio/minio.service';
@@ -62,7 +62,7 @@ export class UserService {
   }
 
   async createUserOauth(
-    userData: userOauthGoogle,
+    userData: UserOauthGoogle,
   ): Promise<CreateUserOauthResult> {
     return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.upsert({
@@ -131,7 +131,7 @@ export class UserService {
     file: Express.Multer.File,
     currentUser: AuthenticatedUser,
   ): Promise<UpdateUserProfileResult> {
-    const oldProfilePicture = await this.prisma.user.findUniqueOrThrow({
+    const oldProfilePicture = await this.prisma.user.findUnique({
       where: {
         id: currentUser.sub,
       },
