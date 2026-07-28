@@ -60,6 +60,7 @@ export function createMockMinioService(): MockMinioUserService {
   return {
     uploadFile: jest.fn(),
     getFileUrl: jest.fn(),
+    deleteFile: jest.fn(),
   };
 }
 

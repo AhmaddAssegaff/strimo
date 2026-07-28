@@ -5,10 +5,10 @@ import { JwtService } from '@nestjs/jwt';
 import { CONSTANTS } from '~app/config';
 import type {
   JwtAuthPayload,
-  oauthGoogleResponseInterface,
-  refreshResponseInterface,
-  userOauthGoogle,
-} from './auth.interface';
+  OauthGoogleResult,
+  RefreshTokenResult,
+  UserOauthGoogle,
+} from './interface/auth.interface';
 
 @Injectable()
 export class AuthService {
@@ -52,9 +52,7 @@ export class AuthService {
     });
   }
 
-  async googleOauth(
-    user: userOauthGoogle,
-  ): Promise<oauthGoogleResponseInterface> {
+  async googleOauth(user: UserOauthGoogle): Promise<OauthGoogleResult> {
     const usr = await this.userService.createUserOauth(user);
 
     const payload: JwtAuthPayload = {
@@ -63,16 +61,14 @@ export class AuthService {
     };
 
     return {
-      tokens: {
+      OauthGoogleResponseInterface: {
         accessToken: this.signAccessToken(payload),
         refreshToken: this.signRefreshToken(payload),
       },
     };
   }
 
-  async refreshToken(
-    payloadUser: JwtAuthPayload,
-  ): Promise<refreshResponseInterface> {
+  async refreshToken(payloadUser: JwtAuthPayload): Promise<RefreshTokenResult> {
     const user = await this.userService.findUserCredensialById(payloadUser.sub);
 
     if (!user) {

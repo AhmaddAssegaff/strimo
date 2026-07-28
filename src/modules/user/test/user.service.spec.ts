@@ -4,8 +4,8 @@ import { PrismaService } from '~app/core/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import {
   AuthenticatedUser,
-  userOauthGoogle,
-} from '~app/modules/auth/auth.interface';
+  UserOauthGoogle,
+} from '~app/modules/auth/interface/auth.interface';
 import {
   MockConfigService,
   MockMinioUserService,
@@ -27,7 +27,7 @@ import {
   UserProfileResult,
 } from '../interface/user.interface';
 import { UpdateUserProfile } from '../dto/update-user';
-import { PhotoProfileProcessorService } from '../image-processor.service';
+import { ProfilePictureProcessorService } from '../profile-picture.proscessor.service';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -59,7 +59,7 @@ describe('UserService', () => {
           useValue: minio,
         },
         {
-          provide: PhotoProfileProcessorService,
+          provide: ProfilePictureProcessorService,
           useValue: photo,
         },
       ],
@@ -122,7 +122,7 @@ describe('UserService', () => {
   });
 
   describe('createUserOauth', () => {
-    const userData: userOauthGoogle = {
+    const userData: UserOauthGoogle = {
       email: 'email@gmail.com',
       googleId: 'googleId',
       name: 'name',
@@ -198,29 +198,31 @@ describe('UserService', () => {
   });
 
   describe('updateUserProfilePicture', () => {
+    const file = {} as Express.Multer.File;
+    const currentUser: AuthenticatedUser = {
+      email: 'email@gmail.com',
+      sub: '5e662bbc-50fc-421e-9665-22f6d2a55d4d',
+    };
+    const updateUserProfileResult: UpdateUserProfileResult = {
+      id: 'af42ec08-81fc-42f0-893c-09e06a5b0b40',
+      email: 'email@gmail.com',
+      username: 'username',
+      profilePicture: `${currentUser.sub}/profile`,
+      isEmailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+    };
+    const mockPresignedUrl =
+      'https://minio.example.com/bucket/user-id/profile.webp';
+
     it('should process image, upload to MinIO, update DB, and return presigned URL', async () => {
-      const file = {} as Express.Multer.File;
-
-      const currentUser: AuthenticatedUser = {
-        email: 'email@gmail.com',
-        sub: '5e662bbc-50fc-421e-9665-22f6d2a55d4d',
-      };
-
-      const updateUserProfileResult: UpdateUserProfileResult = {
-        id: 'af42ec08-81fc-42f0-893c-09e06a5b0b40',
-        email: 'email@gmail.com',
-        username: 'username',
-        profilePicture: `${currentUser.sub}/profile`,
-        isEmailVerified: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null,
-      };
-
-      const mockPresignedUrl =
-        'https://minio.example.com/bucket/user-id/profile.webp';
+      prisma.user.findUnique.mockResolvedValue({
+        profilePicture: `${currentUser.sub}/old-profile.webp`,
+      });
 
       photo.adjustAspectRatio.mockResolvedValue(Buffer.from('resized-buffer'));
+
       photo.convertToWebp.mockResolvedValue(Buffer.from('webp-buffer'));
 
       minio.getFileUrl.mockResolvedValue(mockPresignedUrl);
@@ -236,12 +238,20 @@ describe('UserService', () => {
       expect(minio.uploadFile).toHaveBeenCalledTimes(1);
       expect(prisma.user.update).toHaveBeenCalledTimes(1);
       expect(minio.getFileUrl).toHaveBeenCalledTimes(1);
+      expect(minio.deleteFile).toHaveBeenCalledTimes(1);
 
-      expect(result).toBeDefined();
       expect(result).toEqual({
         ...updateUserProfileResult,
         profilePicture: mockPresignedUrl,
       });
+    });
+
+    it('should throw NotFoundException when oldProfilePicture is null', () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      expect(
+        userService.updateUserProfilePicture(file, currentUser),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

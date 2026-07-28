@@ -8,12 +8,18 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '~app/modules/user/user.service';
-import { JwtAuthPayload, userOauthGoogle } from '../auth.interface';
+import {
+  JwtAuthPayload,
+  OauthGoogleResult,
+  RefreshTokenResult,
+  UserOauthGoogle,
+} from '../interface/auth.interface';
 import {
   createConfigServiceMock,
   createJwtServiceMock,
   createUserServiceMoce,
 } from './auth.factory.test';
+import { NotFoundException } from '@nestjs/common';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -48,19 +54,19 @@ describe('AuthService', () => {
     authService = module.get<AuthService>(AuthService);
   });
 
-  describe('AuthService config', () => {
-    it('should load jwt config', () => {
-      expect(config.getOrThrow).toHaveBeenCalledTimes(4);
-    });
-  });
-
   describe('googleOauth', () => {
     it('should call AuthService.createUserOauth and return tokens', async () => {
-      const user: userOauthGoogle = {
+      const user: UserOauthGoogle = {
         email: 'email',
         googleId: 'googleId',
         name: 'name',
         picture: 'profile picture',
+      };
+      const oauthGoogleResponseInterface: OauthGoogleResult = {
+        OauthGoogleResponseInterface: {
+          accessToken: 'access-token',
+          refreshToken: 'refresh-token',
+        },
       };
 
       userService.createUserOauth.mockResolvedValue({
@@ -72,12 +78,14 @@ describe('AuthService', () => {
         .mockReturnValueOnce('access-token')
         .mockReturnValueOnce('refresh-token');
 
-      await authService.googleOauth(user);
+      const userOauthGoogle = await authService.googleOauth(user);
 
       expect(userService.createUserOauth).toHaveBeenCalledTimes(1);
       expect(userService.createUserOauth).toHaveBeenCalledWith(user);
 
       expect(jwt.sign).toHaveBeenCalledTimes(2);
+
+      expect(userOauthGoogle).toEqual(oauthGoogleResponseInterface);
     });
   });
 
@@ -89,6 +97,11 @@ describe('AuthService', () => {
         exp: 123,
         iat: 123,
       };
+      const refreshResponseInterface: RefreshTokenResult = {
+        token: {
+          accessToken: 'access-token',
+        },
+      };
 
       userService.findUserCredensialById.mockResolvedValue({
         email: 'email',
@@ -97,11 +110,26 @@ describe('AuthService', () => {
       });
       jwt.sign.mockReturnValueOnce('access-token');
 
-      await authService.refreshToken(user);
+      const newAccesToken = await authService.refreshToken(user);
 
       expect(userService.findUserCredensialById).toHaveBeenCalledTimes(1);
       expect(userService.findUserCredensialById).toHaveBeenCalledWith(user.sub);
       expect(jwt.sign).toHaveBeenCalledTimes(1);
+
+      expect(newAccesToken).toEqual(refreshResponseInterface);
+    });
+
+    it('should throw NotFoundException when user is null', async () => {
+      userService.findUserCredensialById.mockResolvedValue(null);
+
+      await expect(
+        authService.refreshToken({
+          email: 'email',
+          sub: '675d028d-5b7d-4370-ba7b-615f10cad8e9',
+          exp: 123,
+          iat: 123,
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

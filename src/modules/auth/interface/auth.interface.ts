@@ -1,6 +1,6 @@
 import { Request } from 'express';
 
-export interface userOauthGoogle {
+export interface UserOauthGoogle {
   googleId: string;
   email: string;
   name: string;
@@ -34,7 +34,7 @@ export interface AuthTokenPair {
   refreshToken: string;
 }
 
-export interface accessToken {
+export interface AccessToken {
   accessToken: string;
 }
 
@@ -42,12 +42,12 @@ export interface accessToken {
  * Response auth to client
  */
 
-export interface refreshResponseInterface {
-  token: accessToken;
+export interface RefreshTokenResult {
+  token: AccessToken;
 }
 
-export interface oauthGoogleResponseInterface {
-  tokens: AuthTokenPair;
+export interface OauthGoogleResult {
+  OauthGoogleResponseInterface: AuthTokenPair;
 }
 
 /**

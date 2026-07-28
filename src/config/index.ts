@@ -6,7 +6,6 @@ import * as db from './database.config';
 import * as smtp from './smtp.config';
 import * as redis from './redis.config';
 import * as minio from './minio.config';
-import * as bucketMinio from './bucket-minio.config';
 import * as auth from './auth.config';
 import * as google from './google-oaut.config';
 import * as health from './health.config';
@@ -17,7 +16,6 @@ export const configs = [
   smtp.default,
   redis.default,
   minio.default,
-  bucketMinio.default,
   auth.default,
   google.default,
   health.default,
@@ -29,7 +27,6 @@ export const validationSchema = Joi.object({
   ...smtp.SmtpValidationSchema,
   ...redis.RedisValidationSchema,
   ...minio.MinioValidationSchema,
-  ...bucketMinio.BucketsMinioValidationSchema,
   ...auth.AuthValidationSchema,
   ...google.GoogleValidationSchema,
   ...health.HealthValidationSchema,
@@ -41,7 +38,6 @@ export const CONSTANTS = {
   ...smtp.CONSTANTS_SMTP_KEYS,
   ...redis.CONSTANTS_REDIS_KEYS,
   ...minio.CONSTANTS_MINIO_KEYS,
-  ...bucketMinio.CONSTANTS_BUCKETS_MINIO_KEYS,
   ...auth.CONSTANTS_AUTH_KEYS,
   ...google.CONSTANTS_GOOGLE_KEYS,
   ...health.CONSTANTS_HEALTH_KEYS,

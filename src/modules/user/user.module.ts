@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
-import { PhotoProfileProcessorService } from './image-processor.service';
+import { ProfilePictureProcessorService } from './profile-picture.proscessor.service';
 import { UserController } from './user.controller';
 
 @Module({
   controllers: [UserController],
-  providers: [UserService, PhotoProfileProcessorService],
-  exports: [UserService, PhotoProfileProcessorService],
+  providers: [UserService, ProfilePictureProcessorService],
+  exports: [UserService, ProfilePictureProcessorService],
 })
 export class UserModule {}

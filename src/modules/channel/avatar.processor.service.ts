@@ -3,11 +3,11 @@ import sharp from 'sharp';
 import { FILE_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
 
 @Injectable()
-export class PhotoProfileProcessorService {
+export class AvatarProcessorService {
   async adjustAspectRatio(
     buffer: Buffer,
-    width = FILE_RULES.profilePicture.minWidth,
-    height = FILE_RULES.profilePicture.minHeight,
+    width = FILE_RULES.avatar.minWidth,
+    height = FILE_RULES.avatar.minHeight,
   ): Promise<Buffer> {
     return sharp(buffer)
       .resize({

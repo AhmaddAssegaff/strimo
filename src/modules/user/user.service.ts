@@ -1,33 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '~app/core/prisma/prisma.service';
-import { AuthenticatedUser, userOauthGoogle } from '../auth/auth.interface';
+import {
+  AuthenticatedUser,
+  UserOauthGoogle,
+} from '../auth/interface/auth.interface';
 import { USER_ACCOUNTS_PROVIDER } from '@prisma/client';
 import { MinioService } from '~app/core/minio/minio.service';
 import { UpdateUserProfile } from './dto/update-user';
-import { ConfigService } from '@nestjs/config';
-import { CONSTANTS } from '~app/config';
 import {
   CreateUserOauthResult,
   FindUserCredensialByIdResult,
   UpdateUserProfileResult,
   UserProfileResult,
 } from './interface/user.interface';
-import { PhotoProfileProcessorService } from './image-processor.service';
+import { ProfilePictureProcessorService } from './profile-picture.proscessor.service';
+import { PROFILE_PICTURE_BUCKET_NAME } from '~core/minio/minio.constants';
 
 @Injectable()
 export class UserService {
-  private readonly userProfileBucketName: string;
-
   constructor(
     private readonly minio: MinioService,
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
-    private readonly photoProfile: PhotoProfileProcessorService,
-  ) {
-    this.userProfileBucketName = this.config.getOrThrow(
-      CONSTANTS.BUCKETS_MINIO.MINIO_USER_PROFILE_BUCKET_NAME,
-    );
-  }
+    private readonly photoProfile: ProfilePictureProcessorService,
+  ) {}
 
   async findUserProfile(
     currentUser: AuthenticatedUser,
@@ -67,7 +62,7 @@ export class UserService {
   }
 
   async createUserOauth(
-    userData: userOauthGoogle,
+    userData: UserOauthGoogle,
   ): Promise<CreateUserOauthResult> {
     return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.upsert({
@@ -122,7 +117,7 @@ export class UserService {
     });
 
     const presignedUrl = await this.minio.getFileUrl(
-      this.userProfileBucketName,
+      PROFILE_PICTURE_BUCKET_NAME,
       user.profilePicture!,
     );
 
@@ -136,11 +131,23 @@ export class UserService {
     file: Express.Multer.File,
     currentUser: AuthenticatedUser,
   ): Promise<UpdateUserProfileResult> {
+    const oldProfilePicture = await this.prisma.user.findUnique({
+      where: {
+        id: currentUser.sub,
+      },
+      select: {
+        profilePicture: true,
+      },
+    });
+
+    if (!oldProfilePicture) {
+      throw new NotFoundException('Profile picture not found');
+    }
+
     const resizedBuffer = await this.photoProfile.adjustAspectRatio(
       file.buffer,
     );
     const webpBuffer = await this.photoProfile.convertToWebp(resizedBuffer);
-
     const webpFile: Express.Multer.File = {
       ...file,
       buffer: webpBuffer,
@@ -149,14 +156,12 @@ export class UserService {
       originalname: 'profile.webp',
     };
 
-    const objectName = `${currentUser.sub}/profile`;
-
+    const objectName = currentUser.sub;
     await this.minio.uploadFile(
-      this.userProfileBucketName,
+      PROFILE_PICTURE_BUCKET_NAME,
       objectName,
       webpFile,
     );
-
     const user = await this.prisma.user.update({
       where: {
         id: currentUser.sub,
@@ -167,9 +172,13 @@ export class UserService {
     });
 
     const presignedUrl = await this.minio.getFileUrl(
-      this.userProfileBucketName,
+      PROFILE_PICTURE_BUCKET_NAME,
       objectName,
     );
+
+    if (oldProfilePicture) {
+      await this.minio.deleteFile(PROFILE_PICTURE_BUCKET_NAME, objectName);
+    }
 
     return {
       ...user,
