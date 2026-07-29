@@ -14,7 +14,7 @@ export class BannerStorageService {
   ) {}
 
   async processAndUpload(
-    userId: string,
+    channelId: string,
     file: Express.Multer.File,
   ): Promise<{ objectName: string; presignedUrl: string }> {
     const resizedBuffer = await this.bannerProcessor.adjustAspectRatio(
@@ -28,7 +28,7 @@ export class BannerStorageService {
       mimetype: 'image/webp',
       originalname: 'banner.webp',
     };
-    const objectName = userId;
+    const objectName = channelId;
 
     await this.objectStorage.uploadFile(
       BANNER_BUCKET_NAME,

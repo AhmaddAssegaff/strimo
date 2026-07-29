@@ -14,7 +14,7 @@ export class AvatarStorageService {
   ) {}
 
   async processAndUpload(
-    userId: string,
+    channelId: string,
     file: Express.Multer.File,
   ): Promise<{ objectName: string; presignedUrl: string }> {
     const resizedBuffer = await this.avatarProcessor.adjustAspectRatio(
@@ -28,7 +28,7 @@ export class AvatarStorageService {
       mimetype: 'image/webp',
       originalname: 'avatar.webp',
     };
-    const objectName = userId;
+    const objectName = channelId;
 
     await this.objectStorage.uploadFile(
       AVATAR_BUCKET_NAME,

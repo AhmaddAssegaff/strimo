@@ -240,9 +240,13 @@ describe('ChannelService', () => {
       updatedAt: new Date(),
       deletedAt: null,
     };
+    const channelId = '9b2dae7e-8325-4abe-8f2d-90f100047322';
 
     it('should process, upload new banner, update DB, delete old banner, and return result', async () => {
-      prisma.channel.findUnique.mockResolvedValue({ banner: 'old-banner-key' });
+      prisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        banner: 'old-banner-key',
+      });
       banner.processAndUpload.mockResolvedValue({
         objectName: 'new-banner-key',
         presignedUrl: 'temp-url',
@@ -256,10 +260,10 @@ describe('ChannelService', () => {
 
       expect(prisma.channel.findUnique).toHaveBeenCalledWith({
         where: { userId: user.sub },
-        select: { banner: true },
+        select: { id: true, banner: true },
       });
 
-      expect(banner.processAndUpload).toHaveBeenCalledWith(user.sub, file);
+      expect(banner.processAndUpload).toHaveBeenCalledWith(channelId, file);
 
       expect(prisma.channel.update).toHaveBeenCalledWith({
         where: { userId: user.sub },
@@ -304,9 +308,13 @@ describe('ChannelService', () => {
       updatedAt: new Date(),
       deletedAt: null,
     };
+    const channelId = '9b2dae7e-8325-4abe-8f2d-90f100047322';
 
     it('should process, upload new avatar, update DB, delete old avatar, and return result', async () => {
-      prisma.channel.findUnique.mockResolvedValue({ avatar: 'old-avatar-key' });
+      prisma.channel.findUnique.mockResolvedValue({
+        id: channelId,
+        avatar: 'old-avatar-key',
+      });
       avatar.processAndUpload.mockResolvedValue({
         objectName: 'new-avatar-key',
         presignedUrl: 'temp-url',
@@ -320,10 +328,10 @@ describe('ChannelService', () => {
 
       expect(prisma.channel.findUnique).toHaveBeenCalledWith({
         where: { userId: user.sub },
-        select: { avatar: true },
+        select: { id: true, avatar: true },
       });
 
-      expect(avatar.processAndUpload).toHaveBeenCalledWith(user.sub, file);
+      expect(avatar.processAndUpload).toHaveBeenCalledWith(channelId, file);
 
       expect(prisma.channel.update).toHaveBeenCalledWith({
         where: { userId: user.sub },

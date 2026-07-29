@@ -109,20 +109,21 @@ export class ChannelService {
     user: AuthenticatedUser,
     file: Express.Multer.File,
   ): Promise<ChannelResult> {
-    const oldChannel = await this.prisma.channel.findUnique({
+    const channel = await this.prisma.channel.findUnique({
       where: {
         userId: user.sub,
       },
       select: {
+        id: true,
         banner: true,
       },
     });
 
-    if (!oldChannel) {
+    if (!channel) {
       throw new NotFoundException('Channel not found');
     }
 
-    const { objectName } = await this.banner.processAndUpload(user.sub, file);
+    const { objectName } = await this.banner.processAndUpload(channel.id, file);
     const updatedChannelBanner = await this.prisma.channel.update({
       where: {
         userId: user.sub,
@@ -132,8 +133,8 @@ export class ChannelService {
       },
     });
 
-    if (oldChannel) {
-      await this.banner.deleteBanner(oldChannel.banner);
+    if (channel) {
+      await this.banner.deleteBanner(channel.banner);
     }
 
     return this.attachPresignedUrls(updatedChannelBanner);
@@ -143,20 +144,21 @@ export class ChannelService {
     user: AuthenticatedUser,
     file: Express.Multer.File,
   ): Promise<ChannelResult> {
-    const oldChannel = await this.prisma.channel.findUnique({
+    const channel = await this.prisma.channel.findUnique({
       where: {
         userId: user.sub,
       },
       select: {
+        id: true,
         avatar: true,
       },
     });
 
-    if (!oldChannel) {
+    if (!channel) {
       throw new NotFoundException('Channel not found');
     }
 
-    const { objectName } = await this.avatar.processAndUpload(user.sub, file);
+    const { objectName } = await this.avatar.processAndUpload(channel.id, file);
     const updatedChannelAvatar = await this.prisma.channel.update({
       where: {
         userId: user.sub,
@@ -166,8 +168,8 @@ export class ChannelService {
       },
     });
 
-    if (oldChannel) {
-      await this.avatar.deleteAvatar(oldChannel.avatar);
+    if (channel) {
+      await this.avatar.deleteAvatar(channel.avatar);
     }
 
     return this.attachPresignedUrls(updatedChannelAvatar);
