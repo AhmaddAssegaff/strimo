@@ -3,26 +3,28 @@ import {
   HealthIndicatorResult,
   HealthIndicatorService,
 } from '@nestjs/terminus';
-import { MinioService } from '~app/core/minio/minio.service';
+import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
 
 @Injectable()
-export class MinioHealthIndicator {
+export class ObjectStorageHealthIndicator {
   constructor(
     private health: HealthIndicatorService,
-    private minio: MinioService,
+    private s3Client: ObjectStorageService,
   ) {}
 
   async check(key: string): Promise<HealthIndicatorResult> {
     const indicator = this.health.check(key);
 
     try {
-      await this.minio.ping();
+      await this.s3Client.ping();
 
       return indicator.up();
     } catch (error) {
       return indicator.down({
         message:
-          error instanceof Error ? error.message : 'Unknown error minio health',
+          error instanceof Error
+            ? error.message
+            : 'Unknown error object-storage health',
       });
     }
   }

@@ -6,9 +6,9 @@ import {
 
 import { RedisHealthIndicator } from '../indicators/redis.health';
 import { PostgresHealthIndicator } from '../indicators/postgres.health';
-import { MinioHealthIndicator } from '../indicators/minio.health';
+import { ObjectStorageHealthIndicator } from '../indicators/object-storage.health';
 
-import { MinioService } from '~app/core/minio/minio.service';
+import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import { RedisService } from '~app/core/redis/redis.service';
 
@@ -40,13 +40,15 @@ export type MockHealthPostgresHealthIndicator = jest.Mocked<
   Pick<PostgresHealthIndicator, 'check'>
 >;
 
-export type MockHealthMinioHealthIndicator = jest.Mocked<
-  Pick<MinioHealthIndicator, 'check'>
+export type MockHealthObjectStorageHealthIndicator = jest.Mocked<
+  Pick<ObjectStorageHealthIndicator, 'check'>
 >;
 
-// Mock types for MinioHealthIndicator unit tests.
-// Each type keeps only the dependency methods used by MinioHealthIndicator.
-export type MockMinioService = jest.Mocked<Pick<MinioService, 'ping'>>;
+// Mock types for ObjectStorageHealthIndicator unit tests.
+// Each type keeps only the dependency methods used by ObjectStorageHealthIndicator.
+export type MockObjectStorageService = jest.Mocked<
+  Pick<ObjectStorageService, 'ping'>
+>;
 
 // Mock types for PostgresHealthIndicator unit tests.
 // Each type keeps only the dependency methods used by PostgresHealthIndicator.

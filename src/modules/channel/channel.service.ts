@@ -12,8 +12,8 @@ import {
   DEFAULT_BANNER_OBJECT_KEY,
   AVATAR_BUCKET_NAME,
   BANNER_BUCKET_NAME,
-} from '~core/minio/minio.constants';
-import { MinioService } from '~app/core/minio/minio.service';
+} from '~app/core/object-storage/object-storage.constants';
+import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { AvatarProcessorService } from './avatar.processor.service';
 import { BannerProcessorService } from './banner.processor.service';
@@ -22,7 +22,7 @@ import { NotificationService } from '../notification/notification.service';
 @Injectable()
 export class ChannelService {
   constructor(
-    private readonly minio: MinioService,
+    private readonly s3Client: ObjectStorageService,
     private readonly prisma: PrismaService,
     private readonly notif: NotificationService,
     private readonly avatar: AvatarProcessorService,
@@ -79,8 +79,8 @@ export class ChannelService {
     );
 
     const [bannerUrl, avatarUrl] = await Promise.all([
-      this.minio.getFileUrl(BANNER_BUCKET_NAME, newChannel.banner),
-      this.minio.getFileUrl(AVATAR_BUCKET_NAME, newChannel.avatar),
+      this.s3Client.getFileUrl(BANNER_BUCKET_NAME, newChannel.banner),
+      this.s3Client.getFileUrl(AVATAR_BUCKET_NAME, newChannel.avatar),
     ]);
 
     return {
@@ -118,8 +118,8 @@ export class ChannelService {
     });
 
     const [bannerUrl, avatarUrl] = await Promise.all([
-      this.minio.getFileUrl(BANNER_BUCKET_NAME, updatedChannel.banner),
-      this.minio.getFileUrl(AVATAR_BUCKET_NAME, updatedChannel.avatar),
+      this.s3Client.getFileUrl(BANNER_BUCKET_NAME, updatedChannel.banner),
+      this.s3Client.getFileUrl(AVATAR_BUCKET_NAME, updatedChannel.avatar),
     ]);
 
     return {
@@ -166,14 +166,14 @@ export class ChannelService {
       },
     });
 
-    await this.minio.uploadFile(BANNER_BUCKET_NAME, objectName, webpFile);
-    const preSignedUrl = await this.minio.getFileUrl(
+    await this.s3Client.uploadFile(BANNER_BUCKET_NAME, objectName, webpFile);
+    const preSignedUrl = await this.s3Client.getFileUrl(
       BANNER_BUCKET_NAME,
       objectName,
     );
 
     if (oldBanner) {
-      await this.minio.deleteFile(BANNER_BUCKET_NAME, oldBanner.avatar);
+      await this.s3Client.deleteFile(BANNER_BUCKET_NAME, oldBanner.avatar);
     }
 
     return {
@@ -219,14 +219,14 @@ export class ChannelService {
       },
     });
 
-    await this.minio.uploadFile(AVATAR_BUCKET_NAME, objectName, webpFile);
-    const presignedUrl = await this.minio.getFileUrl(
+    await this.s3Client.uploadFile(AVATAR_BUCKET_NAME, objectName, webpFile);
+    const presignedUrl = await this.s3Client.getFileUrl(
       AVATAR_BUCKET_NAME,
       objectName,
     );
 
     if (oldAvatar) {
-      await this.minio.deleteFile(AVATAR_BUCKET_NAME, oldAvatar.avatar);
+      await this.s3Client.deleteFile(AVATAR_BUCKET_NAME, oldAvatar.avatar);
     }
 
     return {

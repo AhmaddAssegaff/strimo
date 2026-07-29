@@ -5,7 +5,7 @@ import {
   MockHealthDiskHealthIndicator,
   MockHealthHealthCheckService,
   MockHealthMemoryHealthIndicator,
-  MockHealthMinioHealthIndicator,
+  MockHealthObjectStorageHealthIndicator,
   MockHealthPostgresHealthIndicator,
   MockHealthRedisHealthIndicator,
 } from './health.type.mock';
@@ -14,7 +14,7 @@ import {
   createMockHealthDiskHealthIndicator,
   createMockHealthHealthCheckService,
   createMockHealthMemoryHealthIndicator,
-  createMockHealthMinioHealthIndicator,
+  createMockHealthObjectStorageHealthIndicator,
   createMockHealthPostgresHealthIndicator,
   createMockHealthRedisHealthIndicator,
 } from './health.factory.mock';
@@ -26,7 +26,7 @@ import {
 } from '@nestjs/terminus';
 import { RedisHealthIndicator } from '../indicators/redis.health';
 import { PostgresHealthIndicator } from '../indicators/postgres.health';
-import { MinioHealthIndicator } from '../indicators/minio.health';
+import { ObjectStorageHealthIndicator } from '../indicators/object-storage.health';
 import { CONSTANTS } from '~app/config';
 
 describe('HealthController', () => {
@@ -35,7 +35,7 @@ describe('HealthController', () => {
   let health: MockHealthHealthCheckService;
   let disk: MockHealthDiskHealthIndicator;
   let memory: MockHealthMemoryHealthIndicator;
-  let minio: MockHealthMinioHealthIndicator;
+  let s3Client: MockHealthObjectStorageHealthIndicator;
   let postgres: MockHealthPostgresHealthIndicator;
   let redis: MockHealthRedisHealthIndicator;
 
@@ -44,7 +44,7 @@ describe('HealthController', () => {
     health = createMockHealthHealthCheckService();
     disk = createMockHealthDiskHealthIndicator();
     memory = createMockHealthMemoryHealthIndicator();
-    minio = createMockHealthMinioHealthIndicator();
+    s3Client = createMockHealthObjectStorageHealthIndicator();
     postgres = createMockHealthPostgresHealthIndicator();
     redis = createMockHealthRedisHealthIndicator();
 
@@ -76,8 +76,8 @@ describe('HealthController', () => {
           useValue: postgres,
         },
         {
-          provide: MinioHealthIndicator,
-          useValue: minio,
+          provide: ObjectStorageHealthIndicator,
+          useValue: s3Client,
         },
       ],
     }).compile();
@@ -86,7 +86,7 @@ describe('HealthController', () => {
   });
 
   describe('readiness', () => {
-    it('should check redis, postgres, and minio', async () => {
+    it('should check redis, postgres, and object-storage', async () => {
       await healthController.readiness();
 
       expect(health.check).toHaveBeenCalledTimes(1);
@@ -101,7 +101,7 @@ describe('HealthController', () => {
 
       expect(redis.check).toHaveBeenCalledWith('redis');
       expect(postgres.check).toHaveBeenCalledWith('postgres');
-      expect(minio.check).toHaveBeenCalledWith('minio');
+      expect(s3Client.check).toHaveBeenCalledWith('s3Client');
     });
   });
 

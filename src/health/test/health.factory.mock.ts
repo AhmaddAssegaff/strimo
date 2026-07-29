@@ -5,10 +5,10 @@ import {
   MockHealthHealthCheckService,
   MockHealthIndicatorService,
   MockHealthMemoryHealthIndicator,
-  MockHealthMinioHealthIndicator,
+  MockHealthObjectStorageHealthIndicator,
   MockHealthPostgresHealthIndicator,
   MockHealthRedisHealthIndicator,
-  MockMinioService,
+  MockObjectStorageService,
   MockPrismaService,
   MockRedisService,
 } from './health.type.mock';
@@ -50,7 +50,7 @@ export function createMockHealthMemoryHealthIndicator(): MockHealthMemoryHealthI
   };
 }
 
-export function createMockHealthMinioHealthIndicator(): MockHealthMinioHealthIndicator {
+export function createMockHealthObjectStorageHealthIndicator(): MockHealthObjectStorageHealthIndicator {
   return {
     check: jest.fn(),
   };
@@ -70,7 +70,7 @@ export function createMockHealthRedisHealthIndicator(): MockHealthRedisHealthInd
 
 // Factories for health indicator unit tests.
 // Used to create mocked dependencies of each health indicator.
-export function createMockMinioService(): MockMinioService {
+export function createMockObjectStorageService(): MockObjectStorageService {
   return {
     ping: jest.fn(),
   };

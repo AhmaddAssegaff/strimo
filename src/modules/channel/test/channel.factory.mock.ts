@@ -2,7 +2,7 @@ import {
   MockAvatarProcessorService,
   MockBannerProcessorService,
   MockChannelService,
-  MockMinioChannelService,
+  MockObjectStorageChannelService,
   MockNotificationChannelService,
   MockPrismaChannelService,
 } from './channel.type.mock';
@@ -17,7 +17,7 @@ export function createMockChannelService(): MockChannelService {
   };
 }
 
-export function createMockMinioChannelService(): MockMinioChannelService {
+export function createMockObjectStorageChannelService(): MockObjectStorageChannelService {
   return {
     deleteFile: jest.fn(),
     getFileUrl: jest.fn(),
