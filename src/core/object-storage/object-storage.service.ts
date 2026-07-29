@@ -12,13 +12,18 @@ import {
 import { PinoLogger } from 'nestjs-pino';
 import { readFile } from 'node:fs/promises';
 import {
+  AbortMultipartUploadCommand,
+  CompletedPart,
+  CompleteMultipartUploadCommand,
   CreateBucketCommand,
+  CreateMultipartUploadCommand,
+  DeleteObjectCommand,
   HeadBucketCommand,
   HeadObjectCommand,
-  PutObjectCommand,
-  DeleteObjectCommand,
   ListBucketsCommand,
+  PutObjectCommand,
   S3Client,
+  UploadPartCommand,
 } from '@aws-sdk/client-s3';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -165,6 +170,111 @@ export class ObjectStorageService implements OnModuleInit {
       new DeleteObjectCommand({
         Bucket: bucketName,
         Key: objectName,
+      }),
+    );
+  }
+
+  async initiateMultipartUpload(
+    bucketName: string,
+    objectName: string,
+    contentType: string,
+  ): Promise<string> {
+    await this.ensureBucket(bucketName);
+
+    const command = new CreateMultipartUploadCommand({
+      Bucket: bucketName,
+      Key: objectName,
+      ContentType: contentType,
+    });
+
+    const result = await this.s3Client.send(command);
+
+    if (!result.UploadId) {
+      throw new Error('Failed to initiate multipart upload');
+    }
+
+    return result.UploadId;
+  }
+
+  async getPresignedUploadPartUrl(
+    bucketName: string,
+    objectName: string,
+    uploadId: string,
+    partNumber: number,
+    expirySeconds = 3600,
+  ): Promise<string> {
+    const command = new UploadPartCommand({
+      Bucket: bucketName,
+      Key: objectName,
+      UploadId: uploadId,
+      PartNumber: partNumber,
+    });
+
+    return getSignedUrl(this.s3Client, command, {
+      expiresIn: expirySeconds,
+    });
+  }
+
+  async getPresignedUploadPartUrls(
+    bucketName: string,
+    objectName: string,
+    uploadId: string,
+    totalParts: number,
+    expirySeconds = 3600,
+  ): Promise<
+    {
+      partNumber: number;
+      url: string;
+    }[]
+  > {
+    const urls = await Promise.all(
+      Array.from({ length: totalParts }, async (_, index) => {
+        const partNumber = index + 1;
+
+        const url = await this.getPresignedUploadPartUrl(
+          bucketName,
+          objectName,
+          uploadId,
+          partNumber,
+          expirySeconds,
+        );
+
+        return {
+          partNumber,
+          url,
+        };
+      }),
+    );
+
+    return urls;
+  }
+
+  async completeMultipartUpload(
+    bucketName: string,
+    objectName: string,
+    uploadId: string,
+    parts: CompletedPart[],
+  ): Promise<void> {
+    await this.s3Client.send(
+      new CompleteMultipartUploadCommand({
+        Bucket: bucketName,
+        Key: objectName,
+        UploadId: uploadId,
+        MultipartUpload: { Parts: parts },
+      }),
+    );
+  }
+
+  async abortMultipartUpload(
+    bucketName: string,
+    objectName: string,
+    uploadId: string,
+  ): Promise<void> {
+    await this.s3Client.send(
+      new AbortMultipartUploadCommand({
+        Bucket: bucketName,
+        Key: objectName,
+        UploadId: uploadId,
       }),
     );
   }
