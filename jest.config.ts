@@ -16,7 +16,7 @@ const config: Config = {
     '^~modules/(.*)$': '<rootDir>/modules/$1',
     '^~core/(.*)$': '<rootDir>/core/$1',
     '^~typeorm/(.*)$': '<rootDir>/core/typeorm/$1',
-    '^~minio/(.*)$': '<rootDir>/core/minio/$1',
+    '^~s3/(.*)$': '<rootDir>/core/object-storage/$1',
     '^~smtp/(.*)$': '<rootDir>/core/smtp/$1',
     '^~bullmq/(.*)$': '<rootDir>/core/bullmq/$1',
     '^~redis/(.*)$': '<rootDir>/core/redis/$1',

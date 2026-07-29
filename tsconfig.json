@@ -27,7 +27,7 @@
       "~modules/*": ["src/modules/*"],
       "~core/*": ["src/core/*"],
       "~typeorm/*": ["src/core/typeorm/*"],
-      "~minio/*": ["src/core/minio/*"],
+      "~s3/*": ["src/core/object-storage/*"],
       "~smtp/*": ["src/core/smtp/*"],
       "~bullmq/*": ["src/core/bullmq/*"],
       "~redis/*": ["src/core/redis/*"],
