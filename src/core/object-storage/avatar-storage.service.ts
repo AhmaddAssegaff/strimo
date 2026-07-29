@@ -4,7 +4,7 @@ import {
   AVATAR_BUCKET_NAME,
   DEFAULT_AVATAR_OBJECT_KEY,
 } from './object-storage.constants';
-import { AvatarProcessorService } from '~app/modules/channel/avatar.processor.service';
+import { AvatarProcessorService } from '~app/modules/channel/processor/avatar.processor.service';
 
 @Injectable()
 export class AvatarStorageService {

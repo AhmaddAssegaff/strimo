@@ -4,7 +4,7 @@ import {
   BANNER_BUCKET_NAME,
   DEFAULT_BANNER_OBJECT_KEY,
 } from './object-storage.constants';
-import { BannerProcessorService } from '~app/modules/channel/banner.processor.service';
+import { BannerProcessorService } from '~app/modules/channel/processor/banner.processor.service';
 
 @Injectable()
 export class BannerStorageService {

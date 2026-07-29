@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ObjectStorageService } from './object-storage.service';
 import { PROFILE_PICTURE_BUCKET_NAME } from './object-storage.constants';
-import { ProfilePictureProcessorService } from '~app/modules/user/profile-picture.proscessor.service';
+import { ProfilePictureProcessorService } from '~app/modules/user/processor/profile-picture.processor.service';
 
 @Injectable()
 export class ProfilePictureStorageService {
