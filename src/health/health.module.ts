@@ -4,7 +4,7 @@ import { HealthController } from './health.controller';
 import { RedisModule } from '~app/core/redis/redis.module';
 import { RedisHealthIndicator } from './indicators/redis.health';
 import { PostgresHealthIndicator } from './indicators/postgres.health';
-import { MinioHealthIndicator } from './indicators/minio.health';
+import { ObjectStorageHealthIndicator } from './indicators/object-storage.health';
 
 @Module({
   imports: [TerminusModule, RedisModule],
@@ -12,7 +12,7 @@ import { MinioHealthIndicator } from './indicators/minio.health';
   providers: [
     RedisHealthIndicator,
     PostgresHealthIndicator,
-    MinioHealthIndicator,
+    ObjectStorageHealthIndicator,
   ],
 })
 export class HealthModule {}

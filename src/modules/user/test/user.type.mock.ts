@@ -1,8 +1,8 @@
 import { ConfigService } from '@nestjs/config';
-import { MinioService } from '~app/core/minio/minio.service';
+import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
 import { UserService } from '../user.service';
 import { ProfilePictureProcessorService } from '../profile-picture.proscessor.service';
-import { PROFILE_PICTURE_BUCKET_NAME } from '~core/minio/minio.constants';
+import { PROFILE_PICTURE_BUCKET_NAME } from '~app/core/object-storage/object-storage.constants';
 
 export type MockUserService = jest.Mocked<
   Pick<
@@ -13,8 +13,8 @@ export type MockUserService = jest.Mocked<
 
 export type MockConfigService = jest.Mocked<Pick<ConfigService, 'getOrThrow'>>;
 
-export type MockMinioUserService = jest.Mocked<
-  Pick<MinioService, 'uploadFile' | 'getFileUrl' | 'deleteFile'>
+export type MockObjectStorageUserService = jest.Mocked<
+  Pick<ObjectStorageService, 'uploadFile' | 'getFileUrl' | 'deleteFile'>
 >;
 
 export type MockPrismaUserService = {

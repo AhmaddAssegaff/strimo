@@ -3,19 +3,19 @@ import { ChannelService } from '../channel.service';
 import {
   MockAvatarProcessorService,
   MockBannerProcessorService,
-  MockMinioChannelService,
+  MockObjectStorageChannelService,
   MockNotificationChannelService,
   MockPrismaChannelService,
 } from './channel.type.mock';
 import {
   createMockAvatarProcessorService,
   createMockBannerProcessorService,
-  createMockMinioChannelService,
+  createMockObjectStorageChannelService,
   createMockNotificationChannelService,
   createMockPrismaChannelService,
 } from './channel.factory.mock';
 import { ChannelResult } from '../interface/channel.interface';
-import { MinioService } from '~app/core/minio/minio.service';
+import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import { NotificationService } from '~app/modules/notification/notification.service';
 import { AvatarProcessorService } from '../avatar.processor.service';
@@ -28,19 +28,19 @@ import {
   BANNER_BUCKET_NAME,
   DEFAULT_AVATAR_OBJECT_KEY,
   DEFAULT_BANNER_OBJECT_KEY,
-} from '~app/core/minio/minio.constants';
+} from '~app/core/object-storage/object-storage.constants';
 import { UpdateChannelDto } from '../dto/update-channel.dto';
 
 describe('ChannelService', () => {
   let service: ChannelService;
-  let minio: MockMinioChannelService;
+  let s3Client: MockObjectStorageChannelService;
   let prisma: MockPrismaChannelService;
   let notif: MockNotificationChannelService;
   let avatar: MockAvatarProcessorService;
   let banner: MockBannerProcessorService;
 
   beforeEach(async () => {
-    minio = createMockMinioChannelService();
+    s3Client = createMockObjectStorageChannelService();
     prisma = createMockPrismaChannelService();
     notif = createMockNotificationChannelService();
     avatar = createMockAvatarProcessorService();
@@ -49,7 +49,7 @@ describe('ChannelService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ChannelService,
-        { provide: MinioService, useValue: minio },
+        { provide: ObjectStorageService, useValue: s3Client },
         { provide: PrismaService, useValue: prisma },
         { provide: NotificationService, useValue: notif },
         { provide: AvatarProcessorService, useValue: avatar },
@@ -128,7 +128,7 @@ describe('ChannelService', () => {
     it('should create new channel and create notification and get preSignUrl banner & avatar', async () => {
       prisma.channel.findUnique.mockResolvedValue(null);
       prisma.channel.create.mockResolvedValue(channelResult);
-      minio.getFileUrl
+      s3Client.getFileUrl
         .mockResolvedValueOnce('banner-url')
         .mockResolvedValueOnce('avatar-url');
 
@@ -154,12 +154,12 @@ describe('ChannelService', () => {
         user,
       );
 
-      expect(minio.getFileUrl).toHaveBeenCalledTimes(2);
-      expect(minio.getFileUrl).toHaveBeenCalledWith(
+      expect(s3Client.getFileUrl).toHaveBeenCalledTimes(2);
+      expect(s3Client.getFileUrl).toHaveBeenCalledWith(
         BANNER_BUCKET_NAME,
         newChannel.banner,
       );
-      expect(minio.getFileUrl).toHaveBeenCalledWith(
+      expect(s3Client.getFileUrl).toHaveBeenCalledWith(
         AVATAR_BUCKET_NAME,
         newChannel.avatar,
       );
@@ -207,7 +207,7 @@ describe('ChannelService', () => {
     it('should update user channel when channel exist', async () => {
       prisma.channel.findUnique.mockResolvedValue(channelResult);
       prisma.channel.update.mockResolvedValue(channelResult);
-      minio.getFileUrl
+      s3Client.getFileUrl
         .mockResolvedValueOnce('banner-url')
         .mockResolvedValueOnce('avatar-url');
 
@@ -230,12 +230,12 @@ describe('ChannelService', () => {
         },
       });
 
-      expect(minio.getFileUrl).toHaveBeenCalledTimes(2);
-      expect(minio.getFileUrl).toHaveBeenCalledWith(
+      expect(s3Client.getFileUrl).toHaveBeenCalledTimes(2);
+      expect(s3Client.getFileUrl).toHaveBeenCalledWith(
         BANNER_BUCKET_NAME,
         updatedChannel.banner,
       );
-      expect(minio.getFileUrl).toHaveBeenCalledWith(
+      expect(s3Client.getFileUrl).toHaveBeenCalledWith(
         AVATAR_BUCKET_NAME,
         updatedChannel.avatar,
       );
@@ -297,7 +297,7 @@ describe('ChannelService', () => {
       banner.adjustAspectRatio.mockResolvedValue(resizedBuffer);
       banner.convertToWebp.mockResolvedValue(webpBuffer);
 
-      minio.getFileUrl.mockResolvedValue('banner-url');
+      s3Client.getFileUrl.mockResolvedValue('banner-url');
 
       const updatedChannel = await service.updateChannelBanner(user, file);
 
@@ -334,18 +334,18 @@ describe('ChannelService', () => {
         },
       });
 
-      expect(minio.uploadFile).toHaveBeenCalledWith(
+      expect(s3Client.uploadFile).toHaveBeenCalledWith(
         BANNER_BUCKET_NAME,
         user.sub,
         webpFile,
       );
 
-      expect(minio.getFileUrl).toHaveBeenCalledWith(
+      expect(s3Client.getFileUrl).toHaveBeenCalledWith(
         BANNER_BUCKET_NAME,
         user.sub,
       );
 
-      expect(minio.deleteFile).toHaveBeenCalledWith(
+      expect(s3Client.deleteFile).toHaveBeenCalledWith(
         BANNER_BUCKET_NAME,
         channelResult.avatar,
       );
@@ -406,7 +406,7 @@ describe('ChannelService', () => {
       avatar.adjustAspectRatio.mockResolvedValue(resizedBuffer);
       avatar.convertToWebp.mockResolvedValue(webpBuffer);
 
-      minio.getFileUrl.mockResolvedValue('avatar-url');
+      s3Client.getFileUrl.mockResolvedValue('avatar-url');
 
       const updatedChannel = await service.updateChannelAvatar(user, file);
 
@@ -445,21 +445,21 @@ describe('ChannelService', () => {
         },
       });
 
-      expect(minio.uploadFile).toHaveBeenCalledTimes(1);
-      expect(minio.uploadFile).toHaveBeenCalledWith(
+      expect(s3Client.uploadFile).toHaveBeenCalledTimes(1);
+      expect(s3Client.uploadFile).toHaveBeenCalledWith(
         AVATAR_BUCKET_NAME,
         user.sub,
         webpFile,
       );
 
-      expect(minio.getFileUrl).toHaveBeenCalledTimes(1);
-      expect(minio.getFileUrl).toHaveBeenCalledWith(
+      expect(s3Client.getFileUrl).toHaveBeenCalledTimes(1);
+      expect(s3Client.getFileUrl).toHaveBeenCalledWith(
         AVATAR_BUCKET_NAME,
         user.sub,
       );
 
-      expect(minio.deleteFile).toHaveBeenCalledTimes(1);
-      expect(minio.deleteFile).toHaveBeenCalledWith(
+      expect(s3Client.deleteFile).toHaveBeenCalledTimes(1);
+      expect(s3Client.deleteFile).toHaveBeenCalledWith(
         AVATAR_BUCKET_NAME,
         channelResult.avatar,
       );

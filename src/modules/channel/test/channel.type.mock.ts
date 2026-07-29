@@ -1,6 +1,6 @@
 import { NotificationService } from '~app/modules/notification/notification.service';
 import { ChannelService } from '../channel.service';
-import { MinioService } from '~app/core/minio/minio.service';
+import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
 import { AvatarProcessorService } from '../avatar.processor.service';
 import { BannerProcessorService } from '../banner.processor.service';
 
@@ -15,8 +15,8 @@ export type MockChannelService = jest.Mocked<
   >
 >;
 
-export type MockMinioChannelService = jest.Mocked<
-  Pick<MinioService, 'uploadFile' | 'getFileUrl' | 'deleteFile'>
+export type MockObjectStorageChannelService = jest.Mocked<
+  Pick<ObjectStorageService, 'uploadFile' | 'getFileUrl' | 'deleteFile'>
 >;
 
 export type MockPrismaChannelService = {

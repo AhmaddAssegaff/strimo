@@ -8,17 +8,17 @@ import {
 } from '~app/modules/auth/interface/auth.interface';
 import {
   MockConfigService,
-  MockMinioUserService,
+  MockObjectStorageUserService,
   MockPhotoProfileProcessorService,
   MockPrismaUserService,
 } from './user.type.mock';
 import {
   createConfigServiceMock,
-  createMockMinioService,
+  createMockObjectStorageService,
   createMockPhotoProfileProcessorService,
   createMockPrismaUserService,
 } from './user.factory.mock';
-import { MinioService } from '~app/core/minio/minio.service';
+import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
 import { NotFoundException } from '@nestjs/common';
 import {
   CreateUserOauthResult,
@@ -34,13 +34,13 @@ describe('UserService', () => {
 
   let prisma: MockPrismaUserService;
   let config: MockConfigService;
-  let minio: MockMinioUserService;
+  let s3Client: MockObjectStorageUserService;
   let photo: MockPhotoProfileProcessorService;
 
   beforeEach(async () => {
     prisma = createMockPrismaUserService();
     config = createConfigServiceMock();
-    minio = createMockMinioService();
+    s3Client = createMockObjectStorageService();
     photo = createMockPhotoProfileProcessorService();
 
     const module: TestingModule = await Test.createTestingModule({
@@ -55,8 +55,8 @@ describe('UserService', () => {
           useValue: config,
         },
         {
-          provide: MinioService,
-          useValue: minio,
+          provide: ObjectStorageService,
+          useValue: s3Client,
         },
         {
           provide: ProfilePictureProcessorService,
@@ -179,16 +179,16 @@ describe('UserService', () => {
     };
 
     const mockPresignedUrl =
-      'https://minio.example.com/bucket/user-id/profile.webp';
+      'https://s3.example.com/bucket/user-id/profile.webp';
 
     it('should update user profile and return profile with presigned picture URL', async () => {
-      minio.getFileUrl.mockResolvedValue(mockPresignedUrl);
+      s3Client.getFileUrl.mockResolvedValue(mockPresignedUrl);
       prisma.user.update.mockResolvedValue(updateUserProfileResult);
 
       const result = await userService.updateUserProfile(dto, currentUser);
 
       expect(prisma.user.update).toHaveBeenCalledTimes(1);
-      expect(minio.getFileUrl).toHaveBeenCalledTimes(1);
+      expect(s3Client.getFileUrl).toHaveBeenCalledTimes(1);
       expect(result).toBeDefined();
       expect(result).toEqual({
         ...updateUserProfileResult,
@@ -214,9 +214,9 @@ describe('UserService', () => {
       deletedAt: null,
     };
     const mockPresignedUrl =
-      'https://minio.example.com/bucket/user-id/profile.webp';
+      'https://s3.example.com/bucket/user-id/profile.webp';
 
-    it('should process image, upload to MinIO, update DB, and return presigned URL', async () => {
+    it('should process image, upload to s3, update DB, and return presigned URL', async () => {
       prisma.user.findUnique.mockResolvedValue({
         profilePicture: `${currentUser.sub}/old-profile.webp`,
       });
@@ -225,7 +225,7 @@ describe('UserService', () => {
 
       photo.convertToWebp.mockResolvedValue(Buffer.from('webp-buffer'));
 
-      minio.getFileUrl.mockResolvedValue(mockPresignedUrl);
+      s3Client.getFileUrl.mockResolvedValue(mockPresignedUrl);
       prisma.user.update.mockResolvedValue(updateUserProfileResult);
 
       const result = await userService.updateUserProfilePicture(
@@ -235,10 +235,10 @@ describe('UserService', () => {
 
       expect(photo.adjustAspectRatio).toHaveBeenCalledTimes(1);
       expect(photo.convertToWebp).toHaveBeenCalledTimes(1);
-      expect(minio.uploadFile).toHaveBeenCalledTimes(1);
+      expect(s3Client.uploadFile).toHaveBeenCalledTimes(1);
       expect(prisma.user.update).toHaveBeenCalledTimes(1);
-      expect(minio.getFileUrl).toHaveBeenCalledTimes(1);
-      expect(minio.deleteFile).toHaveBeenCalledTimes(1);
+      expect(s3Client.getFileUrl).toHaveBeenCalledTimes(1);
+      expect(s3Client.deleteFile).toHaveBeenCalledTimes(1);
 
       expect(result).toEqual({
         ...updateUserProfileResult,

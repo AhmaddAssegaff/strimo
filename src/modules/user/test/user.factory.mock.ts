@@ -1,6 +1,6 @@
 import {
   MockConfigService,
-  MockMinioUserService,
+  MockObjectStorageUserService,
   MockPrismaUserService,
   MockUserService,
   MockConfigUserService,
@@ -56,7 +56,7 @@ export function createConfigServiceMock(): MockConfigService {
   return config;
 }
 
-export function createMockMinioService(): MockMinioUserService {
+export function createMockObjectStorageService(): MockObjectStorageUserService {
   return {
     uploadFile: jest.fn(),
     getFileUrl: jest.fn(),

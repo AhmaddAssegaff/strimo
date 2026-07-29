@@ -5,7 +5,7 @@ import {
   UserOauthGoogle,
 } from '../auth/interface/auth.interface';
 import { USER_ACCOUNTS_PROVIDER } from '@prisma/client';
-import { MinioService } from '~app/core/minio/minio.service';
+import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
 import { UpdateUserProfile } from './dto/update-user';
 import {
   CreateUserOauthResult,
@@ -14,12 +14,12 @@ import {
   UserProfileResult,
 } from './interface/user.interface';
 import { ProfilePictureProcessorService } from './profile-picture.proscessor.service';
-import { PROFILE_PICTURE_BUCKET_NAME } from '~core/minio/minio.constants';
+import { PROFILE_PICTURE_BUCKET_NAME } from '~app/core/object-storage/object-storage.constants';
 
 @Injectable()
 export class UserService {
   constructor(
-    private readonly minio: MinioService,
+    private readonly s3Client: ObjectStorageService,
     private readonly prisma: PrismaService,
     private readonly photoProfile: ProfilePictureProcessorService,
   ) {}
@@ -116,7 +116,7 @@ export class UserService {
       },
     });
 
-    const presignedUrl = await this.minio.getFileUrl(
+    const presignedUrl = await this.s3Client.getFileUrl(
       PROFILE_PICTURE_BUCKET_NAME,
       user.profilePicture!,
     );
@@ -157,7 +157,7 @@ export class UserService {
     };
 
     const objectName = currentUser.sub;
-    await this.minio.uploadFile(
+    await this.s3Client.uploadFile(
       PROFILE_PICTURE_BUCKET_NAME,
       objectName,
       webpFile,
@@ -171,13 +171,13 @@ export class UserService {
       },
     });
 
-    const presignedUrl = await this.minio.getFileUrl(
+    const presignedUrl = await this.s3Client.getFileUrl(
       PROFILE_PICTURE_BUCKET_NAME,
       objectName,
     );
 
     if (oldProfilePicture) {
-      await this.minio.deleteFile(PROFILE_PICTURE_BUCKET_NAME, objectName);
+      await this.s3Client.deleteFile(PROFILE_PICTURE_BUCKET_NAME, objectName);
     }
 
     return {

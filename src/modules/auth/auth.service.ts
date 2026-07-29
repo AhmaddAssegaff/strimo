@@ -61,7 +61,7 @@ export class AuthService {
     };
 
     return {
-      OauthGoogleResponseInterface: {
+      tokens: {
         accessToken: this.signAccessToken(payload),
         refreshToken: this.signRefreshToken(payload),
       },
