@@ -47,7 +47,7 @@ export interface RefreshTokenResult {
 }
 
 export interface OauthGoogleResult {
-  OauthGoogleResponseInterface: AuthTokenPair;
+  tokens: AuthTokenPair;
 }
 
 /**

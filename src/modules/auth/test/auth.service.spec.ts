@@ -63,7 +63,7 @@ describe('AuthService', () => {
         picture: 'profile picture',
       };
       const oauthGoogleResponseInterface: OauthGoogleResult = {
-        OauthGoogleResponseInterface: {
+        tokens: {
           accessToken: 'access-token',
           refreshToken: 'refresh-token',
         },
