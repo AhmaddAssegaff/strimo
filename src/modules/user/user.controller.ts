@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAccessGuard } from '../auth/guard/jwt-access.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
 import type { AuthenticatedUser } from '../auth/interface/auth.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UpdateUserProfile } from './dto/update-user';
@@ -21,7 +20,6 @@ import {
 } from './interface/user.interface';
 import { CurrentUser } from '~app/core/decorators/current-user.decorators';
 
-@ApiBearerAuth('access-token')
 @UseGuards(JwtAccessGuard)
 @Controller('user')
 export class UserController {
