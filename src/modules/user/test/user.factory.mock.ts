@@ -1,10 +1,7 @@
 import {
-  MockConfigService,
-  MockObjectStorageUserService,
   MockPrismaUserService,
+  MockProfilePictureStorageService,
   MockUserService,
-  MockConfigUserService,
-  MockPhotoProfileProcessorService,
 } from './user.type.mock';
 
 export function createMockUserService(): MockUserService {
@@ -36,37 +33,10 @@ export function createMockPrismaUserService(): MockPrismaUserService {
   return mock;
 }
 
-export function createConfigServiceMock(): MockConfigService {
-  const configMap: Record<string, any> = {
-    ...MockConfigUserService,
-  };
-
-  const config: MockConfigService = {
-    getOrThrow: jest.fn(),
-  };
-
-  config.getOrThrow.mockImplementation((key: string) => {
-    if (key in configMap) {
-      return configMap[key];
-    }
-
-    throw new Error(`Unexpected config key: ${key}`);
-  });
-
-  return config;
-}
-
-export function createMockObjectStorageService(): MockObjectStorageUserService {
+export function createMockProfilePictureStorageService(): MockProfilePictureStorageService {
   return {
-    uploadFile: jest.fn(),
-    getFileUrl: jest.fn(),
-    deleteFile: jest.fn(),
-  };
-}
-
-export function createMockPhotoProfileProcessorService(): MockPhotoProfileProcessorService {
-  return {
-    adjustAspectRatio: jest.fn(),
-    convertToWebp: jest.fn(),
+    deleteProfilePicture: jest.fn(),
+    getProfilePictureUrl: jest.fn(),
+    processAndUpload: jest.fn(),
   };
 }
