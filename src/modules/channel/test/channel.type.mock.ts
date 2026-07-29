@@ -1,8 +1,8 @@
 import { NotificationService } from '~app/modules/notification/notification.service';
 import { ChannelService } from '../channel.service';
 import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
-import { AvatarProcessorService } from '../avatar.processor.service';
-import { BannerProcessorService } from '../banner.processor.service';
+import { AvatarStorageService } from '~core/object-storage/avatar-storage.service';
+import { BannerStorageService } from '~core/object-storage/banner-storage.service';
 
 export type MockChannelService = jest.Mocked<
   Pick<
@@ -35,11 +35,16 @@ export type MockNotificationChannelService = jest.Mocked<
     | 'findNotificationById'
   >
 >;
-
-export type MockAvatarProcessorService = jest.Mocked<
-  Pick<AvatarProcessorService, 'adjustAspectRatio' | 'convertToWebp'>
+export type MockAvatarStorageService = jest.Mocked<
+  Pick<
+    AvatarStorageService,
+    'processAndUpload' | 'getAvatarUrl' | 'deleteAvatar' | 'getDefaultKey'
+  >
 >;
 
-export type MockBannerProcessorService = jest.Mocked<
-  Pick<BannerProcessorService, 'adjustAspectRatio' | 'convertToWebp'>
+export type MockBannerStorageService = jest.Mocked<
+  Pick<
+    BannerStorageService,
+    'processAndUpload' | 'getBannerUrl' | 'deleteBanner' | 'getDefaultKey'
+  >
 >;
