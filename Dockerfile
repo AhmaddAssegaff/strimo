@@ -35,7 +35,7 @@ ENV APP_NODE_ENV=${APP_NODE_ENV} \
     npm_config_update_notifier=false \
     npm_config_cache=/tmp/.npm
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
 
 WORKDIR /app
 
@@ -111,7 +111,7 @@ ENV APP_NODE_ENV=development \
     PORT=3000 \
     pnpm_config_update_notifier=false
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
 
 WORKDIR /app
 
