@@ -4,10 +4,15 @@ import { CONSTANTS } from '~config/index';
 import { OBJECT_STORAGE_TOKEN } from '~app/core/object-storage/object-storage.constants';
 import { ObjectStorageService } from './object-storage.service';
 import { S3Client } from '@aws-sdk/client-s3';
+import { AvatarStorageService } from './avatar-storage.service';
+import { BannerStorageService } from './banner-storage.service';
+import { ProfilePictureStorageService } from './profile-picture-storage.service';
+import { ChannelProcessorModule } from '~app/modules/channel/processor/channel.processor.module';
+import { UserProcessorModule } from '~app/modules/user/processor/user.processor.module';
 
 @Global()
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, ChannelProcessorModule, UserProcessorModule],
   providers: [
     {
       provide: OBJECT_STORAGE_TOKEN,
@@ -41,7 +46,16 @@ import { S3Client } from '@aws-sdk/client-s3';
       },
     },
     ObjectStorageService,
+    AvatarStorageService,
+    BannerStorageService,
+    ProfilePictureStorageService,
   ],
-  exports: [OBJECT_STORAGE_TOKEN, ObjectStorageService],
+  exports: [
+    OBJECT_STORAGE_TOKEN,
+    ObjectStorageService,
+    AvatarStorageService,
+    BannerStorageService,
+    ProfilePictureStorageService,
+  ],
 })
 export class ObjectStorageModule {}

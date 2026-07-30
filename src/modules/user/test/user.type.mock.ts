@@ -1,20 +1,11 @@
-import { ConfigService } from '@nestjs/config';
-import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
 import { UserService } from '../user.service';
-import { ProfilePictureProcessorService } from '../profile-picture.proscessor.service';
-import { PROFILE_PICTURE_BUCKET_NAME } from '~app/core/object-storage/object-storage.constants';
+import { ProfilePictureStorageService } from '~core/object-storage/profile-picture-storage.service';
 
 export type MockUserService = jest.Mocked<
   Pick<
     UserService,
     'findUserProfile' | 'updateUserProfile' | 'updateUserProfilePicture'
   >
->;
-
-export type MockConfigService = jest.Mocked<Pick<ConfigService, 'getOrThrow'>>;
-
-export type MockObjectStorageUserService = jest.Mocked<
-  Pick<ObjectStorageService, 'uploadFile' | 'getFileUrl' | 'deleteFile'>
 >;
 
 export type MockPrismaUserService = {
@@ -30,10 +21,9 @@ export type MockPrismaUserService = {
   };
 };
 
-export type MockPhotoProfileProcessorService = jest.Mocked<
-  Pick<ProfilePictureProcessorService, 'adjustAspectRatio' | 'convertToWebp'>
+export type MockProfilePictureStorageService = jest.Mocked<
+  Pick<
+    ProfilePictureStorageService,
+    'processAndUpload' | 'getProfilePictureUrl' | 'deleteProfilePicture'
+  >
 >;
-
-export const MockConfigUserService = {
-  [PROFILE_PICTURE_BUCKET_NAME]: 'bucket-name',
-} as const;

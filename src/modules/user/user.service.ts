@@ -5,7 +5,6 @@ import {
   UserOauthGoogle,
 } from '../auth/interface/auth.interface';
 import { USER_ACCOUNTS_PROVIDER } from '@prisma/client';
-import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
 import { UpdateUserProfile } from './dto/update-user';
 import {
   CreateUserOauthResult,
@@ -13,15 +12,13 @@ import {
   UpdateUserProfileResult,
   UserProfileResult,
 } from './interface/user.interface';
-import { ProfilePictureProcessorService } from './profile-picture.proscessor.service';
-import { PROFILE_PICTURE_BUCKET_NAME } from '~app/core/object-storage/object-storage.constants';
+import { ProfilePictureStorageService } from '~app/core/object-storage/profile-picture-storage.service';
 
 @Injectable()
 export class UserService {
   constructor(
-    private readonly s3Client: ObjectStorageService,
     private readonly prisma: PrismaService,
-    private readonly photoProfile: ProfilePictureProcessorService,
+    private readonly profilePictureStorage: ProfilePictureStorageService,
   ) {}
 
   async findUserProfile(
@@ -116,8 +113,7 @@ export class UserService {
       },
     });
 
-    const presignedUrl = await this.s3Client.getFileUrl(
-      PROFILE_PICTURE_BUCKET_NAME,
+    const presignedUrl = await this.profilePictureStorage.getProfilePictureUrl(
       user.profilePicture!,
     );
 
@@ -144,24 +140,9 @@ export class UserService {
       throw new NotFoundException('Profile picture not found');
     }
 
-    const resizedBuffer = await this.photoProfile.adjustAspectRatio(
-      file.buffer,
-    );
-    const webpBuffer = await this.photoProfile.convertToWebp(resizedBuffer);
-    const webpFile: Express.Multer.File = {
-      ...file,
-      buffer: webpBuffer,
-      size: webpBuffer.length,
-      mimetype: 'image/webp',
-      originalname: 'profile.webp',
-    };
+    const { objectName, presignedUrl } =
+      await this.profilePictureStorage.processAndUpload(currentUser.sub, file);
 
-    const objectName = currentUser.sub;
-    await this.s3Client.uploadFile(
-      PROFILE_PICTURE_BUCKET_NAME,
-      objectName,
-      webpFile,
-    );
     const user = await this.prisma.user.update({
       where: {
         id: currentUser.sub,
@@ -171,13 +152,10 @@ export class UserService {
       },
     });
 
-    const presignedUrl = await this.s3Client.getFileUrl(
-      PROFILE_PICTURE_BUCKET_NAME,
-      objectName,
-    );
-
     if (oldProfilePicture) {
-      await this.s3Client.deleteFile(PROFILE_PICTURE_BUCKET_NAME, objectName);
+      await this.profilePictureStorage.deleteProfilePicture(
+        oldProfilePicture.profilePicture!,
+      );
     }
 
     return {
