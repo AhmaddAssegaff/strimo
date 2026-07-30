@@ -1,59 +1,47 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChannelService } from '../channel.service';
 import {
-  MockAvatarProcessorService,
-  MockBannerProcessorService,
-  MockMinioChannelService,
   MockNotificationChannelService,
   MockPrismaChannelService,
-} from './channel.mock.test';
+  MockAvatarStorageService,
+  MockBannerStorageService,
+} from './channel.type.mock';
 import {
-  createMockAvatarProcessorService,
-  createMockBannerProcessorService,
-  createMockMinioChannelService,
   createMockNotificationChannelService,
   createMockPrismaChannelService,
-} from './channel.factory.test';
+  createMockBannerStorageService,
+  createMockAvatarStorageService,
+} from './channel.factory.mock';
 import { ChannelResult } from '../interface/channel.interface';
-import { MinioService } from '~app/core/minio/minio.service';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import { NotificationService } from '~app/modules/notification/notification.service';
-import { AvatarProcessorService } from '../avatar.processor.service';
-import { BannerProcessorService } from '../banner.processor.service';
+import { AvatarStorageService } from '~app/core/object-storage/avatar-storage.service';
+import { BannerStorageService } from '~app/core/object-storage/banner-storage.service';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { AuthenticatedUser } from '~app/modules/auth/interface/auth.interface';
 import { CreateChannelDto } from '../dto/create-channel.dto';
-import {
-  AVATAR_BUCKET_NAME,
-  BANNER_BUCKET_NAME,
-  DEFAULT_AVATAR_OBJECT_KEY,
-  DEFAULT_BANNER_OBJECT_KEY,
-} from '~app/core/minio/minio.constants';
 import { UpdateChannelDto } from '../dto/update-channel.dto';
 
 describe('ChannelService', () => {
   let service: ChannelService;
-  let minio: MockMinioChannelService;
   let prisma: MockPrismaChannelService;
   let notif: MockNotificationChannelService;
-  let avatar: MockAvatarProcessorService;
-  let banner: MockBannerProcessorService;
+  let avatar: MockAvatarStorageService;
+  let banner: MockBannerStorageService;
 
   beforeEach(async () => {
-    minio = createMockMinioChannelService();
     prisma = createMockPrismaChannelService();
     notif = createMockNotificationChannelService();
-    avatar = createMockAvatarProcessorService();
-    banner = createMockBannerProcessorService();
+    avatar = createMockAvatarStorageService();
+    banner = createMockBannerStorageService();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ChannelService,
-        { provide: MinioService, useValue: minio },
         { provide: PrismaService, useValue: prisma },
         { provide: NotificationService, useValue: notif },
-        { provide: AvatarProcessorService, useValue: avatar },
-        { provide: BannerProcessorService, useValue: banner },
+        { provide: AvatarStorageService, useValue: avatar },
+        { provide: BannerStorageService, useValue: banner },
       ],
     }).compile();
 
@@ -64,8 +52,8 @@ describe('ChannelService', () => {
     const channelResult: ChannelResult = {
       id: '7ee082e2-0c8b-4ec6-af9d-3df1ab06ab0f',
       userId: '05e1a01f-7239-4c49-b1f1-23293fea9c9a',
-      avatar: 'url',
-      banner: 'url',
+      avatar: 'default-avatar-key',
+      banner: 'default-banner-key',
       title: 'title',
       description: 'desc',
       isVerified: true,
@@ -75,21 +63,27 @@ describe('ChannelService', () => {
       updatedAt: new Date(),
       deletedAt: null,
     };
-    const id = '573070d3-b2dc-4de4-a4e8-ee7510c1c2ec';
+    const id = '05e1a01f-7239-4c49-b1f1-23293fea9c9a';
 
-    it('should find channel by userId', async () => {
+    it('should find channel by userId and attach presigned urls', async () => {
       prisma.channel.findUnique.mockResolvedValue(channelResult);
+      banner.getBannerUrl.mockResolvedValue('presigned-banner-url');
+      avatar.getAvatarUrl.mockResolvedValue('presigned-avatar-url');
 
-      prisma.channel.create.mockResolvedValue(channelResult);
       const channel = await service.findChannelById(id);
 
       expect(prisma.channel.findUnique).toHaveBeenCalledTimes(1);
       expect(prisma.channel.findUnique).toHaveBeenCalledWith({
-        where: {
-          userId: id,
-        },
+        where: { userId: id },
       });
-      expect(channel).toEqual(channelResult);
+      expect(banner.getBannerUrl).toHaveBeenCalledWith('default-banner-key');
+      expect(avatar.getAvatarUrl).toHaveBeenCalledWith('default-avatar-key');
+
+      expect(channel).toEqual({
+        ...channelResult,
+        banner: 'presigned-banner-url',
+        avatar: 'presigned-avatar-url',
+      });
     });
 
     it('should throw not found error when channel not found', async () => {
@@ -112,12 +106,12 @@ describe('ChannelService', () => {
     };
     const channelResult: ChannelResult = {
       id: '7ee082e2-0c8b-4ec6-af9d-3df1ab06ab0f',
-      userId: '05e1a01f-7239-4c49-b1f1-23293fea9c9a',
-      avatar: 'avatar-url',
-      banner: 'banner-url',
+      userId: user.sub,
+      avatar: 'default-avatar-key',
+      banner: 'default-banner-key',
       title: 'title',
       description: 'desc',
-      isVerified: true,
+      isVerified: false,
       subscriberCount: 0,
       videoCount: 0,
       createdAt: new Date(),
@@ -125,12 +119,14 @@ describe('ChannelService', () => {
       deletedAt: null,
     };
 
-    it('should create new channel and create notification and get preSignUrl banner & avatar', async () => {
+    it('should create new channel, create notification, and return presigned URLs', async () => {
       prisma.channel.findUnique.mockResolvedValue(null);
+      avatar.getDefaultKey.mockReturnValue('default-avatar-key');
+      banner.getDefaultKey.mockReturnValue('default-banner-key');
       prisma.channel.create.mockResolvedValue(channelResult);
-      minio.getFileUrl
-        .mockResolvedValueOnce('banner-url')
-        .mockResolvedValueOnce('avatar-url');
+
+      banner.getBannerUrl.mockResolvedValue('presigned-banner-url');
+      avatar.getAvatarUrl.mockResolvedValue('presigned-avatar-url');
 
       const newChannel = await service.createChannel(user, dto);
 
@@ -140,38 +136,25 @@ describe('ChannelService', () => {
           userId: user.sub,
           title: dto.title,
           description: dto.description,
-          avatar: DEFAULT_AVATAR_OBJECT_KEY,
-          banner: DEFAULT_BANNER_OBJECT_KEY,
+          avatar: 'default-avatar-key',
+          banner: 'default-banner-key',
         },
       });
 
       expect(notif.createNotificationCreatedChannel).toHaveBeenCalledTimes(1);
-      expect(notif.createNotificationCreatedChannel).toHaveBeenCalledWith(
-        {
-          title: 'Congratulations! Your Channel Is Ready',
-          message: 'Thank you for creating a channel on Strimo',
-        },
-        user,
-      );
+      expect(notif.createNotificationCreatedChannel).toHaveBeenCalledWith(user);
 
-      expect(minio.getFileUrl).toHaveBeenCalledTimes(2);
-      expect(minio.getFileUrl).toHaveBeenCalledWith(
-        BANNER_BUCKET_NAME,
-        newChannel.banner,
-      );
-      expect(minio.getFileUrl).toHaveBeenCalledWith(
-        AVATAR_BUCKET_NAME,
-        newChannel.avatar,
-      );
+      expect(banner.getBannerUrl).toHaveBeenCalledWith('default-banner-key');
+      expect(avatar.getAvatarUrl).toHaveBeenCalledWith('default-avatar-key');
 
       expect(newChannel).toEqual({
         ...channelResult,
-        banner: 'banner-url',
-        avatar: 'avatar-url',
+        banner: 'presigned-banner-url',
+        avatar: 'presigned-avatar-url',
       });
     });
 
-    it('should throw config ConflictException when user already have channel', async () => {
+    it('should throw ConflictException when user already has a channel', async () => {
       prisma.channel.findUnique.mockResolvedValue(channelResult);
 
       await expect(service.createChannel(user, dto)).rejects.toThrow(
@@ -186,16 +169,16 @@ describe('ChannelService', () => {
       sub: 'c7b6c0da-484d-445d-8156-04c4828296ad',
     };
     const dto: UpdateChannelDto = {
-      description: 'desc',
-      title: 'title',
+      description: 'updated desc',
+      title: 'updated title',
     };
     const channelResult: ChannelResult = {
       id: '7ee082e2-0c8b-4ec6-af9d-3df1ab06ab0f',
-      userId: '05e1a01f-7239-4c49-b1f1-23293fea9c9a',
-      avatar: 'avatar-url',
-      banner: 'banner-url',
-      title: 'title',
-      description: 'desc',
+      userId: user.sub,
+      avatar: 'avatar-key',
+      banner: 'banner-key',
+      title: 'updated title',
+      description: 'updated desc',
       isVerified: true,
       subscriberCount: 0,
       videoCount: 0,
@@ -204,46 +187,27 @@ describe('ChannelService', () => {
       deletedAt: null,
     };
 
-    it('should update user channel when channel exist', async () => {
+    it('should update user channel when channel exists', async () => {
       prisma.channel.findUnique.mockResolvedValue(channelResult);
       prisma.channel.update.mockResolvedValue(channelResult);
-      minio.getFileUrl
-        .mockResolvedValueOnce('banner-url')
-        .mockResolvedValueOnce('avatar-url');
+      banner.getBannerUrl.mockResolvedValue('presigned-banner-url');
+      avatar.getAvatarUrl.mockResolvedValue('presigned-avatar-url');
 
       const updatedChannel = await service.updateChannel(user, dto);
 
       expect(prisma.channel.findUnique).toHaveBeenCalledTimes(1);
-      expect(prisma.channel.findUnique).toHaveBeenCalledWith({
-        where: {
-          userId: user.sub,
-        },
-      });
-
       expect(prisma.channel.update).toHaveBeenCalledWith({
-        where: {
-          userId: user.sub,
-        },
+        where: { userId: user.sub },
         data: {
           description: dto.description,
           title: dto.title,
         },
       });
 
-      expect(minio.getFileUrl).toHaveBeenCalledTimes(2);
-      expect(minio.getFileUrl).toHaveBeenCalledWith(
-        BANNER_BUCKET_NAME,
-        updatedChannel.banner,
-      );
-      expect(minio.getFileUrl).toHaveBeenCalledWith(
-        AVATAR_BUCKET_NAME,
-        updatedChannel.avatar,
-      );
-
       expect(updatedChannel).toEqual({
-        ...updatedChannel,
-        avatar: 'avatar-url',
-        banner: 'banner-url',
+        ...channelResult,
+        banner: 'presigned-banner-url',
+        avatar: 'presigned-avatar-url',
       });
     });
 
@@ -261,19 +225,12 @@ describe('ChannelService', () => {
       email: 'email@gmail.com',
       sub: 'c7b6c0da-484d-445d-8156-04c4828296ad',
     };
-
-    const file = {
-      buffer: Buffer.from('original-image'),
-    } as Express.Multer.File;
-
-    const resizedBuffer = Buffer.from('resized-image');
-    const webpBuffer = Buffer.from('webp-image');
-
+    const file = {} as Express.Multer.File;
     const channelResult: ChannelResult = {
       id: '7ee082e2-0c8b-4ec6-af9d-3df1ab06ab0f',
       userId: user.sub,
-      avatar: 'avatar-object-key',
-      banner: 'banner-object-key',
+      avatar: 'avatar-key',
+      banner: 'new-banner-key',
       title: 'title',
       description: 'desc',
       isVerified: true,
@@ -283,80 +240,46 @@ describe('ChannelService', () => {
       updatedAt: new Date(),
       deletedAt: null,
     };
+    const channelId = '9b2dae7e-8325-4abe-8f2d-90f100047322';
 
-    it('should upload banner channel and update banner object key and delete old banner', async () => {
+    it('should process, upload new banner, update DB, delete old banner, and return result', async () => {
       prisma.channel.findUnique.mockResolvedValue({
-        avatar: channelResult.avatar,
+        id: channelId,
+        banner: 'old-banner-key',
       });
-
-      prisma.channel.update.mockResolvedValue({
-        ...channelResult,
-        banner: user.sub,
+      banner.processAndUpload.mockResolvedValue({
+        objectName: 'new-banner-key',
+        presignedUrl: 'temp-url',
       });
+      prisma.channel.update.mockResolvedValue(channelResult);
 
-      banner.adjustAspectRatio.mockResolvedValue(resizedBuffer);
-      banner.convertToWebp.mockResolvedValue(webpBuffer);
-
-      minio.getFileUrl.mockResolvedValue('banner-url');
+      banner.getBannerUrl.mockResolvedValue('presigned-banner-url');
+      avatar.getAvatarUrl.mockResolvedValue('presigned-avatar-url');
 
       const updatedChannel = await service.updateChannelBanner(user, file);
 
-      const webpFile: Express.Multer.File = {
-        ...file,
-        buffer: webpBuffer,
-        size: webpBuffer.length,
-        mimetype: 'image/webp',
-        originalname: 'banner.webp',
-      };
-
-      expect(prisma.channel.findUnique).toHaveBeenCalledTimes(1);
       expect(prisma.channel.findUnique).toHaveBeenCalledWith({
-        where: {
-          userId: user.sub,
-        },
-        select: {
-          avatar: true,
-        },
+        where: { userId: user.sub },
+        select: { id: true, banner: true },
       });
 
-      expect(banner.adjustAspectRatio).toHaveBeenCalledTimes(1);
-      expect(banner.adjustAspectRatio).toHaveBeenCalledWith(file.buffer);
-
-      expect(banner.convertToWebp).toHaveBeenCalledTimes(1);
-      expect(banner.convertToWebp).toHaveBeenCalledWith(resizedBuffer);
+      expect(banner.processAndUpload).toHaveBeenCalledWith(channelId, file);
 
       expect(prisma.channel.update).toHaveBeenCalledWith({
-        where: {
-          userId: user.sub,
-        },
-        data: {
-          banner: user.sub,
-        },
+        where: { userId: user.sub },
+        data: { banner: 'new-banner-key' },
       });
 
-      expect(minio.uploadFile).toHaveBeenCalledWith(
-        BANNER_BUCKET_NAME,
-        user.sub,
-        webpFile,
-      );
-
-      expect(minio.getFileUrl).toHaveBeenCalledWith(
-        BANNER_BUCKET_NAME,
-        user.sub,
-      );
-
-      expect(minio.deleteFile).toHaveBeenCalledWith(
-        BANNER_BUCKET_NAME,
-        channelResult.avatar,
-      );
+      expect(banner.deleteBanner).toHaveBeenCalledWith('old-banner-key');
 
       expect(updatedChannel).toEqual({
         ...channelResult,
-        banner: 'banner-url',
+        banner: 'presigned-banner-url',
+        avatar: 'presigned-avatar-url',
       });
     });
 
-    it('throw not found error when old banner not found', async () => {
+    it('should throw NotFoundException when channel does not exist', async () => {
       prisma.channel.findUnique.mockResolvedValue(null);
 
       await expect(service.updateChannelBanner(user, file)).rejects.toThrow(
@@ -370,19 +293,12 @@ describe('ChannelService', () => {
       email: 'email@gmail.com',
       sub: 'c7b6c0da-484d-445d-8156-04c4828296ad',
     };
-
-    const file = {
-      buffer: Buffer.from('original-image'),
-    } as Express.Multer.File;
-
-    const resizedBuffer = Buffer.from('resized-image');
-    const webpBuffer = Buffer.from('webp-image');
-
+    const file = {} as Express.Multer.File;
     const channelResult: ChannelResult = {
       id: '7ee082e2-0c8b-4ec6-af9d-3df1ab06ab0f',
       userId: user.sub,
-      avatar: 'avatar-object-key',
-      banner: 'banner-object-key',
+      avatar: 'new-avatar-key',
+      banner: 'banner-key',
       title: 'title',
       description: 'desc',
       isVerified: true,
@@ -392,85 +308,46 @@ describe('ChannelService', () => {
       updatedAt: new Date(),
       deletedAt: null,
     };
+    const channelId = '9b2dae7e-8325-4abe-8f2d-90f100047322';
 
-    it('should upload avatar channel and update avatar object key and delete old avatar', async () => {
+    it('should process, upload new avatar, update DB, delete old avatar, and return result', async () => {
       prisma.channel.findUnique.mockResolvedValue({
-        avatar: channelResult.avatar,
+        id: channelId,
+        avatar: 'old-avatar-key',
       });
-
-      prisma.channel.update.mockResolvedValue({
-        ...channelResult,
-        avatar: user.sub,
+      avatar.processAndUpload.mockResolvedValue({
+        objectName: 'new-avatar-key',
+        presignedUrl: 'temp-url',
       });
+      prisma.channel.update.mockResolvedValue(channelResult);
 
-      avatar.adjustAspectRatio.mockResolvedValue(resizedBuffer);
-      avatar.convertToWebp.mockResolvedValue(webpBuffer);
-
-      minio.getFileUrl.mockResolvedValue('avatar-url');
+      banner.getBannerUrl.mockResolvedValue('presigned-banner-url');
+      avatar.getAvatarUrl.mockResolvedValue('presigned-avatar-url');
 
       const updatedChannel = await service.updateChannelAvatar(user, file);
 
-      const webpFile: Express.Multer.File = {
-        ...file,
-        buffer: webpBuffer,
-        size: webpBuffer.length,
-        mimetype: 'image/webp',
-        originalname: 'avatar.webp',
-      };
-
-      expect(prisma.channel.findUnique).toHaveBeenCalledTimes(1);
-
       expect(prisma.channel.findUnique).toHaveBeenCalledWith({
-        where: {
-          userId: user.sub,
-        },
-        select: {
-          avatar: true,
-        },
+        where: { userId: user.sub },
+        select: { id: true, avatar: true },
       });
 
-      expect(avatar.adjustAspectRatio).toHaveBeenCalledTimes(1);
-      expect(avatar.adjustAspectRatio).toHaveBeenCalledWith(file.buffer);
+      expect(avatar.processAndUpload).toHaveBeenCalledWith(channelId, file);
 
-      expect(avatar.convertToWebp).toHaveBeenCalledTimes(1);
-      expect(avatar.convertToWebp).toHaveBeenCalledWith(resizedBuffer);
-
-      expect(prisma.channel.update).toHaveBeenCalledTimes(1);
       expect(prisma.channel.update).toHaveBeenCalledWith({
-        where: {
-          userId: user.sub,
-        },
-        data: {
-          avatar: user.sub,
-        },
+        where: { userId: user.sub },
+        data: { avatar: 'new-avatar-key' },
       });
 
-      expect(minio.uploadFile).toHaveBeenCalledTimes(1);
-      expect(minio.uploadFile).toHaveBeenCalledWith(
-        AVATAR_BUCKET_NAME,
-        user.sub,
-        webpFile,
-      );
-
-      expect(minio.getFileUrl).toHaveBeenCalledTimes(1);
-      expect(minio.getFileUrl).toHaveBeenCalledWith(
-        AVATAR_BUCKET_NAME,
-        user.sub,
-      );
-
-      expect(minio.deleteFile).toHaveBeenCalledTimes(1);
-      expect(minio.deleteFile).toHaveBeenCalledWith(
-        AVATAR_BUCKET_NAME,
-        channelResult.avatar,
-      );
+      expect(avatar.deleteAvatar).toHaveBeenCalledWith('old-avatar-key');
 
       expect(updatedChannel).toEqual({
         ...channelResult,
-        avatar: 'avatar-url',
+        banner: 'presigned-banner-url',
+        avatar: 'presigned-avatar-url',
       });
     });
 
-    it('should throw not found error when old avatar not found', async () => {
+    it('should throw NotFoundException when channel does not exist', async () => {
       prisma.channel.findUnique.mockResolvedValue(null);
 
       await expect(service.updateChannelAvatar(user, file)).rejects.toThrow(

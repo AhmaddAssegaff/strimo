@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
-import { ProfilePictureProcessorService } from './profile-picture.proscessor.service';
 import { UserController } from './user.controller';
+import { UserProcessorModule } from './processor/user.processor.module';
+import { ObjectStorageModule } from '~app/core/object-storage/object-storage.module';
 
 @Module({
+  imports: [UserProcessorModule, ObjectStorageModule],
   controllers: [UserController],
-  providers: [UserService, ProfilePictureProcessorService],
-  exports: [UserService, ProfilePictureProcessorService],
+  providers: [UserService],
+  exports: [UserService],
 })
 export class UserModule {}

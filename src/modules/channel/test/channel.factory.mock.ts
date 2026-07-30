@@ -1,11 +1,11 @@
 import {
-  MockAvatarProcessorService,
-  MockBannerProcessorService,
   MockChannelService,
-  MockMinioChannelService,
+  MockObjectStorageChannelService,
   MockNotificationChannelService,
   MockPrismaChannelService,
-} from './channel.mock.test';
+  MockAvatarStorageService,
+  MockBannerStorageService,
+} from './channel.type.mock';
 
 export function createMockChannelService(): MockChannelService {
   return {
@@ -17,7 +17,7 @@ export function createMockChannelService(): MockChannelService {
   };
 }
 
-export function createMockMinioChannelService(): MockMinioChannelService {
+export function createMockObjectStorageChannelService(): MockObjectStorageChannelService {
   return {
     deleteFile: jest.fn(),
     getFileUrl: jest.fn(),
@@ -43,16 +43,20 @@ export function createMockNotificationChannelService(): MockNotificationChannelS
   };
 }
 
-export function createMockBannerProcessorService(): MockBannerProcessorService {
+export function createMockAvatarStorageService(): MockAvatarStorageService {
   return {
-    adjustAspectRatio: jest.fn(),
-    convertToWebp: jest.fn(),
+    deleteAvatar: jest.fn(),
+    getAvatarUrl: jest.fn(),
+    getDefaultKey: jest.fn(),
+    processAndUpload: jest.fn(),
   };
 }
 
-export function createMockAvatarProcessorService(): MockAvatarProcessorService {
+export function createMockBannerStorageService(): MockBannerStorageService {
   return {
-    adjustAspectRatio: jest.fn(),
-    convertToWebp: jest.fn(),
+    getDefaultKey: jest.fn(),
+    processAndUpload: jest.fn(),
+    getBannerUrl: jest.fn(),
+    deleteBanner: jest.fn(),
   };
 }

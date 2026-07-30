@@ -4,7 +4,7 @@ import {
   MockConfigService,
   MockUserService,
   MockJwtService,
-} from './auth.mock.test';
+} from './auth.type.mock';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '~app/modules/user/user.service';
@@ -18,7 +18,7 @@ import {
   createConfigServiceMock,
   createJwtServiceMock,
   createUserServiceMoce,
-} from './auth.factory.test';
+} from './auth.factory.mock';
 import { NotFoundException } from '@nestjs/common';
 
 describe('AuthService', () => {
@@ -63,7 +63,7 @@ describe('AuthService', () => {
         picture: 'profile picture',
       };
       const oauthGoogleResponseInterface: OauthGoogleResult = {
-        OauthGoogleResponseInterface: {
+        tokens: {
           accessToken: 'access-token',
           refreshToken: 'refresh-token',
         },

@@ -3,14 +3,13 @@ import { NotificationService } from '../notification.service';
 import {
   MockPrismaNotificationService,
   MockSmtpService,
-} from './notification.mock.test';
+} from './notification.type.mock';
 import { SmtpService } from '~app/core/smtp/smtp.service';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import {
   createMockPrismaNotificationService,
   createMockSmtpService,
-} from './notification.factory.test';
-import { CreateNotificationDto } from '../dto/create-notification.dto';
+} from './notification.factory.mock';
 import { AuthenticatedUser } from '~app/modules/auth/interface/auth.interface';
 import { NotificationResult } from '../interface/notification.interface';
 import { GetNotificationDto } from '../dto/get-notifications.dto';
@@ -44,37 +43,33 @@ describe('NotificationService', () => {
 
   describe('createNotificationCreatedChannel', () => {
     it('should create notification and send email', async () => {
-      const notificationResult: NotificationResult = {
-        message: 'message',
-        title: 'title',
-        id: 'b0b388ac-3fd8-40ab-85b2-a6d677cf4d77',
-        userId: '6437fd84-c2bb-4f88-864d-06a0e59ecd2f',
-        createdAt: new Date(),
-        deletedAt: null,
-      };
-
-      const dto: CreateNotificationDto = {
-        message: 'message',
-        title: 'title',
-      };
       const user: AuthenticatedUser = {
         email: 'email@gmail.com',
         sub: '13fe11be-5cd3-4f0d-8ce4-4b532b9f3ad6',
       };
 
+      const expectedTitle = 'Congratulations! Your Channel Is Ready';
+      const expectedMessage = 'Thank you for creating a channel on Strimo';
+
+      const notificationResult: NotificationResult = {
+        id: 'b0b388ac-3fd8-40ab-85b2-a6d677cf4d77',
+        userId: user.sub,
+        title: expectedTitle,
+        message: expectedMessage,
+        createdAt: new Date(),
+        deletedAt: null,
+      };
+
       prisma.notification.create.mockResolvedValue(notificationResult);
 
-      const notification = await service.createNotificationCreatedChannel(
-        dto,
-        user,
-      );
+      const notification = await service.createNotificationCreatedChannel(user);
 
       expect(prisma.notification.create).toHaveBeenCalledTimes(1);
       expect(prisma.notification.create).toHaveBeenCalledWith({
         data: {
           userId: user.sub,
-          message: dto.message,
-          title: dto.title,
+          message: expectedMessage,
+          title: expectedTitle,
         },
       });
 
@@ -124,7 +119,7 @@ describe('NotificationService', () => {
       expect(notifications).toEqual(notificationsResult);
     });
 
-    it('throw not found error when notification is array null', () => {
+    it('should throw NotFoundException when notifications array is empty', async () => {
       const dto: GetNotificationDto = {
         limit: 10,
         page: 1,
@@ -136,7 +131,7 @@ describe('NotificationService', () => {
 
       prisma.notification.findMany.mockResolvedValue([]);
 
-      expect(service.findNotifications(dto, user)).rejects.toThrow(
+      await expect(service.findNotifications(dto, user)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -168,10 +163,10 @@ describe('NotificationService', () => {
       expect(notification).toEqual(notificationResult);
     });
 
-    it('should throw NotFoundException when notification is null', () => {
+    it('should throw NotFoundException when notification is null', async () => {
       prisma.notification.findUnique.mockResolvedValue(null);
 
-      expect(service.findNotificationById(id)).rejects.toThrow(
+      await expect(service.findNotificationById(id)).rejects.toThrow(
         NotFoundException,
       );
     });

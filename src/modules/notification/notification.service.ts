@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateNotificationDto } from './dto/create-notification.dto';
 import { GetNotificationDto } from './dto/get-notifications.dto';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import { SmtpService } from '~app/core/smtp/smtp.service';
@@ -14,10 +13,11 @@ export class NotificationService {
   ) {}
 
   async createNotificationCreatedChannel(
-    createNotificationDto: CreateNotificationDto,
     user: AuthenticatedUser,
   ): Promise<NotificationResult> {
-    const { title, message } = createNotificationDto;
+    const title = 'Congratulations! Your Channel Is Ready';
+    const message = 'Thank you for creating a channel on Strimo';
+
     const notification = await this.prisma.notification.create({
       data: {
         userId: user.sub,

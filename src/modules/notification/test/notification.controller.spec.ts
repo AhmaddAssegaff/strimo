@@ -5,12 +5,12 @@ import {
   MockNotificationService,
   MockPrismaNotificationService,
   MockSmtpService,
-} from './notification.mock.test';
+} from './notification.type.mock';
 import {
   createMockNotificationService,
   createMockPrismaNotificationService,
   createMockSmtpService,
-} from './notification.factory.test';
+} from './notification.factory.mock';
 import { SmtpService } from '~app/core/smtp/smtp.service';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import { GetNotificationDto } from '../dto/get-notifications.dto';

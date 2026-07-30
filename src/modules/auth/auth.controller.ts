@@ -5,13 +5,11 @@ import type {
   UserOauthGoogle,
   AuthenticatedUser,
 } from './interface/auth.interface';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtRefreshGuard } from './guard/jwt-refresh.guard';
 import { GoogleAuthGuard } from './guard/oauth-google.guard';
 import { OauthGoogleResult } from './interface/auth.interface';
 import { CurrentUser } from '~app/core/decorators/current-user.decorators';
 
-@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -28,7 +26,6 @@ export class AuthController {
     return this.authService.googleOauth(user);
   }
 
-  @ApiBearerAuth()
   @HttpCode(200)
   @UseGuards(JwtRefreshGuard)
   @Post('refresh-token')

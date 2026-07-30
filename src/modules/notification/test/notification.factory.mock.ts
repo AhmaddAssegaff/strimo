@@ -2,7 +2,7 @@ import {
   MockNotificationService,
   MockPrismaNotificationService,
   MockSmtpService,
-} from './notification.mock.test';
+} from './notification.type.mock';
 
 export function createMockNotificationService(): MockNotificationService {
   return {

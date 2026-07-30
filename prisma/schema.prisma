@@ -23,6 +23,21 @@ enum SUBSCRIPTION_NOTIFICATION_TYPE {
   personalized
 }
 
+enum VIDEO_STATUS {
+  UPLOADING
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
+  PUBLISHED
+}
+
+enum VIDEO_VISIBILITY {
+  PRIVATE
+  PUBLIC
+  UNLISTED
+}
+
 model User {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   profilePicture  String?   @map("profile_picture")
@@ -85,6 +100,7 @@ model Channel {
 
   user          User           @relation(fields: [userId], references: [id])
   subscriptions Subscription[]
+  videos        Video[]
 
   @@map("channels")
 }
@@ -105,4 +121,24 @@ model Subscription {
   @@index([userId])
   @@index([channelId])
   @@map("subscriptions")
+}
+
+model Video {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  channelId   String           @map("channel_id") @db.Uuid
+  title       String           @map("video_title")
+  description String           @map("video_description")
+  duration    Int              @default(0)
+  thumbnail   String
+  status      VIDEO_STATUS     @default(UPLOADING)
+  visibility  VIDEO_VISIBILITY @default(PRIVATE)
+  publishedAt DateTime?        @map("published_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  deletedAt   DateTime?        @map("deleted_at")
+
+  channel Channel @relation(fields: [channelId], references: [id])
+
+  @@index([channelId])
+  @@map("videos")
 }

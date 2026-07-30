@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChannelController } from '../channel.controller';
 import { ChannelService } from '../channel.service';
-import { createMockChannelService } from './channel.factory.test';
-import { MockChannelService } from './channel.mock.test';
+import { createMockChannelService } from './channel.factory.mock';
+import { MockChannelService } from './channel.type.mock';
 import { AuthenticatedUser } from '~app/modules/auth/interface/auth.interface';
 import { UpdateChannelDto } from '../dto/update-channel.dto';
 import { CreateChannelDto } from '../dto/create-channel.dto';
