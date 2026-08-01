@@ -12,8 +12,8 @@ Authorization: Bearer {{variables.access-token}}
 Content-Type: application/json
 
 {
-  "channelTitle": "Ahmad",
-  "channelDescription": "desc"
+  "title": "Ahmad",
+  "description": "desc"
 }
 
 
