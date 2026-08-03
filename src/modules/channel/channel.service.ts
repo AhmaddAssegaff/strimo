@@ -1,23 +1,16 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { CreateChannelDto } from './dto/create-channel.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '~app/core/prisma/prisma.service';
 import { ChannelResult } from './interface/channel.interface';
 import type { AuthenticatedUser } from '../auth/interface/auth.interface';
 import { AvatarStorageService } from '~app/core/object-storage/avatar-storage.service';
 import { BannerStorageService } from '~app/core/object-storage/banner-storage.service';
 import { UpdateChannelDto } from './dto/update-channel.dto';
-import { NotificationService } from '../notification/notification.service';
 import { Channel } from '@prisma/client';
 
 @Injectable()
 export class ChannelService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notif: NotificationService,
     private readonly avatar: AvatarStorageService,
     private readonly banner: BannerStorageService,
   ) {}
@@ -47,35 +40,6 @@ export class ChannelService {
     }
 
     return this.attachPresignedUrls(channel);
-  }
-
-  async createChannel(
-    user: AuthenticatedUser,
-    createChannelDto: CreateChannelDto,
-  ): Promise<ChannelResult> {
-    const oldChannel = await this.prisma.channel.findUnique({
-      where: {
-        userId: user.sub,
-      },
-    });
-
-    if (oldChannel) {
-      throw new ConflictException('User already has a channel');
-    }
-
-    const newChannel = await this.prisma.channel.create({
-      data: {
-        userId: user.sub,
-        title: createChannelDto.title,
-        description: createChannelDto.description,
-        avatar: this.avatar.getDefaultKey(),
-        banner: this.banner.getDefaultKey(),
-      },
-    });
-
-    await this.notif.createNotificationCreatedChannel(user);
-
-    return this.attachPresignedUrls(newChannel);
   }
 
   async updateChannel(

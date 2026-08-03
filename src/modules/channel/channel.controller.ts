@@ -1,6 +1,5 @@
 import {
   Controller,
-  Post,
   Body,
   Put,
   UseGuards,
@@ -12,7 +11,6 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { ChannelService } from './channel.service';
-import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { ChannelResult } from './interface/channel.interface';
 import { CurrentUser } from '~app/core/decorators/current-user.decorators';
@@ -39,15 +37,6 @@ export class ChannelController {
     @Param('channelId', ParseUUIDPipe) channelId: string,
   ): Promise<ChannelResult> {
     return this.channelService.findChannelById(channelId);
-  }
-
-  @Post()
-  @UseGuards(JwtAccessGuard)
-  postChannel(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() createChannelDto: CreateChannelDto,
-  ): Promise<ChannelResult> {
-    return this.channelService.createChannel(user, createChannelDto);
   }
 
   @Put()
