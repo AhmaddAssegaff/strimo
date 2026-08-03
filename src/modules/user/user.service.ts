@@ -8,7 +8,6 @@ import { USER_ACCOUNTS_PROVIDER } from '@prisma/client';
 import { UpdateUserProfile } from './dto/update-user';
 import {
   CreateUserOauthResult,
-  FindUserCredensialByIdResult,
   UpdateUserProfileResult,
   UserProfileResult,
 } from './interface/user.interface';
@@ -45,21 +44,10 @@ export class UserService {
     return user;
   }
 
-  async findUserCredensialById(
-    id: string,
-  ): Promise<FindUserCredensialByIdResult | null> {
-    return await this.prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        email: true,
-        isEmailVerified: true,
-      },
-    });
-  }
-
   async createUserOauth(
     userData: UserOauthGoogle,
+    banner: string,
+    avatar: string,
   ): Promise<CreateUserOauthResult> {
     return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.upsert({
@@ -96,7 +84,30 @@ export class UserService {
         });
       }
 
-      return user;
+      const channel = await tx.channel.upsert({
+        where: {
+          userId: user.id,
+        },
+        create: {
+          userId: user.id,
+          title: userData.name,
+          description: '',
+          banner: banner,
+          avatar: avatar,
+        },
+        update: {},
+        select: {
+          id: true,
+        },
+      });
+
+      return {
+        id: user.id,
+        email: user.email,
+        channel: {
+          id: channel.id,
+        },
+      };
     });
   }
 

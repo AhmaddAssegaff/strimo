@@ -12,6 +12,7 @@ export interface UserOauthGoogle {
  */
 export interface JwtAuthPayload {
   sub: string;
+  channelId: string;
   email: string;
   iat?: number;
   exp?: number;
@@ -23,6 +24,7 @@ export interface JwtAuthPayload {
  */
 export interface AuthenticatedUser {
   sub: string;
+  channelId: string;
   email: string;
 }
 
