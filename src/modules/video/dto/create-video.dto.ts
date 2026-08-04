@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateVideoDto {
   @IsNotEmpty()
@@ -8,16 +8,4 @@ export class CreateVideoDto {
   @IsNotEmpty()
   @IsString()
   description: string;
-
-  @IsNotEmpty()
-  @IsString()
-  filename: string;
-
-  @IsNotEmpty()
-  @IsString()
-  mimeType: string;
-
-  @IsNotEmpty()
-  @IsNumber()
-  sizeBytes: number;
 }

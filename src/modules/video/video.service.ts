@@ -1,42 +1,46 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateVideoDto } from './dto/create-video.dto';
 import { VideoRepository } from './video.repository';
-import { AuthenticatedUser } from '../auth/interface/auth.interface';
-import { VideoStorageService } from '~app/core/object-storage/video-storage.service';
-import { UPLOAD_STATUS } from '@prisma/client';
+import { GetVideosDto } from './dto/get-videos.dto';
+import { UpdateVideoDto } from './dto/update-video.dto';
+import { VideoResult, VideosResult } from './interface/video.interface';
 
 @Injectable()
 export class VideoService {
-  constructor(
-    private readonly videoRepo: VideoRepository,
-    private readonly storageVideo: VideoStorageService,
-  ) {}
+  constructor(private readonly videoRepo: VideoRepository) {}
 
-  async createInitUploadVideo(
+  async createVideo(
+    channelId: string,
     createVideoDto: CreateVideoDto,
-    user: AuthenticatedUser,
-  ) {
-    const channel = await this.videoRepo.findChannel(user.sub);
+  ): Promise<VideoResult> {
+    return await this.videoRepo.insertVideo(createVideoDto, channelId);
+  }
 
-    if (!channel) {
-      throw new NotFoundException('channel not found');
+  async findUserVideos(
+    channelId: string,
+    getVideosDto: GetVideosDto,
+  ): Promise<VideosResult> {
+    return await this.videoRepo.selectUserVideosByChannelId(
+      channelId,
+      getVideosDto,
+    );
+  }
+
+  async updateUserVideos(
+    videoId: string,
+    channelId: string,
+    updateVideoDto: UpdateVideoDto,
+  ): Promise<VideoResult> {
+    const updatedVideo = await this.videoRepo.updateVideo(
+      videoId,
+      channelId,
+      updateVideoDto,
+    );
+
+    if (!updatedVideo) {
+      throw new NotFoundException('video not found');
     }
 
-    const { upload } = await this.videoRepo.createVideo(
-      createVideoDto,
-      channel.id,
-      user.sub,
-    );
-    const { id: uploadId, mimeType } = upload;
-
-    const result = await this.storageVideo.initiateUpload(uploadId, mimeType);
-
-    await this.videoRepo.updateUpload(upload.id, {
-      multipartUploadId: result.multipartUploadId,
-      stagingKey: result.objectKey,
-      status: UPLOAD_STATUS.UPLOADING,
-    });
-
-    return result;
+    return updatedVideo;
   }
 }
