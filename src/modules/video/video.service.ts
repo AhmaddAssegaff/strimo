@@ -37,7 +37,7 @@ export class VideoService {
       updateVideoDto,
     );
 
-    if (!updatedVideo) {
+    if (!updatedVideo.video) {
       throw new NotFoundException('video not found');
     }
 
