@@ -29,7 +29,7 @@ export class ChannelController {
   getUserChannel(
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<ChannelResult> {
-    return this.channelService.findChannelById(user.sub);
+    return this.channelService.findChannelById(user.channelId);
   }
 
   @Get(':channelId')
