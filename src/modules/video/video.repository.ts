@@ -100,4 +100,36 @@ export class VideoRepository {
       video: video,
     };
   }
+
+  async selectUserVideoById(videoId: string, channelId: string) {
+    return await this.prisma.video.findFirst({
+      where: {
+        id: videoId,
+        channelId: channelId,
+      },
+      include: {
+        uploads: {
+          select: {
+            completedAt: true,
+          },
+        },
+      },
+    });
+  }
+
+  async updateStatusVideoById(data: {
+    videoId: string;
+    channelId: string;
+    status: VIDEO_STATUS;
+  }) {
+    return await this.prisma.video.update({
+      where: {
+        id: data.videoId,
+        channelId: data.channelId,
+      },
+      data: {
+        status: data.status,
+      },
+    });
+  }
 }

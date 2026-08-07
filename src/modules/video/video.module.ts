@@ -8,5 +8,6 @@ import { ObjectStorageModule } from '~app/core/object-storage/object-storage.mod
   imports: [ObjectStorageModule],
   controllers: [VideoController],
   providers: [VideoService, VideoRepository],
+  exports: [VideoService, VideoRepository],
 })
 export class VideoModule {}
