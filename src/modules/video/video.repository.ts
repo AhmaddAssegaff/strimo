@@ -4,7 +4,11 @@ import { Injectable } from '@nestjs/common';
 import { GetVideosDto } from './dto/get-videos.dto';
 import { Prisma, VIDEO_STATUS, VIDEO_VISIBILITY } from '@prisma/client';
 import { UpdateVideoDto } from './dto/update-video.dto';
-import { VideoResult, VideosResult } from './interface/video.interface';
+import {
+  VideoAndUploadResult,
+  VideoResult,
+  VideosResult,
+} from './interface/video.interface';
 
 @Injectable()
 export class VideoRepository {
@@ -24,9 +28,7 @@ export class VideoRepository {
       },
     });
 
-    return {
-      video: video,
-    };
+    return video;
   }
 
   async selectUserVideosByChannelId(
@@ -73,7 +75,7 @@ export class VideoRepository {
     ]);
 
     return {
-      videos: videos,
+      videos,
       meta: {
         page: dto.page,
         limit: dto.limit,
@@ -96,12 +98,13 @@ export class VideoRepository {
       data: updateVideoDto,
     });
 
-    return {
-      video: video,
-    };
+    return video;
   }
 
-  async selectUserVideoById(videoId: string, channelId: string) {
+  async selectUserVideoById(
+    videoId: string,
+    channelId: string,
+  ): Promise<VideoAndUploadResult | null> {
     return await this.prisma.video.findFirst({
       where: {
         id: videoId,
@@ -121,7 +124,7 @@ export class VideoRepository {
     videoId: string;
     channelId: string;
     status: VIDEO_STATUS;
-  }) {
+  }): Promise<VideoResult> {
     return await this.prisma.video.update({
       where: {
         id: data.videoId,
