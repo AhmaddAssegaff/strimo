@@ -6,20 +6,21 @@ import {
   IsOptional,
   IsString,
   Max,
+  Min,
 } from 'class-validator';
 
 export class GetVideosDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   @Max(10)
-  @Max(1)
-  page: number;
+  @Min(1)
+  page: number = 1;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   @Max(15)
-  @Max(10)
-  limit: number;
+  @Min(10)
+  limit: number = 10;
 
   @IsNotEmpty()
   @IsEnum(VIDEO_STATUS)
