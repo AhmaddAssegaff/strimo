@@ -60,29 +60,14 @@ export class VideoRepository {
       ];
     }
 
-    const [videos, total] = await this.prisma.$transaction([
-      this.prisma.video.findMany({
-        where,
-        skip,
-        take: dto.limit,
-        orderBy: {
-          createdAt: 'desc',
-        },
-      }),
-      this.prisma.video.count({
-        where,
-      }),
-    ]);
-
-    return {
-      videos,
-      meta: {
-        page: dto.page,
-        limit: dto.limit,
-        total,
-        totalPages: Math.ceil(total / dto.limit),
+    return this.prisma.video.findMany({
+      where,
+      skip,
+      take: dto.limit,
+      orderBy: {
+        createdAt: 'desc',
       },
-    };
+    });
   }
 
   async updateVideo(
