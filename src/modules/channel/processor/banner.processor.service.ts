@@ -4,22 +4,39 @@ import { FILE_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
 
 @Injectable()
 export class BannerProcessorService {
-  async adjustAspectRatio(
+  async process(
     buffer: Buffer,
-    width = FILE_RULES.banner.minWidth,
-    height = FILE_RULES.banner.minHeight,
+    targetWidth = FILE_RULES.banner.targetWidth,
+    targetHeight = FILE_RULES.banner.targetHeight,
+    quality = FILE_RULES.banner.qualityWebp,
   ): Promise<Buffer> {
-    return sharp(buffer)
-      .resize({
-        width,
-        height,
+    const image = sharp(buffer);
+    const metadata = await image.metadata();
+
+    const needResize =
+      metadata.width !== targetWidth || metadata.height !== targetHeight;
+
+    const needConvert = metadata.format !== 'webp';
+
+    if (!needResize && !needConvert) {
+      return buffer;
+    }
+
+    let pipeline = image;
+
+    if (needResize) {
+      pipeline = pipeline.resize({
+        width: targetWidth,
+        height: targetHeight,
         fit: 'cover',
         position: 'centre',
-      })
-      .toBuffer();
-  }
+      });
+    }
 
-  async convertToWebp(buffer: Buffer, quality = 80): Promise<Buffer> {
-    return sharp(buffer).webp({ quality }).toBuffer();
+    if (needConvert) {
+      pipeline = pipeline.webp({ quality });
+    }
+
+    return pipeline.toBuffer();
   }
 }

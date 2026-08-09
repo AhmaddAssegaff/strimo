@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "VIDEO_STATUS" AS ENUM ('UPLOADING', 'UPLOADED', 'PROCESSING', 'READY', 'FAILED', 'PUBLISHED');
+CREATE TYPE "VIDEO_STATUS" AS ENUM ('DRAFT', 'UPLOADING', 'PROCESSING', 'READY', 'FAILED', 'PUBLISHED');
 
 -- CreateEnum
 CREATE TYPE "VIDEO_VISIBILITY" AS ENUM ('PRIVATE', 'PUBLIC', 'UNLISTED');
@@ -11,7 +11,8 @@ CREATE TABLE "videos" (
     "video_title" TEXT NOT NULL,
     "video_description" TEXT NOT NULL,
     "duration" INTEGER NOT NULL DEFAULT 0,
-    "thumbnail" TEXT NOT NULL,
+    "manifest_url" TEXT,
+    "thumbnail" TEXT,
     "status" "VIDEO_STATUS" NOT NULL DEFAULT 'UPLOADING',
     "visibility" "VIDEO_VISIBILITY" NOT NULL DEFAULT 'PRIVATE',
     "published_at" TIMESTAMP(3),

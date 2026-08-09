@@ -1,59 +1,79 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from '../auth.controller';
+import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { AuthService } from '../auth.service';
-import { MockAuthService } from './auth.type.mock';
-import { JwtAuthPayload, UserOauthGoogle } from '../interface/auth.interface';
-import { createAuthServiceMock } from './auth.factory.mock';
+import {
+  AuthenticatedUser,
+  OauthGoogleResult,
+  RefreshTokenResult,
+  UserOauthGoogle,
+} from '../interface/auth.interface';
 
 describe('AuthController', () => {
   let authController: AuthController;
-  let authService: MockAuthService;
+  let authService: DeepMocked<AuthService>;
 
   beforeEach(async () => {
-    authService = createAuthServiceMock();
-
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [
-        {
-          provide: AuthService,
-          useValue: authService,
-        },
-      ],
-    }).compile();
+    })
+      .useMocker(createMock)
+      .compile();
 
     authController = module.get<AuthController>(AuthController);
+    authService = module.get(AuthService);
   });
 
   describe('googleOauthCallback', () => {
-    it('should call authService.googleOauth', () => {
-      const user: UserOauthGoogle = {
-        email: 'email',
-        googleId: 'googleId',
-        name: 'username',
-        picture: 'url profile pic',
-      };
+    const user: UserOauthGoogle = {
+      email: 'email@gmail.com',
+      googleId: 'googleId',
+      name: 'name',
+      picture: 'url profile pic',
+    };
 
-      authController.googleOauthCallback(user);
+    const result: OauthGoogleResult = {
+      tokens: {
+        accessToken: 'accessToken',
+        refreshToken: 'refreshToken',
+      },
+    };
 
-      expect(authService.googleOauth).toHaveBeenCalledTimes(1);
+    it('it should only call authService.googleOauth', async () => {
+      authService.googleOauth.mockResolvedValue(result);
+
+      const res = await authController.googleOauthCallback(user);
+
       expect(authService.googleOauth).toHaveBeenCalledWith(user);
+      expect(authService.googleOauth).toHaveBeenCalledTimes(1);
+
+      expect(res).toEqual(result);
     });
   });
 
   describe('refreshToken', () => {
-    it('should call authService.refreshToken', () => {
-      const user: JwtAuthPayload = {
-        email: 'user@email.com',
-        sub: '354d512d-c665-4d39-8b7a-dea81f05b801',
-        exp: 123,
-        iat: 123,
-      };
+    const user: AuthenticatedUser = {
+      email: 'email@gmail.com',
+      channelId: '9d0d0b15-fba9-4ed5-aa68-014954fa05cf',
+      sub: '6a5d0b02-a24c-4c8e-bc21-b40b741ae455',
+    };
 
-      authController.refreshToken(user);
+    const result: RefreshTokenResult = {
+      token: {
+        accessToken: 'accessToken',
+      },
+    };
 
-      expect(authService.refreshToken).toHaveBeenCalledTimes(1);
+    it('it should only call authService.refreshToken', () => {
+      authService.refreshToken.mockReturnValue(result);
+
+      const res = authController.refreshToken(user);
+
       expect(authService.refreshToken).toHaveBeenCalledWith(user);
+      expect(authService.refreshToken).toHaveBeenCalledTimes(1);
+
+      expect(res).toEqual(result);
     });
   });
 });

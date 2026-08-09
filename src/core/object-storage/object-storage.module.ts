@@ -9,6 +9,7 @@ import { BannerStorageService } from './banner-storage.service';
 import { ProfilePictureStorageService } from './profile-picture-storage.service';
 import { ChannelProcessorModule } from '~app/modules/channel/processor/channel.processor.module';
 import { UserProcessorModule } from '~app/modules/user/processor/user.processor.module';
+import { VideoStorageService } from './video-storage.service';
 
 @Global()
 @Module({
@@ -49,6 +50,7 @@ import { UserProcessorModule } from '~app/modules/user/processor/user.processor.
     AvatarStorageService,
     BannerStorageService,
     ProfilePictureStorageService,
+    VideoStorageService,
   ],
   exports: [
     OBJECT_STORAGE_TOKEN,
@@ -56,6 +58,7 @@ import { UserProcessorModule } from '~app/modules/user/processor/user.processor.
     AvatarStorageService,
     BannerStorageService,
     ProfilePictureStorageService,
+    VideoStorageService,
   ],
 })
 export class ObjectStorageModule {}
