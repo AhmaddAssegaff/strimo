@@ -1,25 +1,18 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { CreateChannelDto } from './dto/create-channel.dto';
-import { PrismaService } from '~app/core/prisma/prisma.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ChannelResult } from './interface/channel.interface';
 import type { AuthenticatedUser } from '../auth/interface/auth.interface';
 import { AvatarStorageService } from '~app/core/object-storage/avatar-storage.service';
 import { BannerStorageService } from '~app/core/object-storage/banner-storage.service';
 import { UpdateChannelDto } from './dto/update-channel.dto';
-import { NotificationService } from '../notification/notification.service';
 import { Channel } from '@prisma/client';
+import { ChannelRepository } from './channel.repository';
 
 @Injectable()
 export class ChannelService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly notif: NotificationService,
     private readonly avatar: AvatarStorageService,
     private readonly banner: BannerStorageService,
+    private readonly channelRepo: ChannelRepository,
   ) {}
 
   private async attachPresignedUrls(channel: Channel): Promise<ChannelResult> {
@@ -35,12 +28,8 @@ export class ChannelService {
     };
   }
 
-  async findChannelById(id: string): Promise<ChannelResult> {
-    const channel = await this.prisma.channel.findUnique({
-      where: {
-        userId: id,
-      },
-    });
+  async findChannelById(channelId: string): Promise<ChannelResult> {
+    const channel = await this.channelRepo.selectChannelById(channelId);
 
     if (!channel) {
       throw new NotFoundException('Channel not found');
@@ -49,58 +38,15 @@ export class ChannelService {
     return this.attachPresignedUrls(channel);
   }
 
-  async createChannel(
-    user: AuthenticatedUser,
-    createChannelDto: CreateChannelDto,
-  ): Promise<ChannelResult> {
-    const oldChannel = await this.prisma.channel.findUnique({
-      where: {
-        userId: user.sub,
-      },
-    });
-
-    if (oldChannel) {
-      throw new ConflictException('User already has a channel');
-    }
-
-    const newChannel = await this.prisma.channel.create({
-      data: {
-        userId: user.sub,
-        title: createChannelDto.title,
-        description: createChannelDto.description,
-        avatar: this.avatar.getDefaultKey(),
-        banner: this.banner.getDefaultKey(),
-      },
-    });
-
-    await this.notif.createNotificationCreatedChannel(user);
-
-    return this.attachPresignedUrls(newChannel);
-  }
-
   async updateChannel(
     user: AuthenticatedUser,
     updateChannelDto: UpdateChannelDto,
   ): Promise<ChannelResult> {
-    const oldChannel = await this.prisma.channel.findUnique({
-      where: {
-        userId: user.sub,
-      },
-    });
-
-    if (!oldChannel) {
-      throw new NotFoundException('channel not found');
-    }
-
-    const updatedChannel = await this.prisma.channel.update({
-      where: {
-        userId: user.sub,
-      },
-      data: {
-        title: updateChannelDto.title,
-        description: updateChannelDto.description,
-      },
-    });
+    const updatedChannel = await this.channelRepo.updateChannel(
+      user.channelId,
+      user.sub,
+      updateChannelDto,
+    );
 
     return this.attachPresignedUrls(updatedChannel);
   }
@@ -109,69 +55,37 @@ export class ChannelService {
     user: AuthenticatedUser,
     file: Express.Multer.File,
   ): Promise<ChannelResult> {
-    const channel = await this.prisma.channel.findUnique({
-      where: {
-        userId: user.sub,
-      },
-      select: {
-        id: true,
-        banner: true,
-      },
-    });
+    const channel = await this.channelRepo.selectChannelByIdAndUserId(
+      user.channelId,
+      user.sub,
+    );
 
     if (!channel) {
       throw new NotFoundException('Channel not found');
     }
 
-    const { objectName } = await this.banner.processAndUpload(channel.id, file);
-    const updatedChannelBanner = await this.prisma.channel.update({
-      where: {
-        userId: user.sub,
-      },
-      data: {
-        banner: objectName,
-      },
-    });
+    await this.banner.deleteBanner(user.channelId);
+    await this.banner.processAndUpload(user.channelId, file);
 
-    if (channel) {
-      await this.banner.deleteBanner(channel.banner);
-    }
-
-    return this.attachPresignedUrls(updatedChannelBanner);
+    return this.attachPresignedUrls(channel);
   }
 
   async updateChannelAvatar(
     user: AuthenticatedUser,
     file: Express.Multer.File,
   ): Promise<ChannelResult> {
-    const channel = await this.prisma.channel.findUnique({
-      where: {
-        userId: user.sub,
-      },
-      select: {
-        id: true,
-        avatar: true,
-      },
-    });
+    const channel = await this.channelRepo.selectChannelByIdAndUserId(
+      user.channelId,
+      user.sub,
+    );
 
     if (!channel) {
       throw new NotFoundException('Channel not found');
     }
 
-    const { objectName } = await this.avatar.processAndUpload(channel.id, file);
-    const updatedChannelAvatar = await this.prisma.channel.update({
-      where: {
-        userId: user.sub,
-      },
-      data: {
-        avatar: objectName,
-      },
-    });
+    await this.avatar.deleteAvatar(user.channelId);
+    await this.avatar.processAndUpload(user.channelId, file);
 
-    if (channel) {
-      await this.avatar.deleteAvatar(channel.avatar);
-    }
-
-    return this.attachPresignedUrls(updatedChannelAvatar);
+    return this.attachPresignedUrls(channel);
   }
 }

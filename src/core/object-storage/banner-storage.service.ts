@@ -16,32 +16,24 @@ export class BannerStorageService {
   async processAndUpload(
     channelId: string,
     file: Express.Multer.File,
-  ): Promise<{ objectName: string; presignedUrl: string }> {
-    const resizedBuffer = await this.bannerProcessor.adjustAspectRatio(
-      file.buffer,
-    );
-    const webpBuffer = await this.bannerProcessor.convertToWebp(resizedBuffer);
+  ): Promise<void> {
+    const objectName = channelId;
+
+    const processedBanner = await this.bannerProcessor.process(file.buffer);
+
     const webpFile: Express.Multer.File = {
       ...file,
-      buffer: webpBuffer,
-      size: webpBuffer.length,
+      buffer: processedBanner,
+      size: processedBanner.length,
       mimetype: 'image/webp',
       originalname: 'banner.webp',
     };
-    const objectName = channelId;
 
     await this.objectStorage.uploadFile(
       BANNER_BUCKET_NAME,
       objectName,
       webpFile,
     );
-
-    const presignedUrl = await this.objectStorage.getFileUrl(
-      BANNER_BUCKET_NAME,
-      objectName,
-    );
-
-    return { objectName, presignedUrl };
   }
 
   async getBannerUrl(objectName: string): Promise<string> {

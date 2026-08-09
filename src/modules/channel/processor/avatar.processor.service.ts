@@ -4,22 +4,39 @@ import { FILE_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
 
 @Injectable()
 export class AvatarProcessorService {
-  async adjustAspectRatio(
+  async process(
     buffer: Buffer,
-    width = FILE_RULES.avatar.minWidth,
-    height = FILE_RULES.avatar.minHeight,
+    minWidth = FILE_RULES.avatar.minWidth,
+    minHeight = FILE_RULES.avatar.minHeight,
+    quality = FILE_RULES.avatar.qualityWebp,
   ): Promise<Buffer> {
-    return sharp(buffer)
-      .resize({
-        width,
-        height,
+    const image = sharp(buffer);
+    const metadata = await image.metadata();
+
+    const needResize =
+      metadata.width !== minWidth || metadata.height !== minHeight;
+
+    const needConvert = metadata.format !== 'webp';
+
+    if (!needResize && !needConvert) {
+      return buffer;
+    }
+
+    let pipeline = image;
+
+    if (needResize) {
+      pipeline = pipeline.resize({
+        width: minWidth,
+        height: minHeight,
         fit: 'cover',
         position: 'centre',
-      })
-      .toBuffer();
-  }
+      });
+    }
 
-  async convertToWebp(buffer: Buffer, quality = 80): Promise<Buffer> {
-    return sharp(buffer).webp({ quality }).toBuffer();
+    if (needConvert) {
+      pipeline = pipeline.webp({ quality });
+    }
+
+    return pipeline.toBuffer();
   }
 }

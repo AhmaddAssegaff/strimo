@@ -16,32 +16,23 @@ export class AvatarStorageService {
   async processAndUpload(
     channelId: string,
     file: Express.Multer.File,
-  ): Promise<{ objectName: string; presignedUrl: string }> {
-    const resizedBuffer = await this.avatarProcessor.adjustAspectRatio(
-      file.buffer,
-    );
-    const webpBuffer = await this.avatarProcessor.convertToWebp(resizedBuffer);
+  ): Promise<void> {
+    const objectName = channelId;
+
+    const processedAvatar = await this.avatarProcessor.process(file.buffer);
+
     const webpFile: Express.Multer.File = {
       ...file,
-      buffer: webpBuffer,
-      size: webpBuffer.length,
+      buffer: processedAvatar,
+      size: processedAvatar.length,
       mimetype: 'image/webp',
-      originalname: 'avatar.webp',
     };
-    const objectName = channelId;
 
     await this.objectStorage.uploadFile(
       AVATAR_BUCKET_NAME,
       objectName,
       webpFile,
     );
-
-    const presignedUrl = await this.objectStorage.getFileUrl(
-      AVATAR_BUCKET_NAME,
-      objectName,
-    );
-
-    return { objectName, presignedUrl };
   }
 
   async getAvatarUrl(objectName: string): Promise<string> {

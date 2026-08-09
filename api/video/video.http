@@ -1,0 +1,26 @@
+@videoId=uuid
+
+### Create drafted Video
+POST {{host}}/api/v1/video
+Authorization: Bearer {{variables.access-token}}
+Content-Type: application/json
+
+{
+  "title": "title video",
+  "description": "desc video"
+}
+
+### Get User Draft Videos
+GET {{host}}/api/v1/video/me?status=DRAFT
+Authorization: Bearer {{variables.access-token}}
+
+### Get User Videos Being Processed
+GET {{host}}/api/v1/video/me?status=PROCESSING
+Authorization: Bearer {{variables.access-token}}
+
+### Get User Videos Ready to Publish
+GET {{host}}/api/v1/video/me?status=READY
+Authorization: Bearer {{variables.access-token}}
+
+### Get Public Video 
+GET {{host}}/api/v1/video/{{videoId}}

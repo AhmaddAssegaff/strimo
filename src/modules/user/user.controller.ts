@@ -11,7 +11,7 @@ import { UserService } from './user.service';
 import { JwtAccessGuard } from '../auth/guard/jwt-access.guard';
 import type { AuthenticatedUser } from '../auth/interface/auth.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UpdateUserProfile } from './dto/update-user';
+import { UpdateUserProfileDto } from './dto/update-user.dto';
 import { FILE_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
 import { FileUploadPipe } from '~app/core/pipes/file-upload/file-upload.pipe';
 import {
@@ -29,15 +29,15 @@ export class UserController {
   getUserProfile(
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<UserProfileResult> {
-    return this.userService.findUserProfile(user);
+    return this.userService.findUserProfile(user.sub);
   }
 
   @Patch('profile')
   updateProfile(
-    @Body() body: UpdateUserProfile,
+    @Body() updateUserProfileDto: UpdateUserProfileDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<UpdateUserProfileResult> {
-    return this.userService.updateUserProfile(body, user);
+    return this.userService.updateUserProfile(user.sub, updateUserProfileDto);
   }
 
   @Patch('profile/profile-picture')
@@ -47,6 +47,6 @@ export class UserController {
     file: Express.Multer.File,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<UpdateUserProfileResult> {
-    return this.userService.updateUserProfilePicture(file, user);
+    return this.userService.updateUserProfilePicture(user.sub, file);
   }
 }

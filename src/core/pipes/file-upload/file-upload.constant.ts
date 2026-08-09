@@ -29,8 +29,13 @@ export interface FileRule {
   minWidth: number;
   minHeight: number;
 
+  targetWidth?: number;
+  targetHeight?: number;
+
   maxWidth?: number;
   maxHeight?: number;
+
+  qualityWebp?: number;
 }
 
 export const FILE_RULES = {
@@ -46,6 +51,8 @@ export const FILE_RULES = {
     aspectRatio: ASPECT_RATIOS.SQUARE,
     minWidth: 512,
     minHeight: 512,
+
+    qualityWebp: 100,
   },
 
   avatar: {
@@ -60,6 +67,8 @@ export const FILE_RULES = {
     aspectRatio: ASPECT_RATIOS.SQUARE,
     minHeight: 800,
     minWidth: 800,
+
+    qualityWebp: 100,
   },
 
   banner: {
@@ -72,8 +81,14 @@ export const FILE_RULES = {
     fileTypeErrorMessage: 'Channel banner must be a JPEG, PNG, or WebP image.',
 
     aspectRatio: ASPECT_RATIOS.LANDSCAPE_16_9,
-    minWidth: 2560,
-    minHeight: 1440,
+
+    minWidth: 1920,
+    minHeight: 1080,
+
+    targetWidth: 2560,
+    targetHeight: 1440,
+
+    qualityWebp: 85,
   },
 
   videoThumbnail: {
@@ -87,6 +102,8 @@ export const FILE_RULES = {
 
     minWidth: 720,
     minHeight: 720,
+
+    qualityWebp: 100,
   },
 
   video: {
