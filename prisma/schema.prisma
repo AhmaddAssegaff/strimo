@@ -25,11 +25,8 @@ enum SUBSCRIPTION_NOTIFICATION_TYPE {
 
 enum VIDEO_STATUS {
   DRAFT
-  UPLOADING
   PROCESSING
   READY
-  FAILED
-  PUBLISHED
 }
 
 enum VIDEO_VISIBILITY {
@@ -42,9 +39,6 @@ enum UPLOAD_STATUS {
   PENDING
   UPLOADING
   UPLOADED
-  SCANNING
-  CLEAN
-  INFECTED
   FAILED
 }
 
@@ -159,7 +153,7 @@ model Video {
   duration    Int              @default(0)
   manifestUrl String?          @map("manifest_url")
   thumbnail   String?
-  status      VIDEO_STATUS     @default(UPLOADING)
+  status      VIDEO_STATUS     @default(DRAFT)
   visibility  VIDEO_VISIBILITY @default(PRIVATE)
   publishedAt DateTime?        @map("published_at")
   createdAt   DateTime         @default(now()) @map("created_at")
@@ -176,26 +170,25 @@ model Video {
 model Upload {
   id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId            String        @map("user_id") @db.Uuid
-  videoId           String?       @map("video_id") @db.Uuid
+  videoId           String        @map("video_id") @db.Uuid
   filename          String        @db.VarChar(512)
   sizeBytes         BigInt        @map("size_bytes")
   mimeType          String        @map("mime_type") @db.VarChar(128)
+  chunkSize         Int?          @map("chunk_size")
   storageKey        String?       @map("storage_key") @db.VarChar(1024)
   stagingKey        String?       @map("staging_key") @db.VarChar(1024)
-  checksumSha256    String?       @map("checksum_sha256") @db.Char(64)
+  checksumSha256    String        @map("checksum_sha256") @db.Char(64)
   status            UPLOAD_STATUS @default(PENDING)
   uploadType        UPLOAD_TYPE   @default(SINGLE) @map("upload_type")
-  multipartUploadId String?       @map("multipart_upload_id") @db.VarChar(512)
+  multipartUploadId String        @map("multipart_upload_id") @db.VarChar(512)
   totalChunks       Int?          @map("total_chunks")
-  errorMessage      String?       @map("error_message") @db.Text
   createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz
   completedAt       DateTime?     @map("completed_at") @db.Timestamptz
 
-  user             User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  video            Video?                  @relation(fields: [videoId], references: [id], onDelete: SetNull)
-  chunks           UploadChunk[]
-  processingEvents UploadProcessingEvent[]
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video  Video         @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  chunks UploadChunk[]
 
   @@index([userId, createdAt(sort: Desc)])
   @@map("uploads")
@@ -208,7 +201,6 @@ model UploadChunk {
   byteOffset  BigInt       @map("byte_offset")
   sizeBytes   Int          @map("size_bytes")
   etag        String?      @db.VarChar(128)
-  checksumMd5 String?      @map("checksum_md5") @db.Char(32)
   status      CHUNK_STATUS @default(PENDING)
   uploadedAt  DateTime?    @map("uploaded_at") @db.Timestamptz
 
@@ -217,18 +209,4 @@ model UploadChunk {
   @@unique([uploadId, chunkNumber])
   @@index([uploadId])
   @@map("upload_chunks")
-}
-
-model UploadProcessingEvent {
-  id        BigInt            @id @default(autoincrement()) @map("event_id")
-  uploadId  String            @map("upload_id") @db.Uuid
-  stage     String            @db.VarChar(64)
-  status    PROCESSING_STATUS
-  details   Json              @default("{}")
-  createdAt DateTime          @default(now()) @map("created_at") @db.Timestamptz
-
-  upload Upload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
-
-  @@index([uploadId])
-  @@map("upload_processing_events")
 }
