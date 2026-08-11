@@ -24,8 +24,8 @@ import {
   PutObjectCommand,
   S3Client,
   UploadPartCommand,
+  GetObjectCommand,
 } from '@aws-sdk/client-s3';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
@@ -62,7 +62,6 @@ export class ObjectStorageService implements OnModuleInit {
           Key: objectName,
         }),
       );
-
       return true;
     } catch {
       return false;
@@ -75,15 +74,11 @@ export class ObjectStorageService implements OnModuleInit {
     localFilePath: string,
   ): Promise<boolean> {
     await this.ensureBucket(bucketName);
-
     const exists = await this.isObjectExists(bucketName, objectName);
-
     if (exists) {
       return false;
     }
-
     const fileBuffer = await readFile(localFilePath);
-
     await this.s3Client.send(
       new PutObjectCommand({
         Bucket: bucketName,
@@ -92,30 +87,24 @@ export class ObjectStorageService implements OnModuleInit {
         ContentType: 'image/png',
       }),
     );
-
     return true;
   }
 
   async onModuleInit(): Promise<void> {
     try {
       await this.ping();
-
       const avatarPath = path.join(process.cwd(), DEFAULT_AVATAR_LOCAL_PATH);
-
       const bannerPath = path.join(process.cwd(), DEFAULT_BANNER_LOCAL_PATH);
-
       const avatarCreated = await this.ensureDefaultObject(
         AVATAR_BUCKET_NAME,
         DEFAULT_AVATAR_OBJECT_KEY,
         avatarPath,
       );
-
       const bannerCreated = await this.ensureDefaultObject(
         BANNER_BUCKET_NAME,
         DEFAULT_BANNER_OBJECT_KEY,
         bannerPath,
       );
-
       if (avatarCreated || bannerCreated) {
         this.logger.info('Default object storage objects initialized');
       }
@@ -136,7 +125,6 @@ export class ObjectStorageService implements OnModuleInit {
     file: Express.Multer.File,
   ): Promise<string> {
     await this.ensureBucket(bucketName);
-
     await this.s3Client.send(
       new PutObjectCommand({
         Bucket: bucketName,
@@ -146,7 +134,6 @@ export class ObjectStorageService implements OnModuleInit {
         ContentType: file.mimetype,
       }),
     );
-
     return objectName;
   }
 
@@ -159,7 +146,6 @@ export class ObjectStorageService implements OnModuleInit {
       Bucket: bucketName,
       Key: objectName,
     });
-
     return getSignedUrl(this.s3Client, command, {
       expiresIn: expirySeconds,
     });
@@ -180,33 +166,30 @@ export class ObjectStorageService implements OnModuleInit {
     contentType: string,
   ): Promise<string> {
     await this.ensureBucket(bucketName);
-
     const command = new CreateMultipartUploadCommand({
       Bucket: bucketName,
       Key: objectName,
       ContentType: contentType,
     });
-
     const result = await this.s3Client.send(command);
 
     if (!result.UploadId) {
       throw new Error('Failed to initiate multipart upload');
     }
-
     return result.UploadId;
   }
 
   async getPresignedUploadPartUrl(
     bucketName: string,
     objectName: string,
-    uploadId: string,
+    multipartUploadId: string,
     partNumber: number,
     expirySeconds = 3600,
   ): Promise<string> {
     const command = new UploadPartCommand({
       Bucket: bucketName,
       Key: objectName,
-      UploadId: uploadId,
+      UploadId: multipartUploadId,
       PartNumber: partNumber,
     });
 
@@ -221,16 +204,10 @@ export class ObjectStorageService implements OnModuleInit {
     uploadId: string,
     totalParts: number,
     expirySeconds = 3600,
-  ): Promise<
-    {
-      partNumber: number;
-      url: string;
-    }[]
-  > {
+  ): Promise<{ partNumber: number; url: string }[]> {
     const urls = await Promise.all(
       Array.from({ length: totalParts }, async (_, index) => {
         const partNumber = index + 1;
-
         const url = await this.getPresignedUploadPartUrl(
           bucketName,
           objectName,
@@ -238,29 +215,31 @@ export class ObjectStorageService implements OnModuleInit {
           partNumber,
           expirySeconds,
         );
-
         return {
           partNumber,
           url,
         };
       }),
     );
-
     return urls;
   }
 
   async completeMultipartUpload(
     bucketName: string,
     objectName: string,
-    uploadId: string,
+    multipartUploadId: string,
     parts: CompletedPart[],
   ): Promise<void> {
     await this.s3Client.send(
       new CompleteMultipartUploadCommand({
         Bucket: bucketName,
         Key: objectName,
-        UploadId: uploadId,
-        MultipartUpload: { Parts: parts },
+        UploadId: multipartUploadId,
+        MultipartUpload: {
+          Parts: parts.sort(
+            (a, b) => (a.PartNumber ?? 0) - (b.PartNumber ?? 0),
+          ),
+        },
       }),
     );
   }
