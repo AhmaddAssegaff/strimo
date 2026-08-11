@@ -1,0 +1,40 @@
+@videoId=2f639d42-dcf3-48d8-b4a0-5ad90e9e7888
+@uploadId=ceea31d1-24f3-42c8-bdda-bba3e4f65a1f
+
+### Initiate Upload video
+POST {{host}}/api/v1/uploads/initiate/{{videoId}}
+Authorization: Bearer {{variables.access-token}}
+Content-Type: application/json
+
+{
+  "filename": "video.mp4",
+  "mimeType": "video/mp4",
+  "sizeBytes": 28776080,
+  "checksumSha256": "29f06acd93053f147cdf99909744aaae90007319a5e9d9102b692ac6d91f9c79"
+}
+
+### Get presign-url per chunk
+GET {{host}}/api/v1/uploads/presigned-url/{{uploadId}}?chunkNumber=4
+Authorization: Bearer {{variables.access-token}}
+
+### Update etag Chunks
+PATCH {{host}}/api/v1/uploads/chunks/{{uploadId}}?chunkNumber=4
+Authorization: Bearer {{variables.access-token}}
+Content-Type: application/json
+
+{
+  "etag": "\"af3514e54d695baf7d20596de9fdbe2e\"",
+}
+
+### post complated upload
+POST {{host}}/api/v1/uploads/complete/{{uploadId}}
+Authorization: Bearer {{variables.access-token}}
+
+
+### check status uplod
+GET {{host}}/api/v1/uploads/status/{{uploadId}}
+Authorization: Bearer {{variables.access-token}}
+
+### abort upload
+DELETE {{host}}/api/v1/uploads/abort/{{uploadId}}
+Authorization: Bearer {{variables.access-token}}
