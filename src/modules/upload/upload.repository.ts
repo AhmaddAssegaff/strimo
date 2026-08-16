@@ -24,6 +24,7 @@ export class UploadRepository {
 
   async createUploadMultipart(params: {
     userId: string;
+    tempObjectKey: string;
     videoId: string;
     filename: string;
     mimeType: string;
@@ -31,7 +32,6 @@ export class UploadRepository {
     chunkSize: number;
     multipartUploadId: string;
     totalChunks: number;
-    storageKey: string;
     checksumSha256: string;
   }) {
     const chunksData = Array.from(
@@ -57,6 +57,7 @@ export class UploadRepository {
     return await this.prisma.upload.create({
       data: {
         userId: params.userId,
+        tempObjectKey: params.tempObjectKey,
         videoId: params.videoId,
         filename: params.filename,
         mimeType: params.mimeType,
@@ -66,7 +67,6 @@ export class UploadRepository {
         status: UPLOAD_STATUS.PENDING,
         multipartUploadId: params.multipartUploadId,
         totalChunks: params.totalChunks,
-        storageKey: params.storageKey,
         checksumSha256: params.checksumSha256,
         chunks: {
           createMany: {
@@ -122,6 +122,7 @@ export class UploadRepository {
     uploadId: string;
     chunkNumber: number;
     etag: string;
+    sha256: string;
   }) {
     return this.prisma.uploadChunk.update({
       where: {
@@ -132,6 +133,7 @@ export class UploadRepository {
       },
       data: {
         etag: params.etag,
+        sha256: params.sha256,
         status: CHUNK_STATUS.UPLOADED,
         upload: {
           update: {

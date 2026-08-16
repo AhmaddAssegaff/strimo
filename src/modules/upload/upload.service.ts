@@ -65,6 +65,7 @@ export class UploadService {
 
     const upload = await this.uploadRepo.createUploadMultipart({
       userId,
+      tempObjectKey: storageInit.objectKey,
       videoId,
       filename: dto.filename,
       mimeType: dto.mimeType,
@@ -72,8 +73,7 @@ export class UploadService {
       chunkSize,
       totalChunks,
       multipartUploadId: storageInit.multipartUploadId,
-      storageKey: storageInit.objectKey,
-      checksumSha256: dto.checksumSha256,
+      checksumSha256: dto.sha256Hex,
     });
 
     await this.videoRepo.updateStatusVideoById({
@@ -85,7 +85,6 @@ export class UploadService {
     return {
       uploadId: upload.id,
       videoId: upload.videoId,
-      storageKey: upload.storageKey,
       multipartUploadId: upload.multipartUploadId,
       chunkSize,
       totalChunks: upload.totalChunks,
@@ -100,7 +99,7 @@ export class UploadService {
     const upload = await this.getValidUpload(uploadId, userId);
 
     const storageRes = await this.videoStorage.getChunkPresignedUrl(
-      upload.storageKey!,
+      upload.tempObjectKey,
       upload.multipartUploadId,
       chunkNumber,
     );
@@ -122,6 +121,7 @@ export class UploadService {
 
     const chunk = await this.uploadRepo.recordChunkSuccessAndSetUploading({
       etag: dto.etag,
+      sha256: dto.sha256Base64,
       chunkNumber: chunkNumber,
       uploadId: uploadId,
     });
@@ -182,7 +182,7 @@ export class UploadService {
     }));
 
     await this.videoStorage.completeUpload(
-      upload.storageKey!,
+      upload.tempObjectKey,
       upload.multipartUploadId,
       completedParts,
     );
@@ -202,9 +202,9 @@ export class UploadService {
   async abortUpload(userId: string, channelId: string, uploadId: string) {
     const upload = await this.getValidUpload(uploadId, userId);
 
-    if (upload.multipartUploadId && upload.storageKey) {
+    if (upload.multipartUploadId && upload.tempObjectKey) {
       await this.videoStorage.abortUpload(
-        upload.storageKey,
+        upload.tempObjectKey,
         upload.multipartUploadId,
       );
     }

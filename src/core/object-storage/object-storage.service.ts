@@ -170,6 +170,7 @@ export class ObjectStorageService implements OnModuleInit {
       Bucket: bucketName,
       Key: objectName,
       ContentType: contentType,
+      ChecksumAlgorithm: 'SHA256',
     });
     const result = await this.s3Client.send(command);
 
