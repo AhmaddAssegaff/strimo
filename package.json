@@ -72,6 +72,7 @@
     "@prisma/instrumentation": "^7.8.0",
     "@prisma/sqlcommenter-trace-context": "^7.8.0",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^6.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "ioredis": "^5.11.0",
