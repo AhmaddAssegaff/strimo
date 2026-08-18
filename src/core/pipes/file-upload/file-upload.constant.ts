@@ -105,24 +105,6 @@ export const FILE_RULES = {
 
     qualityWebp: 100,
   },
-
-  video: {
-    maxSize: MB(5000),
-    allowedMimeTypes: [
-      'video/mp4',
-      'video/webm',
-      'video/x-matroska',
-      'video/quicktime',
-    ],
-    fileTypeRegex: /^video\/(mp4|webm|x-matroska|quicktime)$/,
-
-    fileIsRequired: true,
-    maxFileSizeErrorMessage: 'Video must not exceed 5GB.',
-    fileTypeErrorMessage: 'Video must be an MP4, WebM, or MKV file.',
-
-    minWidth: 1280,
-    minHeight: 720,
-  },
 } satisfies Record<string, FileRule>;
 
 export type UploadRuleKey = keyof typeof FILE_RULES;
