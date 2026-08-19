@@ -2,6 +2,7 @@
 
 import { spawn } from 'node:child_process';
 import * as path from 'node:path';
+import { mkdir } from 'node:fs/promises';
 
 // Runs FFmpeg to transcode a video from a presigned URL into one or more
 // resolution variants.
@@ -22,7 +23,22 @@ import * as path from 'node:path';
 //   -map "[out144]" -c:v libopenh264 -b:v 250k ... \
 //   -map 0:a? -c:a aac -b:a 64k ...
 //
-// The generated files are written to the given output directory.
+// Output structure:
+//
+// transcoded/
+// ├── audio/
+// │   └── audio.mp4
+// └── video/
+//     ├── 144/
+//     │   └── video.mp4
+//     ├── 360/
+//     │   └── video.mp4
+//     ├── 480/
+//     │   └── video.mp4
+//     ├── 720/
+//     │   └── video.mp4
+//     └── 1080/
+//         └── video.mp4
 
 export class FfmpegService {
   private runFfmpegArgs(args: string[]): Promise<void> {
@@ -34,30 +50,58 @@ export class FfmpegService {
         stderrData += data.toString();
       });
 
-      ffmpeg.on('error', (err) => reject(err));
+      ffmpeg.on('error', (error) => {
+        reject(error);
+      });
+
       ffmpeg.on('close', (code) => {
-        if (code === 0) resolve();
-        else
-          reject(new Error(`FFmpeg exited with code ${code}: ${stderrData}`));
+        if (code === 0) {
+          resolve();
+          return;
+        }
+
+        reject(new Error(`FFmpeg exited with code ${code}: ${stderrData}`));
       });
     });
+  }
+
+  private async prepareOutputDirectories(
+    outputDirectory: string,
+    resolutions: number[],
+  ): Promise<void> {
+    await mkdir(path.join(outputDirectory, 'audio'), {
+      recursive: true,
+    });
+
+    await Promise.all(
+      resolutions.map((resolution) =>
+        mkdir(path.join(outputDirectory, 'video', String(resolution)), {
+          recursive: true,
+        }),
+      ),
+    );
   }
 
   private generateBitrate(params: {
     targetMaxKbps: number;
     originalBps: number | null;
   }): string {
-    if (!params.originalBps) return `${params.targetMaxKbps}k`;
+    if (!params.originalBps) {
+      return `${params.targetMaxKbps}k`;
+    }
+
     const originalKbps = Math.round(params.originalBps / 1000);
+
     const finalKbps = Math.min(params.targetMaxKbps, originalKbps);
+
     return `${finalKbps}k`;
   }
 
   private mapStream(
     label: string,
     bitrate: string,
-    outDir: string,
-    filename: string,
+    outputDirectory: string,
+    resolution: number,
   ): string[] {
     return [
       '-map',
@@ -72,11 +116,11 @@ export class FfmpegService {
       '48',
       '-sc_threshold',
       '0',
-      path.join(outDir, filename),
+      path.join(outputDirectory, 'video', String(resolution), 'video.mp4'),
     ];
   }
 
-  private mapAudio(bitrate: string, outDir: string): string[] {
+  private mapAudio(bitrate: string, outputDirectory: string): string[] {
     return [
       '-map',
       '0:a?',
@@ -84,57 +128,70 @@ export class FfmpegService {
       'aac',
       '-b:a',
       bitrate,
-      path.join(outDir, 'audio.mp4'),
+      path.join(outputDirectory, 'audio', 'audio.mp4'),
     ];
   }
 
-  transcodeVideo(params: {
+  async transcodeVideo(params: {
     preSignUrl: string;
     outputDirectory: string;
     originalVideoBitrate: number | null;
   }) {
     const { preSignUrl, outputDirectory, originalVideoBitrate } = params;
 
-    const MaxKbps144p = 250;
-    const MaxKbps360p = 800;
-    const MaxKbps480p = 1400;
-    const MaxKbps720p = 2500;
-    const MaxKbps1080p = 4000;
+    const MAX_KBPS_144P = 250;
+    const MAX_KBPS_360P = 800;
+    const MAX_KBPS_480P = 1400;
+    const MAX_KBPS_720P = 2500;
+    const MAX_KBPS_1080P = 4000;
 
     const bitRate144p = this.generateBitrate({
       originalBps: originalVideoBitrate,
-      targetMaxKbps: MaxKbps144p,
+      targetMaxKbps: MAX_KBPS_144P,
     });
+
     const bitRate360p = this.generateBitrate({
       originalBps: originalVideoBitrate,
-      targetMaxKbps: MaxKbps360p,
+      targetMaxKbps: MAX_KBPS_360P,
     });
+
     const bitRate480p = this.generateBitrate({
       originalBps: originalVideoBitrate,
-      targetMaxKbps: MaxKbps480p,
+      targetMaxKbps: MAX_KBPS_480P,
     });
+
     const bitRate720p = this.generateBitrate({
       originalBps: originalVideoBitrate,
-      targetMaxKbps: MaxKbps720p,
+      targetMaxKbps: MAX_KBPS_720P,
     });
+
     const bitRate1080p = this.generateBitrate({
       originalBps: originalVideoBitrate,
-      targetMaxKbps: MaxKbps1080p,
+      targetMaxKbps: MAX_KBPS_1080P,
     });
+
+    /*
+     * Prepare all possible output directories.
+     *
+     * The actual FFmpeg command determines which resolutions
+     * are populated.
+     */
+    await this.prepareOutputDirectories(
+      outputDirectory,
+      [144, 360, 480, 720, 1080],
+    );
 
     return {
       toMax144: () =>
         this.runFfmpegArgs([
           '-i',
           preSignUrl,
+
           '-filter_complex',
           '[0:v]fps=24,scale=w=256:h=144[out144]',
-          ...this.mapStream(
-            'out144',
-            bitRate144p,
-            outputDirectory,
-            'v_144.mp4',
-          ),
+
+          ...this.mapStream('out144', bitRate144p, outputDirectory, 144),
+
           ...this.mapAudio('64k', outputDirectory),
         ]),
 
@@ -144,18 +201,8 @@ export class FfmpegService {
           preSignUrl,
           '-filter_complex',
           '[0:v]fps=24,split=2[v144][v360];[v144]scale=w=256:h=144[out144];[v360]scale=w=640:h=360[out360]',
-          ...this.mapStream(
-            'out144',
-            bitRate144p,
-            outputDirectory,
-            'v_144.mp4',
-          ),
-          ...this.mapStream(
-            'out360',
-            bitRate360p,
-            outputDirectory,
-            'v_360.mp4',
-          ),
+          ...this.mapStream('out144', bitRate144p, outputDirectory, 144),
+          ...this.mapStream('out360', bitRate360p, outputDirectory, 360),
           ...this.mapAudio('96k', outputDirectory),
         ]),
 
@@ -165,24 +212,9 @@ export class FfmpegService {
           preSignUrl,
           '-filter_complex',
           '[0:v]fps=24,split=3[v144][v360][v480];[v144]scale=w=256:h=144[out144];[v360]scale=w=640:h=360[out360];[v480]scale=w=854:h=480[out480]',
-          ...this.mapStream(
-            'out144',
-            bitRate144p,
-            outputDirectory,
-            'v_144.mp4',
-          ),
-          ...this.mapStream(
-            'out360',
-            bitRate360p,
-            outputDirectory,
-            'v_360.mp4',
-          ),
-          ...this.mapStream(
-            'out480',
-            bitRate480p,
-            outputDirectory,
-            'v_480.mp4',
-          ),
+          ...this.mapStream('out144', bitRate144p, outputDirectory, 144),
+          ...this.mapStream('out360', bitRate360p, outputDirectory, 360),
+          ...this.mapStream('out480', bitRate480p, outputDirectory, 480),
           ...this.mapAudio('128k', outputDirectory),
         ]),
 
@@ -192,30 +224,10 @@ export class FfmpegService {
           preSignUrl,
           '-filter_complex',
           '[0:v]fps=24,split=4[v144][v360][v480][v720];[v144]scale=w=256:h=144[out144];[v360]scale=w=640:h=360[out360];[v480]scale=w=854:h=480[out480];[v720]scale=w=1280:h=720[out720]',
-          ...this.mapStream(
-            'out144',
-            bitRate144p,
-            outputDirectory,
-            'v_144.mp4',
-          ),
-          ...this.mapStream(
-            'out360',
-            bitRate360p,
-            outputDirectory,
-            'v_360.mp4',
-          ),
-          ...this.mapStream(
-            'out480',
-            bitRate480p,
-            outputDirectory,
-            'v_480.mp4',
-          ),
-          ...this.mapStream(
-            'out720',
-            bitRate720p,
-            outputDirectory,
-            'v_720.mp4',
-          ),
+          ...this.mapStream('out144', bitRate144p, outputDirectory, 144),
+          ...this.mapStream('out360', bitRate360p, outputDirectory, 360),
+          ...this.mapStream('out480', bitRate480p, outputDirectory, 480),
+          ...this.mapStream('out720', bitRate720p, outputDirectory, 720),
           ...this.mapAudio('128k', outputDirectory),
         ]),
 
@@ -225,36 +237,11 @@ export class FfmpegService {
           preSignUrl,
           '-filter_complex',
           '[0:v]fps=24,split=5[v144][v360][v480][v720][v1080];[v144]scale=w=256:h=144[out144];[v360]scale=w=640:h=360[out360];[v480]scale=w=854:h=480[out480];[v720]scale=w=1280:h=720[out720];[v1080]scale=w=1920:h=1080[out1080]',
-          ...this.mapStream(
-            'out144',
-            bitRate144p,
-            outputDirectory,
-            'v_144.mp4',
-          ),
-          ...this.mapStream(
-            'out360',
-            bitRate360p,
-            outputDirectory,
-            'v_360.mp4',
-          ),
-          ...this.mapStream(
-            'out480',
-            bitRate480p,
-            outputDirectory,
-            'v_480.mp4',
-          ),
-          ...this.mapStream(
-            'out720',
-            bitRate720p,
-            outputDirectory,
-            'v_720.mp4',
-          ),
-          ...this.mapStream(
-            'out1080',
-            bitRate1080p,
-            outputDirectory,
-            'v_1080.mp4',
-          ),
+          ...this.mapStream('out144', bitRate144p, outputDirectory, 144),
+          ...this.mapStream('out360', bitRate360p, outputDirectory, 360),
+          ...this.mapStream('out480', bitRate480p, outputDirectory, 480),
+          ...this.mapStream('out720', bitRate720p, outputDirectory, 720),
+          ...this.mapStream('out1080', bitRate1080p, outputDirectory, 1080),
           ...this.mapAudio('192k', outputDirectory),
         ]),
     };
