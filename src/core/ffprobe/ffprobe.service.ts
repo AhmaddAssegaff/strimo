@@ -3,6 +3,7 @@
 import { Injectable } from '@nestjs/common';
 import { spawn } from 'node:child_process';
 import { VideoMetadata } from './ffprobe.interface';
+import { PinoLogger } from 'nestjs-pino';
 
 // Runs ffprobe against the video at the given presigned URL.
 // Equivalent CLI command:
@@ -15,6 +16,8 @@ import { VideoMetadata } from './ffprobe.interface';
 
 @Injectable()
 export class FfprobeService {
+  constructor(private readonly pino: PinoLogger) {}
+
   getVideoMetadata(inputPreSignUrl: string): Promise<VideoMetadata> {
     return new Promise((resolve, reject) => {
       const ffprobe = spawn('ffprobe', [
@@ -37,10 +40,12 @@ export class FfprobeService {
 
       ffprobe.on('error', (error) => {
         reject(error);
+        this.pino.error('ffprobe error', error);
       });
 
       ffprobe.on('close', (code) => {
         if (code !== 0) {
+          this.pino.error('ffprobe error', code);
           reject(new Error(`ffprobe exited with code ${code}`));
           return;
         }
@@ -56,7 +61,7 @@ export class FfprobeService {
             (stream: any) => stream.codec_type === 'audio',
           );
 
-          if (!video && audio) {
+          if (!video) {
             reject(new Error('No video stream found'));
             return;
           }
