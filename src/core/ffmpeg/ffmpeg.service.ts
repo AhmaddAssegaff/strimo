@@ -40,6 +40,9 @@ import { mkdir } from 'node:fs/promises';
 //     └── 1080/
 //         └── video.mp4
 
+type Resolution = 144 | 360 | 480 | 720 | 1080;
+const RESOLUTIONS: Resolution[] = [144, 360, 480, 720, 1080];
+
 export class FfmpegService {
   private runFfmpegArgs(args: string[]): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -176,10 +179,7 @@ export class FfmpegService {
      * The actual FFmpeg command determines which resolutions
      * are populated.
      */
-    await this.prepareOutputDirectories(
-      outputDirectory,
-      [144, 360, 480, 720, 1080],
-    );
+    await this.prepareOutputDirectories(outputDirectory, RESOLUTIONS);
 
     return {
       toMax144: () =>
