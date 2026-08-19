@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
-
-import { spawn } from 'node:child_process';
 import * as path from 'node:path';
+import { spawn } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
+import { PinoLogger } from 'nestjs-pino';
+import { Injectable } from '@nestjs/common';
+import { VideoMetadata } from '../ffprobe/ffprobe.interface';
 
 // Runs FFmpeg to transcode a video from a presigned URL into one or more
 // resolution variants.
@@ -43,7 +45,10 @@ import { mkdir } from 'node:fs/promises';
 type Resolution = 144 | 360 | 480 | 720 | 1080;
 const RESOLUTIONS: Resolution[] = [144, 360, 480, 720, 1080];
 
+@Injectable()
 export class FfmpegService {
+  constructor(private readonly pino: PinoLogger) {}
+
   private runFfmpegArgs(args: string[]): Promise<void> {
     return new Promise((resolve, reject) => {
       const ffmpeg = spawn('ffmpeg', args);
@@ -54,6 +59,7 @@ export class FfmpegService {
       });
 
       ffmpeg.on('error', (error) => {
+        this.pino.error('ffmpeg error', error);
         reject(error);
       });
 
@@ -63,6 +69,7 @@ export class FfmpegService {
           return;
         }
 
+        this.pino.error(`FFmpeg exited with code ${code}: ${stderrData}`);
         reject(new Error(`FFmpeg exited with code ${code}: ${stderrData}`));
       });
     });
@@ -85,7 +92,7 @@ export class FfmpegService {
     );
   }
 
-  private generateBitrate(params: {
+  private generateVideoBitrate(params: {
     targetMaxKbps: number;
     originalBps: number | null;
   }): string {
@@ -95,9 +102,20 @@ export class FfmpegService {
 
     const originalKbps = Math.round(params.originalBps / 1000);
 
-    const finalKbps = Math.min(params.targetMaxKbps, originalKbps);
+    return `${Math.min(params.targetMaxKbps, originalKbps)}k`;
+  }
 
-    return `${finalKbps}k`;
+  private generateAudioBitrate(
+    targetKbps: number,
+    originalBps: number | null,
+  ): string {
+    if (!originalBps) {
+      return `${targetKbps}k`;
+    }
+
+    const originalKbps = Math.round(originalBps / 1000);
+
+    return `${Math.min(targetKbps, originalKbps)}k`;
   }
 
   private mapStream(
@@ -113,12 +131,13 @@ export class FfmpegService {
       'libopenh264',
       '-b:v',
       bitrate,
+      '-pix_fmt',
+      'yuv420p',
       '-g',
       '48',
       '-keyint_min',
       '48',
-      '-sc_threshold',
-      '0',
+      '-an',
       path.join(outputDirectory, 'video', String(resolution), 'video.mp4'),
     ];
   }
@@ -138,111 +157,133 @@ export class FfmpegService {
   async transcodeVideo(params: {
     preSignUrl: string;
     outputDirectory: string;
-    originalVideoBitrate: number | null;
+    metadata: VideoMetadata;
   }) {
-    const { preSignUrl, outputDirectory, originalVideoBitrate } = params;
+    const { preSignUrl, outputDirectory, metadata } = params;
+    const { video, audio } = metadata;
 
-    const MAX_KBPS_144P = 250;
-    const MAX_KBPS_360P = 800;
-    const MAX_KBPS_480P = 1400;
-    const MAX_KBPS_720P = 2500;
-    const MAX_KBPS_1080P = 4000;
+    const MAX_KBPS_144P = 500;
+    const MAX_KBPS_360P = 1500;
+    const MAX_KBPS_480P = 3000;
+    const MAX_KBPS_720P = 6000;
+    const MAX_KBPS_1080P = 10000;
 
-    const bitRate144p = this.generateBitrate({
-      originalBps: originalVideoBitrate,
+    const videoBitRate144p = this.generateVideoBitrate({
+      originalBps: video.bitRate,
       targetMaxKbps: MAX_KBPS_144P,
     });
 
-    const bitRate360p = this.generateBitrate({
-      originalBps: originalVideoBitrate,
+    const videoBitRate360p = this.generateVideoBitrate({
+      originalBps: video.bitRate,
       targetMaxKbps: MAX_KBPS_360P,
     });
 
-    const bitRate480p = this.generateBitrate({
-      originalBps: originalVideoBitrate,
+    const videoBitRate480p = this.generateVideoBitrate({
+      originalBps: video.bitRate,
       targetMaxKbps: MAX_KBPS_480P,
     });
 
-    const bitRate720p = this.generateBitrate({
-      originalBps: originalVideoBitrate,
+    const VideoBitRate720p = this.generateVideoBitrate({
+      originalBps: video.bitRate,
       targetMaxKbps: MAX_KBPS_720P,
     });
 
-    const bitRate1080p = this.generateBitrate({
-      originalBps: originalVideoBitrate,
+    const videoBitRate1080p = this.generateVideoBitrate({
+      originalBps: video.bitRate,
       targetMaxKbps: MAX_KBPS_1080P,
     });
 
-    /*
-     * Prepare all possible output directories.
-     *
-     * The actual FFmpeg command determines which resolutions
-     * are populated.
-     */
+    const audioBitRate64 = this.generateAudioBitrate(
+      64,
+      audio?.bitRate ?? null,
+    );
+
+    const audioBitRate96 = this.generateAudioBitrate(
+      96,
+      audio?.bitRate ?? null,
+    );
+
+    const audioBitRate128 = this.generateAudioBitrate(
+      128,
+      audio?.bitRate ?? null,
+    );
+
+    const audioBitRate192 = this.generateAudioBitrate(
+      192,
+      audio?.bitRate ?? null,
+    );
+
     await this.prepareOutputDirectories(outputDirectory, RESOLUTIONS);
 
     return {
       toMax144: () =>
         this.runFfmpegArgs([
+          '-y',
           '-i',
           preSignUrl,
-
           '-filter_complex',
-          '[0:v]fps=24,scale=w=256:h=144[out144]',
-
-          ...this.mapStream('out144', bitRate144p, outputDirectory, 144),
-
-          ...this.mapAudio('64k', outputDirectory),
+          '[0:v]scale=w=256:h=144,unsharp=5:5:0.8:5:5:0.0[out144]',
+          ...this.mapStream('out144', videoBitRate144p, outputDirectory, 144),
+          ...this.mapAudio(audioBitRate64, outputDirectory),
         ]),
 
       toMax360: () =>
         this.runFfmpegArgs([
+          '-y',
           '-i',
           preSignUrl,
           '-filter_complex',
-          '[0:v]fps=24,split=2[v144][v360];[v144]scale=w=256:h=144[out144];[v360]scale=w=640:h=360[out360]',
-          ...this.mapStream('out144', bitRate144p, outputDirectory, 144),
-          ...this.mapStream('out360', bitRate360p, outputDirectory, 360),
-          ...this.mapAudio('96k', outputDirectory),
+          '[0:v]split=2[v144][v360];[v144]scale=w=256:h=144,unsharp=5:5:0.8:5:5:0.0[out144];[v360]scale=w=640:h=360,unsharp=5:5:0.8:5:5:0.0[out360]',
+          ...this.mapStream('out144', videoBitRate144p, outputDirectory, 144),
+          ...this.mapStream('out360', videoBitRate360p, outputDirectory, 360),
+          ...this.mapAudio(audioBitRate96, outputDirectory),
         ]),
 
       toMax480: () =>
         this.runFfmpegArgs([
+          '-y',
           '-i',
           preSignUrl,
           '-filter_complex',
-          '[0:v]fps=24,split=3[v144][v360][v480];[v144]scale=w=256:h=144[out144];[v360]scale=w=640:h=360[out360];[v480]scale=w=854:h=480[out480]',
-          ...this.mapStream('out144', bitRate144p, outputDirectory, 144),
-          ...this.mapStream('out360', bitRate360p, outputDirectory, 360),
-          ...this.mapStream('out480', bitRate480p, outputDirectory, 480),
-          ...this.mapAudio('128k', outputDirectory),
+          '[0:v]split=3[v144][v360][v480];[v144]scale=w=256:h=144,unsharp=5:5:0.8:5:5:0.0[out144];[v360]scale=w=640:h=360,unsharp=5:5:0.8:5:5:0.0[out360];[v480]scale=w=854:h=480,unsharp=5:5:0.8:5:5:0.0[out480]',
+          ...this.mapStream('out144', videoBitRate144p, outputDirectory, 144),
+          ...this.mapStream('out360', videoBitRate360p, outputDirectory, 360),
+          ...this.mapStream('out480', videoBitRate480p, outputDirectory, 480),
+          ...this.mapAudio(audioBitRate128, outputDirectory),
         ]),
 
       toMax720: () =>
         this.runFfmpegArgs([
+          '-y',
           '-i',
           preSignUrl,
           '-filter_complex',
-          '[0:v]fps=24,split=4[v144][v360][v480][v720];[v144]scale=w=256:h=144[out144];[v360]scale=w=640:h=360[out360];[v480]scale=w=854:h=480[out480];[v720]scale=w=1280:h=720[out720]',
-          ...this.mapStream('out144', bitRate144p, outputDirectory, 144),
-          ...this.mapStream('out360', bitRate360p, outputDirectory, 360),
-          ...this.mapStream('out480', bitRate480p, outputDirectory, 480),
-          ...this.mapStream('out720', bitRate720p, outputDirectory, 720),
-          ...this.mapAudio('128k', outputDirectory),
+          '[0:v]split=4[v144][v360][v480][v720];[v144]scale=w=256:h=144,unsharp=5:5:0.8:5:5:0.0[out144];[v360]scale=w=640:h=360,unsharp=5:5:0.8:5:5:0.0[out360];[v480]scale=w=854:h=480,unsharp=5:5:0.8:5:5:0.0[out480];[v720]scale=w=1280:h=720,unsharp=5:5:0.8:5:5:0.0[out720]',
+          ...this.mapStream('out144', videoBitRate144p, outputDirectory, 144),
+          ...this.mapStream('out360', videoBitRate360p, outputDirectory, 360),
+          ...this.mapStream('out480', videoBitRate480p, outputDirectory, 480),
+          ...this.mapStream('out720', VideoBitRate720p, outputDirectory, 720),
+          ...this.mapAudio(audioBitRate128, outputDirectory),
         ]),
 
       toMax1080: () =>
         this.runFfmpegArgs([
+          '-y',
           '-i',
           preSignUrl,
           '-filter_complex',
-          '[0:v]fps=24,split=5[v144][v360][v480][v720][v1080];[v144]scale=w=256:h=144[out144];[v360]scale=w=640:h=360[out360];[v480]scale=w=854:h=480[out480];[v720]scale=w=1280:h=720[out720];[v1080]scale=w=1920:h=1080[out1080]',
-          ...this.mapStream('out144', bitRate144p, outputDirectory, 144),
-          ...this.mapStream('out360', bitRate360p, outputDirectory, 360),
-          ...this.mapStream('out480', bitRate480p, outputDirectory, 480),
-          ...this.mapStream('out720', bitRate720p, outputDirectory, 720),
-          ...this.mapStream('out1080', bitRate1080p, outputDirectory, 1080),
-          ...this.mapAudio('192k', outputDirectory),
+          '[0:v]split=5[v144][v360][v480][v720][v1080];[v144]scale=w=256:h=144,unsharp=5:5:0.8:5:5:0.0[out144];[v360]scale=w=640:h=360,unsharp=5:5:0.8:5:5:0.0[out360];[v480]scale=w=854:h=480,unsharp=5:5:0.8:5:5:0.0[out480];[v720]scale=w=1280:h=720,unsharp=5:5:0.8:5:5:0.0[out720];[v1080]scale=w=1920:h=1080,unsharp=5:5:0.8:5:5:0.0[out1080]',
+          ...this.mapStream('out144', videoBitRate144p, outputDirectory, 144),
+          ...this.mapStream('out360', videoBitRate360p, outputDirectory, 360),
+          ...this.mapStream('out480', videoBitRate480p, outputDirectory, 480),
+          ...this.mapStream('out720', VideoBitRate720p, outputDirectory, 720),
+          ...this.mapStream(
+            'out1080',
+            videoBitRate1080p,
+            outputDirectory,
+            1080,
+          ),
+          ...this.mapAudio(audioBitRate192, outputDirectory),
         ]),
     };
   }
