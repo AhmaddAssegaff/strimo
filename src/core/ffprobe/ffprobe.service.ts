@@ -5,14 +5,85 @@ import { spawn } from 'node:child_process';
 import { VideoMetadata } from './ffprobe.interface';
 import { PinoLogger } from 'nestjs-pino';
 
-// Runs ffprobe against the video at the given presigned URL.
-// Equivalent CLI command:
-//
-// ffprobe -v error \
-//   -show_entries 'stream=codec_type,codec_name,profile,level,width,height,pix_fmt,r_frame_rate,avg_frame_rate,bit_rate,sample_aspect_ratio,display_aspect_ratio,sample_rate,channels' \
-//   -show_entries 'format=format_name,size,duration,bit_rate' \
-//   -of json \
-//   <presignedUrl>
+/**
+ * Extracts video, audio, and container metadata using FFprobe.
+ *
+ * The service runs FFprobe against a video URL, typically a presigned URL,
+ * and converts the JSON output into a typed VideoMetadata object.
+ *
+ * Video metadata includes:
+ * - Codec name and type
+ * - Profile and level
+ * - Width and height
+ * - Pixel format
+ * - Frame rate and average frame rate
+ * - Video bitrate
+ * - Sample and display aspect ratio
+ *
+ * Audio metadata includes:
+ * - Codec name and type
+ * - Sample rate
+ * - Number of channels
+ * - Audio bitrate
+ *
+ * Container metadata includes:
+ * - Format name
+ * - File size
+ * - Duration
+ * - Overall bitrate
+ *
+ * CLI equivalent:
+ *
+ * ```bash
+ * ffprobe -v error \
+ *   -show_entries \
+ *   'stream=codec_type,codec_name,profile,level,width,height,pix_fmt,r_frame_rate,avg_frame_rate,bit_rate,sample_aspect_ratio,display_aspect_ratio,sample_rate,channels' \
+ *   -show_entries \
+ *   'format=format_name,size,duration,bit_rate' \
+ *   -of json \
+ *   <presignedUrl>
+ * ```
+ *
+ * Example output:
+ *
+ * ```json
+ * {
+ *   "streams": [
+ *     {
+ *       "codec_type": "video",
+ *       "codec_name": "h264",
+ *       "profile": "High",
+ *       "level": 40,
+ *       "width": 1920,
+ *       "height": 1080,
+ *       "pix_fmt": "yuv420p",
+ *       "r_frame_rate": "30/1",
+ *       "avg_frame_rate": "30/1",
+ *       "bit_rate": "5000000",
+ *       "sample_aspect_ratio": "1:1",
+ *       "display_aspect_ratio": "16:9"
+ *     },
+ *     {
+ *       "codec_type": "audio",
+ *       "codec_name": "aac",
+ *       "sample_rate": "48000",
+ *       "channels": 2,
+ *       "bit_rate": "128000"
+ *     }
+ *   ],
+ *   "format": {
+ *     "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+ *     "size": "27000000",
+ *     "duration": "45.000000",
+ *     "bit_rate": "4800000"
+ *   }
+ * }
+ * ```
+ *
+ * The extracted metadata is used by the video processing pipeline to make
+ * transcoding decisions, such as selecting the maximum output resolution
+ * and calculating appropriate video and audio bitrates.
+ */
 
 @Injectable()
 export class FfprobeService {

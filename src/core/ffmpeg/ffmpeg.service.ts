@@ -6,41 +6,110 @@ import { PinoLogger } from 'nestjs-pino';
 import { Injectable } from '@nestjs/common';
 import { VideoMetadata } from '../ffprobe/ffprobe.interface';
 
-// Runs FFmpeg to transcode a video from a presigned URL into one or more
-// resolution variants.
-//
-// The service generates different video resolutions based on the requested
-// maximum quality (144p, 360p, 480p, 720p, or 1080p).
-//
-// Each variant is encoded using H.264 (libopenh264) with a bitrate capped
-// by the original video's bitrate, so transcoding does not increase the
-// target bitrate beyond the source video.
-//
-// Audio is encoded separately using AAC.
-//
-// Example:
-//
-// ffmpeg -i <presignedUrl> \
-//   -filter_complex "[0:v]fps=24,scale=w=256:h=144[out144]" \
-//   -map "[out144]" -c:v libopenh264 -b:v 250k ... \
-//   -map 0:a? -c:a aac -b:a 64k ...
-//
-// Output structure:
-//
-// transcoded/
-// ├── audio/
-// │   └── audio.mp4
-// └── video/
-//     ├── 144/
-//     │   └── video.mp4
-//     ├── 360/
-//     │   └── video.mp4
-//     ├── 480/
-//     │   └── video.mp4
-//     ├── 720/
-//     │   └── video.mp4
-//     └── 1080/
-//         └── video.mp4
+/**
+ * Transcodes a video into multiple adaptive bitrate variants using FFmpeg.
+ *
+ * The maximum output resolution is selected by the worker based on the
+ * original video's height:
+ *
+ * - 144p  -> 256x144
+ * - 360p  -> 640x360
+ * - 480p  -> 854x480
+ * - 720p  -> 1280x720
+ * - 1080p -> 1920x1080
+ *
+ * Video bitrate is dynamically capped by the original video's bitrate.
+ * This prevents a generated video variant from using a higher bitrate
+ * than the source video.
+ *
+ * Audio bitrate is also dynamically capped by the original audio bitrate.
+ *
+ * Video:
+ * - Codec: H.264 (libopenh264)
+ * - Pixel format: yuv420p
+ * - GOP/keyframe interval: 48 frames
+ *
+ * Audio:
+ * - Codec: AAC
+ * - Stored separately as audio/audio.mp4
+ *
+ * CLI equivalent for a 720p source:
+ *
+ * ```bash
+ * ffmpeg -y \
+ *   -i input.mp4 \
+ *   -filter_complex "
+ *     [0:v]split=4[v144][v360][v480][v720];
+ *     [v144]scale=w=256:h=144unsharp=5:5:0.8:5:5:0.0[out144];
+ *     [v360]scale=w=640:h=360unsharp=5:5:0.8:5:5:0.0[out360];
+ *     [v480]scale=w=854:h=480unsharp=5:5:0.8:5:5:0.0[out480];
+ *     [v720]scale=w=1280:h=720unsharp=5:5:0.8:5:5:0.0[out720]
+ *   " \
+ *
+ *   -map "[out144]" \
+ *   -c:v libopenh264 \
+ *   -b:v 500k \
+ *   -pix_fmt yuv420p \
+ *   -g 48 \
+ *   -keyint_min 48 \
+ *   -an \
+ *   output/video/144/video.mp4 \
+ *
+ *   -map "[out360]" \
+ *   -c:v libopenh264 \
+ *   -b:v 1500k \
+ *   -pix_fmt yuv420p \
+ *   -g 48 \
+ *   -keyint_min 48 \
+ *   -an \
+ *   output/video/360/video.mp4 \
+ *
+ *   -map "[out480]" \
+ *   -c:v libopenh264 \
+ *   -b:v 3000k \
+ *   -pix_fmt yuv420p \
+ *   -g 48 \
+ *   -keyint_min 48 \
+ *   -an \
+ *   output/video/480/video.mp4 \
+ *
+ *   -map "[out720]" \
+ *   -c:v libopenh264 \
+ *   -b:v 6000k \
+ *   -pix_fmt yuv420p \
+ *   -g 48 \
+ *   -keyint_min 48 \
+ *   -an \
+ *   output/video/720/video.mp4 \
+ *
+ *   -map 0:a? \
+ *   -c:a aac \
+ *   -b:a 128k \
+ *   output/audio/audio.mp4
+ * ```
+ *
+ * Note:
+ * The bitrates shown in the CLI example are maximum target bitrates.
+ * The actual bitrate used by the service may be lower depending on the
+ * original video's video and audio bitrates.
+ *
+ * Output structure:
+ *
+ * transcoded/
+ * ├── audio/
+ * │   └── audio.mp4
+ * └── video/
+ *     ├── 144/
+ *     │   └── video.mp4
+ *     ├── 360/
+ *     │   └── video.mp4
+ *     ├── 480/
+ *     │   └── video.mp4
+ *     ├── 720/
+ *     │   └── video.mp4
+ *     └── 1080/
+ *         └── video.mp4
+ */
 
 type Resolution = 144 | 360 | 480 | 720 | 1080;
 const RESOLUTIONS: Resolution[] = [144, 360, 480, 720, 1080];
