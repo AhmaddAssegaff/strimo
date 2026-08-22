@@ -12,6 +12,13 @@ import { UploadRepository } from './upload.repository';
 import { VideoRepository } from '../video/video.repository';
 import { VideoStorageService } from '~app/core/object-storage/video-storage.service';
 import { InitiateUploadDto, RecordChunkDto } from './dto/upload.dto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { VIDEO_PROCESSING_QUEUE_NAME } from '~app/core/queue/queue.constant';
+import {
+  TranscodeJob,
+  VIDEO_PROCESSING_JOB_NAME,
+} from '~app/core/worker/video-worker/video-worker.constants';
 
 @Injectable()
 export class UploadService {
@@ -19,6 +26,8 @@ export class UploadService {
     private readonly uploadRepo: UploadRepository,
     private readonly videoRepo: VideoRepository,
     private readonly videoStorage: VideoStorageService,
+    @InjectQueue(VIDEO_PROCESSING_QUEUE_NAME)
+    private readonly videoProcessingQueue: Queue<TranscodeJob>,
   ) {}
 
   private async getValidUpload(uploadId: string, userId: string) {
@@ -187,14 +196,27 @@ export class UploadService {
       completedParts,
     );
 
+    const preSignUrl = await this.videoStorage.getPresignedUrl(
+      upload.tempObjectKey,
+    );
+
     await this.uploadRepo.updateUploadStatus(uploadId, UPLOAD_STATUS.UPLOADED, {
       completedAt: new Date(),
     });
+
+    const queue = await this.videoProcessingQueue.add(
+      VIDEO_PROCESSING_JOB_NAME,
+      {
+        videoId: upload.videoId,
+        preSignUrl,
+      },
+    );
 
     return {
       uploadId,
       videoId: upload.videoId,
       status: UPLOAD_STATUS.UPLOADED,
+      queue: queue,
       message: 'Upload completed successfully',
     };
   }
