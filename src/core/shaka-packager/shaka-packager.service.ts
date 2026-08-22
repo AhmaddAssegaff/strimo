@@ -72,15 +72,20 @@ import { PinoLogger } from 'nestjs-pino';
  */
 
 type Resolution = 144 | 360 | 480 | 720 | 1080;
-const RESOLUTIONS: Resolution[] = [144, 360, 480, 720, 1080];
 
 @Injectable()
 export class ShakaPackagerService {
   constructor(private readonly pino: PinoLogger) {}
 
-  private runPackagerArgs(args: string[]): Promise<void> {
+  private runPackagerArgs(args: string[], outputDir: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const packager = spawn('packager', args);
+      const packager = spawn('packager', args, {
+        cwd: outputDir,
+        env: {
+          ...process.env,
+          TMPDIR: outputDir,
+        },
+      });
 
       let stderrData = '';
 
@@ -109,125 +114,75 @@ export class ShakaPackagerService {
     });
   }
 
-  private async prepareOutputDirectories(
-    outputDirectory: string,
-    resolutions: Resolution[],
-  ): Promise<void> {
-    await Promise.all([
-      mkdir(path.join(outputDirectory, 'audio'), {
-        recursive: true,
-      }),
-
-      mkdir(path.join(outputDirectory, 'hls'), {
-        recursive: true,
-      }),
-
-      mkdir(path.join(outputDirectory, 'dash'), {
-        recursive: true,
-      }),
-
-      ...resolutions.map((resolution) =>
-        mkdir(path.join(outputDirectory, 'video', String(resolution)), {
-          recursive: true,
-        }),
-      ),
-    ]);
+  private async prepareDirectories(outputDirectory: string): Promise<void> {
+    await mkdir(outputDirectory, { recursive: true });
   }
 
-  private videoCommand(
-    inputDirectory: string,
-    outputDirectory: string,
-    resolution: Resolution,
-  ): string {
+  private videoCommand(inputDirectory: string, resolution: Resolution): string {
     const input = path.join(
       inputDirectory,
       'video',
       String(resolution),
       'video.mp4',
     );
+    const output = `v_${resolution}p.mp4`;
+    const playlist = `hls_${resolution}p.m3u8`;
 
-    const output = path.join(
-      outputDirectory,
-      'video',
-      String(resolution),
-      'video.mp4',
-    );
-
-    return `in=${input},stream=video,output=${output}`;
+    return `in=${input},stream=video,output=${output},playlist_name=${playlist}`;
   }
 
-  private audioCommand(
-    inputDirectory: string,
-    outputDirectory: string,
-  ): string {
+  private audioCommand(inputDirectory: string): string {
     const input = path.join(inputDirectory, 'audio', 'audio.mp4');
-    const output = path.join(outputDirectory, 'audio', 'audio.mp4');
+    const output = 'a_audio.mp4';
+    const playlist = 'hls_audio.m3u8';
 
-    return `in=${input},stream=audio,output=${output}`;
+    return `in=${input},stream=audio,output=${output},playlist_name=${playlist}`;
   }
 
-  private mpegDashCommand(outputDirectory: string): string[] {
-    return ['--mpd_output', path.join(outputDirectory, 'dash', 'manifest.mpd')];
+  private mpegDashCommand(): string[] {
+    return ['--mpd_output', 'manifest.mpd', '--generate_static_live_mpd'];
   }
 
-  private hlsCommand(outputDirectory: string): string[] {
+  private hlsCommand(): string[] {
     return [
       '--hls_master_playlist_output',
-      path.join(outputDirectory, 'hls', 'master.m3u8'),
+      'master.m3u8',
+      '--hls_playlist_type',
+      'VOD',
     ];
   }
 
   private buildArgs(
     inputDirectory: string,
-    outputDirectory: string,
     resolutions: Resolution[],
   ): string[] {
     return [
       ...resolutions.map((resolution) =>
-        this.videoCommand(inputDirectory, outputDirectory, resolution),
+        this.videoCommand(inputDirectory, resolution),
       ),
-
-      this.audioCommand(inputDirectory, outputDirectory),
-
-      ...this.mpegDashCommand(outputDirectory),
-      ...this.hlsCommand(outputDirectory),
+      this.audioCommand(inputDirectory),
+      ...this.mpegDashCommand(),
+      ...this.hlsCommand(),
     ];
   }
 
   async pack(params: { inputDirectory: string; outputDirectory: string }) {
     const { inputDirectory, outputDirectory } = params;
 
-    await this.prepareOutputDirectories(outputDirectory, RESOLUTIONS);
+    await this.prepareDirectories(outputDirectory);
+
+    const execute = (resolutions: Resolution[]) =>
+      this.runPackagerArgs(
+        this.buildArgs(inputDirectory, resolutions),
+        outputDirectory,
+      );
 
     return {
-      toMax144: () =>
-        this.runPackagerArgs(
-          this.buildArgs(inputDirectory, outputDirectory, [144]),
-        ),
-
-      toMax360: () =>
-        this.runPackagerArgs(
-          this.buildArgs(inputDirectory, outputDirectory, [144, 360]),
-        ),
-
-      toMax480: () =>
-        this.runPackagerArgs(
-          this.buildArgs(inputDirectory, outputDirectory, [144, 360, 480]),
-        ),
-
-      toMax720: () =>
-        this.runPackagerArgs(
-          this.buildArgs(inputDirectory, outputDirectory, [144, 360, 480, 720]),
-        ),
-
-      toMax1080: () =>
-        this.runPackagerArgs(
-          this.buildArgs(
-            inputDirectory,
-            outputDirectory,
-            [144, 360, 480, 720, 1080],
-          ),
-        ),
+      toMax144: () => execute([144]),
+      toMax360: () => execute([144, 360]),
+      toMax480: () => execute([144, 360, 480]),
+      toMax720: () => execute([144, 360, 480, 720]),
+      toMax1080: () => execute([144, 360, 480, 720, 1080]),
     };
   }
 }
