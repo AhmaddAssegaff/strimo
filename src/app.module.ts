@@ -10,6 +10,7 @@ import { PinoModule } from '~core/pino/pino.module';
 import { PrismaModule } from './core/prisma/prisma.module';
 import { HealthModule } from '~app/health/health.module';
 import { RouterModule } from '~modules/router.module';
+import { WorkerModule } from './core/worker/worker.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { RouterModule } from '~modules/router.module';
     PinoModule,
     PrismaModule,
     HealthModule,
+    WorkerModule,
     RouterModule.forRoot(),
   ],
   controllers: [AppController],
