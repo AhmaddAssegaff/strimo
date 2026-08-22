@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
-import { TEMP_BUCKET_NAME } from '~app/core/object-storage/object-storage.constants';
+import {
+  TEMP_BUCKET_NAME,
+  VIDEO_BUCKET_NAME,
+} from '~app/core/object-storage/object-storage.constants';
 import { CompletedPart } from '@aws-sdk/client-s3';
 
 @Injectable()
@@ -94,5 +97,22 @@ export class VideoStorageService {
       objectKey,
       multipartUploadId,
     );
+  }
+
+  async getPresignedUrl(objectKey: string) {
+    return await this.objectStorage.getFileUrl(TEMP_BUCKET_NAME, objectKey);
+  }
+
+  async uploadPackedFile(params: {
+    objectKey: string;
+    filePath: string;
+    contentType: string;
+  }) {
+    return this.objectStorage.uploadVideoPacked({
+      bucketName: VIDEO_BUCKET_NAME,
+      objectKey: params.objectKey,
+      filePath: params.filePath,
+      contentType: params.contentType,
+    });
   }
 }

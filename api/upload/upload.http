@@ -1,5 +1,5 @@
-@videoId=2f639d42-dcf3-48d8-b4a0-5ad90e9e7888
-@uploadId=ceea31d1-24f3-42c8-bdda-bba3e4f65a1f
+@videoId=98adf27d-eafe-4834-a32f-4bcf5c99122a
+@uploadId=701c85a1-a5ec-4b9e-8b24-58c75f07430c
 
 ### Initiate Upload video
 POST {{host}}/api/v1/uploads/initiate/{{videoId}}
@@ -10,7 +10,7 @@ Content-Type: application/json
   "filename": "video.mp4",
   "mimeType": "video/mp4",
   "sizeBytes": 28776080,
-  "checksumSha256": "29f06acd93053f147cdf99909744aaae90007319a5e9d9102b692ac6d91f9c79"
+  "sha256Hex": "29f06acd93053f147cdf99909744aaae90007319a5e9d9102b692ac6d91f9c79"
 }
 
 ### Get presign-url per chunk
@@ -24,6 +24,7 @@ Content-Type: application/json
 
 {
   "etag": "\"af3514e54d695baf7d20596de9fdbe2e\"",
+  "sha256Base64": "Nr70cKlN99N1vR9hDAhr+8xaLbecCXlwmMNgtub0LzE="
 }
 
 ### post complated upload

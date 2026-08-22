@@ -17,11 +17,15 @@ export class InitiateUploadDto {
 
   @IsNotEmpty()
   @IsString()
-  checksumSha256: string;
+  sha256Hex: string;
 }
 
 export class RecordChunkDto {
   @IsNotEmpty()
   @IsString()
   etag: string;
+
+  @IsNotEmpty()
+  @IsString()
+  sha256Base64: string;
 }

@@ -28,7 +28,7 @@ import { CONSTANTS } from '~config/index';
             ),
           maxRetriesPerRequest: null,
           enableReadyCheck: true,
-          lazyConnect: true,
+          lazyConnect: false,
         },
       }),
     }),

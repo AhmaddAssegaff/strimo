@@ -12,6 +12,13 @@ import { UploadRepository } from './upload.repository';
 import { VideoRepository } from '../video/video.repository';
 import { VideoStorageService } from '~app/core/object-storage/video-storage.service';
 import { InitiateUploadDto, RecordChunkDto } from './dto/upload.dto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { VIDEO_PROCESSING_QUEUE_NAME } from '~app/core/queue/queue.constant';
+import {
+  TranscodeJob,
+  VIDEO_PROCESSING_JOB_NAME,
+} from '~app/core/worker/video-worker/video-worker.constants';
 
 @Injectable()
 export class UploadService {
@@ -19,6 +26,8 @@ export class UploadService {
     private readonly uploadRepo: UploadRepository,
     private readonly videoRepo: VideoRepository,
     private readonly videoStorage: VideoStorageService,
+    @InjectQueue(VIDEO_PROCESSING_QUEUE_NAME)
+    private readonly videoProcessingQueue: Queue<TranscodeJob>,
   ) {}
 
   private async getValidUpload(uploadId: string, userId: string) {
@@ -65,6 +74,7 @@ export class UploadService {
 
     const upload = await this.uploadRepo.createUploadMultipart({
       userId,
+      tempObjectKey: storageInit.objectKey,
       videoId,
       filename: dto.filename,
       mimeType: dto.mimeType,
@@ -72,8 +82,7 @@ export class UploadService {
       chunkSize,
       totalChunks,
       multipartUploadId: storageInit.multipartUploadId,
-      storageKey: storageInit.objectKey,
-      checksumSha256: dto.checksumSha256,
+      checksumSha256: dto.sha256Hex,
     });
 
     await this.videoRepo.updateStatusVideoById({
@@ -85,7 +94,6 @@ export class UploadService {
     return {
       uploadId: upload.id,
       videoId: upload.videoId,
-      storageKey: upload.storageKey,
       multipartUploadId: upload.multipartUploadId,
       chunkSize,
       totalChunks: upload.totalChunks,
@@ -100,7 +108,7 @@ export class UploadService {
     const upload = await this.getValidUpload(uploadId, userId);
 
     const storageRes = await this.videoStorage.getChunkPresignedUrl(
-      upload.storageKey!,
+      upload.tempObjectKey,
       upload.multipartUploadId,
       chunkNumber,
     );
@@ -122,6 +130,7 @@ export class UploadService {
 
     const chunk = await this.uploadRepo.recordChunkSuccessAndSetUploading({
       etag: dto.etag,
+      sha256: dto.sha256Base64,
       chunkNumber: chunkNumber,
       uploadId: uploadId,
     });
@@ -182,19 +191,32 @@ export class UploadService {
     }));
 
     await this.videoStorage.completeUpload(
-      upload.storageKey!,
+      upload.tempObjectKey,
       upload.multipartUploadId,
       completedParts,
+    );
+
+    const preSignUrl = await this.videoStorage.getPresignedUrl(
+      upload.tempObjectKey,
     );
 
     await this.uploadRepo.updateUploadStatus(uploadId, UPLOAD_STATUS.UPLOADED, {
       completedAt: new Date(),
     });
 
+    const queue = await this.videoProcessingQueue.add(
+      VIDEO_PROCESSING_JOB_NAME,
+      {
+        videoId: upload.videoId,
+        preSignUrl,
+      },
+    );
+
     return {
       uploadId,
       videoId: upload.videoId,
       status: UPLOAD_STATUS.UPLOADED,
+      queue: queue,
       message: 'Upload completed successfully',
     };
   }
@@ -202,9 +224,9 @@ export class UploadService {
   async abortUpload(userId: string, channelId: string, uploadId: string) {
     const upload = await this.getValidUpload(uploadId, userId);
 
-    if (upload.multipartUploadId && upload.storageKey) {
+    if (upload.multipartUploadId && upload.tempObjectKey) {
       await this.videoStorage.abortUpload(
-        upload.storageKey,
+        upload.tempObjectKey,
         upload.multipartUploadId,
       );
     }

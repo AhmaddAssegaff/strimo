@@ -175,8 +175,7 @@ model Upload {
   sizeBytes         BigInt        @map("size_bytes")
   mimeType          String        @map("mime_type") @db.VarChar(128)
   chunkSize         Int?          @map("chunk_size")
-  storageKey        String?       @map("storage_key") @db.VarChar(1024)
-  stagingKey        String?       @map("staging_key") @db.VarChar(1024)
+  tempObjectKey     String        @map("temp_object_key") @db.VarChar(1024)
   checksumSha256    String        @map("checksum_sha256") @db.Char(64)
   status            UPLOAD_STATUS @default(PENDING)
   uploadType        UPLOAD_TYPE   @default(SINGLE) @map("upload_type")
@@ -201,6 +200,7 @@ model UploadChunk {
   byteOffset  BigInt       @map("byte_offset")
   sizeBytes   Int          @map("size_bytes")
   etag        String?      @db.VarChar(128)
+  sha256      String?      @db.VarChar(128)
   status      CHUNK_STATUS @default(PENDING)
   uploadedAt  DateTime?    @map("uploaded_at") @db.Timestamptz
 
