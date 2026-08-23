@@ -32,7 +32,6 @@ export class UploadRepository {
     chunkSize: number;
     multipartUploadId: string;
     totalChunks: number;
-    checksumSha256: string;
   }) {
     const chunksData = Array.from(
       { length: params.totalChunks },
@@ -67,7 +66,6 @@ export class UploadRepository {
         status: UPLOAD_STATUS.PENDING,
         multipartUploadId: params.multipartUploadId,
         totalChunks: params.totalChunks,
-        checksumSha256: params.checksumSha256,
         chunks: {
           createMany: {
             data: chunksData,

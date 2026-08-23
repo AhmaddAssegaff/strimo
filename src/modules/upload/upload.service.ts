@@ -82,7 +82,6 @@ export class UploadService {
       chunkSize,
       totalChunks,
       multipartUploadId: storageInit.multipartUploadId,
-      checksumSha256: dto.sha256Hex,
     });
 
     await this.videoRepo.updateStatusVideoById({

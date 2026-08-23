@@ -14,10 +14,6 @@ export class InitiateUploadDto {
   @IsNumber()
   @Min(1)
   sizeBytes: number;
-
-  @IsNotEmpty()
-  @IsString()
-  sha256Hex: string;
 }
 
 export class RecordChunkDto {
