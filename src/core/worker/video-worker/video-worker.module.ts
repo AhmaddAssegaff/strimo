@@ -5,6 +5,7 @@ import { ShakaPackagerModule } from '~app/core/shaka-packager/shaka-packager.mod
 import { VideoTranscodingWorker } from './video-worker.service';
 import { VideoProcessingQueueModule } from '~app/core/queue/video-processing/video-processing.module';
 import { ObjectStorageModule } from '~app/core/object-storage/object-storage.module';
+import { VideoModule } from '~app/modules/video/video.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ObjectStorageModule } from '~app/core/object-storage/object-storage.mod
     ShakaPackagerModule,
     VideoProcessingQueueModule,
     ObjectStorageModule,
+    VideoModule,
   ],
   providers: [VideoTranscodingWorker],
 })

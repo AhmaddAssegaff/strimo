@@ -174,7 +174,7 @@ export class UploadService {
     };
   }
 
-  async completeUpload(userId: string, uploadId: string) {
+  async completeUpload(userId: string, channelId: string, uploadId: string) {
     const upload = await this.getValidUpload(uploadId, userId);
 
     const uploadedChunksCount = upload.chunks.length;
@@ -207,8 +207,10 @@ export class UploadService {
     const queue = await this.videoProcessingQueue.add(
       VIDEO_PROCESSING_JOB_NAME,
       {
+        uploadId: upload.id,
         videoId: upload.videoId,
         preSignUrl,
+        channelId: channelId,
       },
     );
 

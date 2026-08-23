@@ -10,6 +10,8 @@ import { mkdir, readdir } from 'node:fs/promises';
 import { PinoLogger } from 'nestjs-pino';
 import { VideoStorageService } from '~app/core/object-storage/video-storage.service';
 import { lookup } from 'mime-types';
+import { VideoRepository } from '~app/modules/video/video.repository';
+import { VIDEO_STATUS } from '@prisma/client';
 
 @Processor(VIDEO_PROCESSING_QUEUE_NAME)
 export class VideoTranscodingWorker extends WorkerHost {
@@ -19,6 +21,7 @@ export class VideoTranscodingWorker extends WorkerHost {
     private readonly shakaPackager: ShakaPackagerService,
     private readonly videoStorage: VideoStorageService,
     private readonly pino: PinoLogger,
+    private readonly videoRepo: VideoRepository,
   ) {
     super();
   }
@@ -105,7 +108,14 @@ export class VideoTranscodingWorker extends WorkerHost {
       await packager.toMax144();
     }
 
+    // TODO: generate video thumnail and upload to s3
+
     await this.uploadPackedDirectory(packedDir, job.data.videoId);
+    await this.videoRepo.updateStatusVideoById({
+      videoId: job.data.videoId,
+      status: VIDEO_STATUS.READY,
+      channelId: job.data.channelId,
+    });
   }
 
   @OnWorkerEvent('completed')

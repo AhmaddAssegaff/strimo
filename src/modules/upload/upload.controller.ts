@@ -76,7 +76,11 @@ export class UploadController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('uploadId') uploadId: string,
   ) {
-    return await this.uploadService.completeUpload(user.sub, uploadId);
+    return await this.uploadService.completeUpload(
+      user.sub,
+      user.channelId,
+      uploadId,
+    );
   }
 
   @Delete('abort/:uploadId')
