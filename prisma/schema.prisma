@@ -145,7 +145,8 @@ model Video {
   title       String           @map("video_title")
   description String           @map("video_description")
   duration    Int              @default(0)
-  manifestUrl String?          @map("manifest_url")
+  hlsKey      String?          @map("hls_key")
+  dashKey     String?          @map("dash_key")
   thumbnail   String?
   status      VIDEO_STATUS     @default(DRAFT)
   visibility  VIDEO_VISIBILITY @default(PRIVATE)
@@ -170,9 +171,8 @@ model Upload {
   mimeType          String        @map("mime_type") @db.VarChar(128)
   chunkSize         Int?          @map("chunk_size")
   tempObjectKey     String        @map("temp_object_key") @db.VarChar(1024)
-  checksumSha256    String        @map("checksum_sha256") @db.Char(64)
   status            UPLOAD_STATUS @default(PENDING)
-  uploadType        UPLOAD_TYPE   @default(SINGLE) @map("upload_type")
+  uploadType        UPLOAD_TYPE   @default(MULTIPART) @map("upload_type")
   multipartUploadId String        @map("multipart_upload_id") @db.VarChar(512)
   totalChunks       Int?          @map("total_chunks")
   createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
