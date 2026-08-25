@@ -12,6 +12,10 @@ import { VideoStorageService } from '~app/core/object-storage/video-storage.serv
 import { lookup } from 'mime-types';
 import { VideoRepository } from '~app/modules/video/video.repository';
 import { VIDEO_STATUS } from '@prisma/client';
+import {
+  THUMNAIL_VIDEO_BUCKET_NAME,
+  VIDEO_BUCKET_NAME,
+} from '~app/core/object-storage/object-storage.constants';
 
 @Processor(VIDEO_PROCESSING_QUEUE_NAME)
 export class VideoTranscodingWorker extends WorkerHost {
@@ -108,13 +112,21 @@ export class VideoTranscodingWorker extends WorkerHost {
       await packager.toMax144();
     }
 
-    // TODO: generate video thumnail and upload to s3
+    // TODO: generate video thumnail and upload to s3 with `thumbnailKey`
 
     await this.uploadPackedDirectory(packedDir, job.data.videoId);
-    await this.videoRepo.updateStatusVideoById({
+
+    const dashKey = `${VIDEO_BUCKET_NAME}/${job.data.videoId}/manifest.mpd`;
+    const hlsKey = `${VIDEO_BUCKET_NAME}/${job.data.videoId}/master.m3u8`;
+    const thumbnailKey = `${THUMNAIL_VIDEO_BUCKET_NAME}/${job.data.videoId}/thumnail.png`;
+
+    await this.videoRepo.updateProcessedVideoById({
       videoId: job.data.videoId,
       status: VIDEO_STATUS.READY,
       channelId: job.data.channelId,
+      dashKey: dashKey,
+      hlsKey: hlsKey,
+      thumbnailKey: thumbnailKey,
     });
   }
 

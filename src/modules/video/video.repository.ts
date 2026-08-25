@@ -120,4 +120,26 @@ export class VideoRepository {
       },
     });
   }
+
+  async updateProcessedVideoById(data: {
+    videoId: string;
+    channelId: string;
+    status: VIDEO_STATUS;
+    dashKey: string;
+    hlsKey: string;
+    thumbnailKey: string;
+  }): Promise<VideoResult> {
+    return await this.prisma.video.update({
+      where: {
+        id: data.videoId,
+        channelId: data.channelId,
+      },
+      data: {
+        status: data.status,
+        hlsKey: data.hlsKey,
+        dashKey: data.dashKey,
+        thumbnail: data.thumbnailKey,
+      },
+    });
+  }
 }
