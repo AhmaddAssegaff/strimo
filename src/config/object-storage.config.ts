@@ -10,6 +10,7 @@ const objectStorageConfig = registerAs(CONFIG_NAME, () => ({
   RUSTFS_API_PORT: process.env.RUSTFS_API_PORT,
   RUSTFS_DASHBOARD_CONSOLE_PORT: process.env.RUSTFS_DASHBOARD_CONSOLE_PORT,
   RUSTFS_REGION: process.env.RUSTFS_REGION,
+  RUSTFS_CORS_ALLOWED_ORIGINS: process.env.RUSTFS_CORS_ALLOWED_ORIGINS,
 }));
 
 type ObjectStorageConfig = ReturnType<typeof objectStorageConfig>;
@@ -22,6 +23,7 @@ export const ObjectStorageValidationSchema = {
   RUSTFS_API_PORT: Joi.number().required(),
   RUSTFS_DASHBOARD_CONSOLE_PORT: Joi.number().required(),
   RUSTFS_REGION: Joi.string().required(),
+  RUSTFS_CORS_ALLOWED_ORIGINS: Joi.string().uri().required(),
 };
 
 export const CONSTANTS_OBJECT_STORAGE_KEYS: {
@@ -36,6 +38,7 @@ export const CONSTANTS_OBJECT_STORAGE_KEYS: {
     RUSTFS_API_PORT: 's3.RUSTFS_API_PORT',
     RUSTFS_DASHBOARD_CONSOLE_PORT: 's3.RUSTFS_DASHBOARD_CONSOLE_PORT',
     RUSTFS_REGION: 's3.RUSTFS_REGION',
+    RUSTFS_CORS_ALLOWED_ORIGINS: 's3.RUSTFS_CORS_ALLOWED_ORIGINS',
   },
 } as const;
 
