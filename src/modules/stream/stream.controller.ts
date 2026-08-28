@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Res } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Res } from '@nestjs/common';
 import { StreamService } from './stream.service';
 import type { Response } from 'express';
 
@@ -8,7 +8,7 @@ export class StreamController {
 
   @Get(':videoId/*fileName')
   async streamVideo(
-    @Param('videoId') videoId: string,
+    @Param('videoId', ParseUUIDPipe) videoId: string,
     @Param('fileName') fileName: string,
     @Res() res: Response,
   ) {
