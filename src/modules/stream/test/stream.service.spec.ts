@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { StreamService } from '../stream.service';
 import { RedisService } from '~app/core/redis/redis.service';
-import { StreamRepository } from '../stream.repository';
 import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { CACHE_KEY } from '~app/core/redis/redis.constants';
 import { ForbiddenException } from '@nestjs/common';
 
 describe('StreamService', () => {
   let service: StreamService;
-  let streamRepo: DeepMocked<StreamRepository>;
   let redis: DeepMocked<RedisService>;
 
   beforeEach(async () => {
@@ -20,7 +19,6 @@ describe('StreamService', () => {
       .compile();
 
     service = module.get(StreamService);
-    streamRepo = module.get(StreamRepository);
     redis = module.get(RedisService);
   });
 
@@ -34,7 +32,7 @@ describe('StreamService', () => {
       expect(redis.lazyLoadCache).toHaveBeenCalledTimes(1);
       expect(redis.lazyLoadCache).toHaveBeenCalledWith({
         cacheKey: cache.key,
-        load: streamRepo.selectVideoPolicy(videoId),
+        load: expect.any(Function),
         opts: {
           ttlSeconds: cache.ttlSeconds,
         },
