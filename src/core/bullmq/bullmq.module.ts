@@ -28,11 +28,11 @@ import { CONSTANTS } from '~config/index';
             ),
           maxRetriesPerRequest: null,
           enableReadyCheck: true,
-          lazyConnect: true,
+          lazyConnect: false,
         },
       }),
     }),
   ],
-  exports: [BullmqModule],
+  exports: [BullModule],
 })
 export class BullmqModule {}

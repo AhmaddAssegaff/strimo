@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 import { trace, context } from '@opentelemetry/api';
 
+@Global()
 @Module({
   imports: [
     LoggerModule.forRoot({

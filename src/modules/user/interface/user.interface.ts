@@ -11,20 +11,13 @@ export type UserProfileResult = Prisma.UserGetPayload<{
   };
 }>;
 
-export type FindUserCredensialByIdResult = Prisma.UserGetPayload<{
-  select: {
-    id: true;
-    email: true;
-    isEmailVerified: true;
+export interface CreateUserOauthResult {
+  id: string;
+  email: string;
+  channel: {
+    id: string;
   };
-}>;
-
-export type CreateUserOauthResult = Prisma.UserGetPayload<{
-  select: {
-    id: true;
-    email: true;
-  };
-}>;
+}
 
 export type UpdateUserProfileResult = Prisma.UserGetPayload<{
   select: {

@@ -7,7 +7,7 @@ const config: Config = {
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },
-  collectCoverageFrom: ['**/*.(t|j)s'],
+  // collectCoverageFrom: ['**/*.ts'],
   coverageDirectory: '../coverage',
   testEnvironment: 'node',
   moduleNameMapper: {
@@ -16,11 +16,22 @@ const config: Config = {
     '^~modules/(.*)$': '<rootDir>/modules/$1',
     '^~core/(.*)$': '<rootDir>/core/$1',
     '^~typeorm/(.*)$': '<rootDir>/core/typeorm/$1',
-    '^~minio/(.*)$': '<rootDir>/core/minio/$1',
+    '^~s3/(.*)$': '<rootDir>/core/object-storage/$1',
     '^~smtp/(.*)$': '<rootDir>/core/smtp/$1',
     '^~bullmq/(.*)$': '<rootDir>/core/bullmq/$1',
     '^~redis/(.*)$': '<rootDir>/core/redis/$1',
   },
+  collectCoverageFrom: [
+    '**/*.ts',
+    '!**/*.module.ts',
+    '!main.ts',
+    '!**/*.dto.ts',
+    '!**/index.ts',
+    '!**/*.constant.ts',
+    '!**/*.spec.ts',
+    '!**/*.mock.ts',
+  ],
+  coverageReporters: ['text', 'text-summary', 'html', 'lcov'],
 };
 
 export default config;

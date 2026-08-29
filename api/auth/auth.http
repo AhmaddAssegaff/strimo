@@ -1,0 +1,3 @@
+### Refresh
+POST {{host}}/api/v1/auth/refresh-token
+Authorization: Bearer {{variables.refresh-token}}

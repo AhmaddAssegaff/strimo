@@ -9,11 +9,10 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAccessGuard } from '../auth/guard/jwt-access.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
-import type { AuthenticatedUser } from '../auth/auth.interface';
+import type { AuthenticatedUser } from '../auth/interface/auth.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UpdateUserProfile } from './dto/update-user';
-import { UPLOAD_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
+import { UpdateUserProfileDto } from './dto/update-user.dto';
+import { FILE_RULES } from '~app/core/pipes/file-upload/file-upload.constant';
 import { FileUploadPipe } from '~app/core/pipes/file-upload/file-upload.pipe';
 import {
   UpdateUserProfileResult,
@@ -21,7 +20,6 @@ import {
 } from './interface/user.interface';
 import { CurrentUser } from '~app/core/decorators/current-user.decorators';
 
-@ApiBearerAuth('access-token')
 @UseGuards(JwtAccessGuard)
 @Controller('user')
 export class UserController {
@@ -31,24 +29,24 @@ export class UserController {
   getUserProfile(
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<UserProfileResult> {
-    return this.userService.findUserProfile(user);
+    return this.userService.findUserProfile(user.sub);
   }
 
   @Patch('profile')
   updateProfile(
-    @Body() body: UpdateUserProfile,
+    @Body() updateUserProfileDto: UpdateUserProfileDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<UpdateUserProfileResult> {
-    return this.userService.updateUserProfile(body, user);
+    return this.userService.updateUserProfile(user.sub, updateUserProfileDto);
   }
 
   @Patch('profile/profile-picture')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('profile-picture'))
   updateProfilePicture(
-    @UploadedFile(FileUploadPipe(UPLOAD_RULES.profilePicture))
+    @UploadedFile(FileUploadPipe(FILE_RULES.profilePicture))
     file: Express.Multer.File,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<UpdateUserProfileResult> {
-    return this.userService.updateUserProfilePicture(file, user);
+    return this.userService.updateUserProfilePicture(user.sub, file);
   }
 }

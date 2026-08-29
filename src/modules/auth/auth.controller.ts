@@ -1,17 +1,15 @@
 import { Controller, Post, HttpCode, UseGuards, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type {
-  refreshResponseInterface,
-  JwtAuthPayload,
-  userOauthGoogle,
-} from './auth.interface';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+  RefreshTokenResult,
+  UserOauthGoogle,
+  AuthenticatedUser,
+} from './interface/auth.interface';
 import { JwtRefreshGuard } from './guard/jwt-refresh.guard';
 import { GoogleAuthGuard } from './guard/oauth-google.guard';
-import { oauthGoogleResponseInterface } from './auth.interface';
+import { OauthGoogleResult } from './interface/auth.interface';
 import { CurrentUser } from '~app/core/decorators/current-user.decorators';
 
-@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -23,18 +21,15 @@ export class AuthController {
   @Get('oauth/google/callback')
   @UseGuards(GoogleAuthGuard)
   googleOauthCallback(
-    @CurrentUser() user: userOauthGoogle,
-  ): Promise<oauthGoogleResponseInterface> {
+    @CurrentUser() user: UserOauthGoogle,
+  ): Promise<OauthGoogleResult> {
     return this.authService.googleOauth(user);
   }
 
-  @ApiBearerAuth()
   @HttpCode(200)
   @UseGuards(JwtRefreshGuard)
   @Post('refresh-token')
-  refreshToken(
-    @CurrentUser() user: JwtAuthPayload,
-  ): Promise<refreshResponseInterface> {
+  refreshToken(@CurrentUser() user: AuthenticatedUser): RefreshTokenResult {
     return this.authService.refreshToken(user);
   }
 }

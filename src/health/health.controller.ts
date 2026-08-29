@@ -8,7 +8,7 @@ import {
 } from '@nestjs/terminus';
 import { RedisHealthIndicator } from './indicators/redis.health';
 import { PostgresHealthIndicator } from './indicators/postgres.health';
-import { MinioHealthIndicator } from './indicators/minio.health';
+import { ObjectStorageHealthIndicator } from './indicators/object-storage.health';
 import { ConfigService } from '@nestjs/config';
 import { CONSTANTS } from '~app/config';
 
@@ -28,7 +28,7 @@ export class HealthController {
     private readonly disk: DiskHealthIndicator,
     private readonly redis: RedisHealthIndicator,
     private readonly postgres: PostgresHealthIndicator,
-    private readonly minio: MinioHealthIndicator,
+    private readonly s3Client: ObjectStorageHealthIndicator,
   ) {
     this.memoryHeapLimit = this.config.getOrThrow(
       CONSTANTS.HEALTH.HEALTH_MEMORY_HEAP_LIMIT,
@@ -52,7 +52,7 @@ export class HealthController {
     return this.health.check([
       () => this.redis.check('redis'),
       () => this.postgres.check('postgres'),
-      () => this.minio.check('minio'),
+      () => this.s3Client.check('s3Client'),
       // () => this.http.pingCheck('external-api', 'https://google.com'),
     ]);
   }

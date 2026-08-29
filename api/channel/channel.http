@@ -1,0 +1,42 @@
+### Get My Channel
+GET {{host}}/api/v1/channel/me
+Authorization: Bearer {{variables.access-token}}
+
+### Get Channel by ID
+GET {{host}}/api/v1/channel/827cc206-4d82-4f68-a506-cab8e76b4ad5
+
+### Update channel
+PUT {{host}}/api/v1/channel
+Authorization: Bearer {{variables.access-token}}
+Content-Type: application/json
+
+{
+  "title": "Ahmad",
+  "description": "desc"
+}
+
+### Update Channel Avatar
+PATCH {{host}}/api/v1/channel/avatar
+Authorization: Bearer {{variables.access-token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="avatar"; filename="avatar-default.png"
+Content-Type: image/png
+
+< ../../assets/avatar-default.png
+
+--boundary--
+
+### Update Channel Banner
+PATCH {{host}}/api/v1/channel/banner
+Authorization: Bearer {{variables.access-token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="banner"; filename="banner-default.png"
+Content-Type: image/png
+
+< ../../assets/banner-default.png
+
+--boundary--

@@ -1,107 +1,160 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from '../auth.service';
-import {
-  MockConfigService,
-  MockUserService,
-  MockJwtService,
-} from './auth.mock.test';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { createMock, DeepMocked } from '@golevelup/ts-jest';
+import { AuthService } from '../auth.service';
 import { UserService } from '~app/modules/user/user.service';
-import { JwtAuthPayload, userOauthGoogle } from '../auth.interface';
+import { AvatarStorageService } from '~app/core/object-storage/avatar-storage.service';
+import { BannerStorageService } from '~app/core/object-storage/banner-storage.service';
 import {
-  createConfigServiceMock,
-  createJwtServiceMock,
-  createUserServiceMoce,
-} from './auth.factory.test';
+  AuthenticatedUser,
+  JwtAuthPayload,
+  OauthGoogleResult,
+  RefreshTokenResult,
+  UserOauthGoogle,
+} from '../interface/auth.interface';
+import { CONSTANTS } from '~app/config';
+import { CreateUserOauthResult } from '~app/modules/user/interface/user.interface';
 
 describe('AuthService', () => {
   let authService: AuthService;
-
-  let config: MockConfigService;
-  let jwt: MockJwtService;
-  let userService: MockUserService;
+  let jwtService: DeepMocked<JwtService>;
+  let userService: DeepMocked<UserService>;
+  let avatar: DeepMocked<AvatarStorageService>;
+  let banner: DeepMocked<BannerStorageService>;
 
   beforeEach(async () => {
-    config = createConfigServiceMock();
-    jwt = createJwtServiceMock();
-    userService = createUserServiceMoce();
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         {
           provide: ConfigService,
-          useValue: config,
-        },
-        {
-          provide: JwtService,
-          useValue: jwt,
-        },
-        {
-          provide: UserService,
-          useValue: userService,
+          useValue: {
+            getOrThrow: jest.fn((key: string) => {
+              switch (key) {
+                case CONSTANTS.AUTH.AUTH_JWT_ACCESS_TOKEN_SECRET:
+                  return 'access-secret';
+                case CONSTANTS.AUTH.AUTH_JWT_ACCESS_TOKEN_EXPIRES_IN:
+                  return 3600;
+                case CONSTANTS.AUTH.AUTH_JWT_REFRESH_TOKEN_SECRET:
+                  return 'refresh-secret';
+                case CONSTANTS.AUTH.AUTH_JWT_REFRESH_TOKEN_EXPIRES_IN:
+                  return 86400;
+              }
+            }),
+          },
         },
       ],
-    }).compile();
+    })
+      .useMocker(createMock)
+      .compile();
 
     authService = module.get<AuthService>(AuthService);
-  });
-
-  describe('AuthService config', () => {
-    it('should load jwt config', () => {
-      expect(config.getOrThrow).toHaveBeenCalledTimes(4);
-    });
+    jwtService = module.get(JwtService);
+    userService = module.get(UserService);
+    avatar = module.get(AvatarStorageService);
+    banner = module.get(BannerStorageService);
   });
 
   describe('googleOauth', () => {
-    it('should call AuthService.createUserOauth and return tokens', async () => {
-      const user: userOauthGoogle = {
-        email: 'email',
-        googleId: 'googleId',
-        name: 'name',
-        picture: 'profile picture',
-      };
+    const userGoogle: UserOauthGoogle = {
+      email: 'dev@example.com',
+      googleId: 'google-123',
+      name: 'Dev User',
+      picture: 'https://example.com/photo.jpg',
+    };
 
-      userService.createUserOauth.mockResolvedValue({
-        id: 'user-id',
-        email: 'email',
-      });
+    const createdUser: CreateUserOauthResult = {
+      id: '59c0d2a4-db55-4df7-8a62-0b0311dd8a8e',
+      email: 'email@gmail.com',
+      channel: {
+        id: '8578910b-e045-4163-bedd-032015494250',
+      },
+    };
 
-      jwt.sign
-        .mockReturnValueOnce('access-token')
-        .mockReturnValueOnce('refresh-token');
+    const expectedPayload: JwtAuthPayload = {
+      sub: createdUser.id,
+      channelId: createdUser.channel.id,
+      email: createdUser.email,
+    };
 
-      await authService.googleOauth(user);
+    const expectedResult: OauthGoogleResult = {
+      tokens: {
+        accessToken: 'mocked-access-token',
+        refreshToken: 'mocked-refresh-token',
+      },
+    };
+
+    it('should create or find user oauth, sign both access and refresh tokens', async () => {
+      banner.getDefaultKey.mockReturnValue('default-banner.png');
+      avatar.getDefaultKey.mockReturnValue('default-avatar.png');
+      userService.createUserOauth.mockResolvedValue(createdUser);
+
+      jwtService.sign
+        .mockReturnValueOnce(expectedResult.tokens.accessToken)
+        .mockReturnValueOnce(expectedResult.tokens.refreshToken);
+
+      const actualResult = await authService.googleOauth(userGoogle);
+
+      expect(banner.getDefaultKey).toHaveBeenCalledTimes(1);
+      expect(avatar.getDefaultKey).toHaveBeenCalledTimes(1);
 
       expect(userService.createUserOauth).toHaveBeenCalledTimes(1);
-      expect(userService.createUserOauth).toHaveBeenCalledWith(user);
+      expect(userService.createUserOauth).toHaveBeenCalledWith(
+        userGoogle,
+        'default-banner.png',
+        'default-avatar.png',
+      );
 
-      expect(jwt.sign).toHaveBeenCalledTimes(2);
+      expect(jwtService.sign).toHaveBeenCalledTimes(2);
+      expect(jwtService.sign).toHaveBeenNthCalledWith(1, expectedPayload, {
+        algorithm: 'HS256',
+        secret: 'access-secret',
+        expiresIn: 3600,
+      });
+      expect(jwtService.sign).toHaveBeenNthCalledWith(2, expectedPayload, {
+        algorithm: 'HS256',
+        secret: 'refresh-secret',
+        expiresIn: 86400,
+      });
+
+      expect(actualResult).toEqual(expectedResult);
     });
   });
 
   describe('refreshToken', () => {
-    it('should call UserService.findUserCredensialById', async () => {
-      const user: JwtAuthPayload = {
-        email: 'email',
-        sub: '675d028d-5b7d-4370-ba7b-615f10cad8e9',
-        exp: 123,
-        iat: 123,
-      };
+    const user: AuthenticatedUser = {
+      sub: 'user-uuid-123',
+      channelId: 'channel-uuid-456',
+      email: 'dev@example.com',
+    };
 
-      userService.findUserCredensialById.mockResolvedValue({
-        email: 'email',
-        id: 'f57623d6-051e-4657-b8bd-9ac210fdbd7e',
-        isEmailVerified: true,
+    const expectedPayload: JwtAuthPayload = {
+      sub: user.sub,
+      channelId: user.channelId,
+      email: user.email,
+    };
+
+    const expectedResult: RefreshTokenResult = {
+      token: {
+        accessToken: 'accessToken',
+      },
+    };
+
+    it('should generate a new access token', () => {
+      jwtService.sign.mockReturnValue(expectedResult.token.accessToken);
+
+      const actualResult = authService.refreshToken(user);
+
+      expect(jwtService.sign).toHaveBeenCalledTimes(1);
+      expect(jwtService.sign).toHaveBeenCalledWith(expectedPayload, {
+        algorithm: 'HS256',
+        secret: 'access-secret',
+        expiresIn: 3600,
       });
-      jwt.sign.mockReturnValueOnce('access-token');
 
-      await authService.refreshToken(user);
-
-      expect(userService.findUserCredensialById).toHaveBeenCalledTimes(1);
-      expect(userService.findUserCredensialById).toHaveBeenCalledWith(user.sub);
-      expect(jwt.sign).toHaveBeenCalledTimes(1);
+      expect(actualResult).toEqual(expectedResult);
     });
   });
 });

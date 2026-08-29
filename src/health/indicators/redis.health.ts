@@ -8,7 +8,7 @@ import { RedisService } from '~app/core/redis/redis.service';
 @Injectable()
 export class RedisHealthIndicator {
   constructor(
-    private health: HealthIndicatorService,
+    private readonly health: HealthIndicatorService,
     private readonly redisService: RedisService,
   ) {}
 

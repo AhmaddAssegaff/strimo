@@ -23,13 +23,24 @@ export interface FileRule {
   fileTypeErrorMessage?: string;
 
   aspectRatio?: AspectRatio;
-  minWidth?: number;
-  minHeight?: number;
+
+  validateAspectRatio?: boolean;
+
+  minWidth: number;
+  minHeight: number;
+
+  targetWidth?: number;
+  targetHeight?: number;
+
+  maxWidth?: number;
+  maxHeight?: number;
+
+  qualityWebp?: number;
 }
 
-export const UPLOAD_RULES = {
+export const FILE_RULES = {
   profilePicture: {
-    maxSize: MB(2),
+    maxSize: MB(3),
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     fileTypeRegex: /^image\/(jpeg|png|webp)$/,
 
@@ -38,11 +49,14 @@ export const UPLOAD_RULES = {
     fileTypeErrorMessage: 'Profile picture must be a JPEG, PNG, or WebP image.',
 
     aspectRatio: ASPECT_RATIOS.SQUARE,
-    minWidth: 200,
+    minWidth: 512,
+    minHeight: 512,
+
+    qualityWebp: 100,
   },
 
   avatar: {
-    maxSize: MB(2),
+    maxSize: MB(4),
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     fileTypeRegex: /^image\/(jpeg|png|webp)$/,
 
@@ -51,10 +65,14 @@ export const UPLOAD_RULES = {
     fileTypeErrorMessage: 'Channel avatar must be a JPEG, PNG, or WebP image.',
 
     aspectRatio: ASPECT_RATIOS.SQUARE,
+    minHeight: 800,
+    minWidth: 800,
+
+    qualityWebp: 100,
   },
 
   banner: {
-    maxSize: MB(5),
+    maxSize: MB(6),
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     fileTypeRegex: /^image\/(jpeg|png|webp)$/,
 
@@ -63,11 +81,18 @@ export const UPLOAD_RULES = {
     fileTypeErrorMessage: 'Channel banner must be a JPEG, PNG, or WebP image.',
 
     aspectRatio: ASPECT_RATIOS.LANDSCAPE_16_9,
-    minWidth: 1200,
+
+    minWidth: 1920,
+    minHeight: 1080,
+
+    targetWidth: 2560,
+    targetHeight: 1440,
+
+    qualityWebp: 85,
   },
 
   videoThumbnail: {
-    maxSize: MB(3),
+    maxSize: MB(6),
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     fileTypeRegex: /^image\/(jpeg|png|webp)$/,
 
@@ -75,18 +100,11 @@ export const UPLOAD_RULES = {
     maxFileSizeErrorMessage: 'Video thumbnail must not exceed 3 MB.',
     fileTypeErrorMessage: 'Video thumbnail must be a JPEG, PNG, or WebP image.',
 
-    aspectRatio: ASPECT_RATIOS.LANDSCAPE_16_9,
-  },
+    minWidth: 720,
+    minHeight: 720,
 
-  video: {
-    maxSize: MB(100),
-    allowedMimeTypes: ['video/mp4', 'video/webm', 'video/x-matroska'],
-    fileTypeRegex: /^video\/(mp4|webm|x-matroska)$/,
-
-    fileIsRequired: true,
-    maxFileSizeErrorMessage: 'Video must not exceed 100 MB.',
-    fileTypeErrorMessage: 'Video must be an MP4, WebM, or MKV file.',
+    qualityWebp: 100,
   },
 } satisfies Record<string, FileRule>;
 
-export type UploadRuleKey = keyof typeof UPLOAD_RULES;
+export type UploadRuleKey = keyof typeof FILE_RULES;

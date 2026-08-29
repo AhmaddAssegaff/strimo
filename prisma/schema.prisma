@@ -17,6 +17,42 @@ enum USER_ACCOUNTS_PROVIDER {
   google
 }
 
+enum SUBSCRIPTION_NOTIFICATION_TYPE {
+  all
+  none
+  personalized
+}
+
+enum VIDEO_STATUS {
+  DRAFT
+  PROCESSING
+  READY
+}
+
+enum VIDEO_VISIBILITY {
+  PRIVATE
+  PUBLIC
+  UNLISTED
+}
+
+enum UPLOAD_STATUS {
+  PENDING
+  UPLOADING
+  UPLOADED
+  FAILED
+}
+
+enum UPLOAD_TYPE {
+  SINGLE
+  MULTIPART
+}
+
+enum CHUNK_STATUS {
+  PENDING
+  UPLOADED
+  VERIFIED
+}
+
 model User {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   profilePicture  String?   @map("profile_picture")
@@ -27,7 +63,11 @@ model User {
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
 
-  accounts UserAccount[]
+  accounts      UserAccount[]
+  notifications Notification[]
+  channel       Channel?
+  subscriptions Subscription[]
+  uploads       Upload[]
 
   @@map("users")
 }
@@ -45,4 +85,122 @@ model UserAccount {
 
   @@unique([provider, providerId])
   @@map("user_accounts")
+}
+
+model Notification {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  title     String    @map("notification_title")
+  message   String
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model Channel {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String    @unique @map("user_id") @db.Uuid
+  title           String    @map("channel_title")
+  description     String    @map("channel_description")
+  avatar          String
+  banner          String
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+  isVerified      Boolean   @default(false) @map("is_verified")
+  videoCount      Int       @default(0) @map("video_count")
+  subscriberCount Int       @default(0) @map("subscriber_count")
+
+  user          User           @relation(fields: [userId], references: [id])
+  subscriptions Subscription[]
+  videos        Video[]
+
+  @@map("channels")
+}
+
+model Subscription {
+  id               String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String                         @map("user_id") @db.Uuid
+  channelId        String                         @map("channel_id") @db.Uuid
+  createdAt        DateTime                       @default(now()) @map("created_at")
+  updatedAt        DateTime                       @updatedAt @map("updated_at")
+  deletedAt        DateTime?                      @map("deleted_at")
+  notificationType SUBSCRIPTION_NOTIFICATION_TYPE @default(all) @map("notification_type")
+
+  channel Channel @relation(fields: [channelId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, channelId])
+  @@index([userId])
+  @@index([channelId])
+  @@map("subscriptions")
+}
+
+model Video {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  channelId   String           @map("channel_id") @db.Uuid
+  title       String           @map("video_title")
+  description String           @map("video_description")
+  duration    Int              @default(0)
+  hlsKey      String?          @map("hls_key")
+  dashKey     String?          @map("dash_key")
+  thumbnail   String?
+  status      VIDEO_STATUS     @default(DRAFT)
+  visibility  VIDEO_VISIBILITY @default(PRIVATE)
+  publishedAt DateTime?        @map("published_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  deletedAt   DateTime?        @map("deleted_at")
+
+  channel Channel  @relation(fields: [channelId], references: [id])
+  uploads Upload[]
+
+  @@index([channelId])
+  @@map("videos")
+}
+
+model Upload {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String        @map("user_id") @db.Uuid
+  videoId           String        @map("video_id") @db.Uuid
+  filename          String        @db.VarChar(512)
+  sizeBytes         BigInt        @map("size_bytes")
+  mimeType          String        @map("mime_type") @db.VarChar(128)
+  chunkSize         Int?          @map("chunk_size")
+  tempObjectKey     String        @map("temp_object_key") @db.VarChar(1024)
+  status            UPLOAD_STATUS @default(PENDING)
+  uploadType        UPLOAD_TYPE   @default(MULTIPART) @map("upload_type")
+  multipartUploadId String        @map("multipart_upload_id") @db.VarChar(512)
+  totalChunks       Int?          @map("total_chunks")
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  completedAt       DateTime?     @map("completed_at") @db.Timestamptz
+
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video  Video         @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  chunks UploadChunk[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("uploads")
+}
+
+model UploadChunk {
+  id          BigInt       @id @default(autoincrement()) @map("chunk_id")
+  uploadId    String       @map("upload_id") @db.Uuid
+  chunkNumber Int          @map("chunk_number")
+  byteOffset  BigInt       @map("byte_offset")
+  sizeBytes   Int          @map("size_bytes")
+  etag        String?      @db.VarChar(128)
+  sha256      String?      @db.VarChar(128)
+  status      CHUNK_STATUS @default(PENDING)
+  uploadedAt  DateTime?    @updatedAt @map("uploaded_at") @db.Timestamptz
+
+  upload Upload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  @@unique([uploadId, chunkNumber])
+  @@index([uploadId])
+  @@map("upload_chunks")
 }

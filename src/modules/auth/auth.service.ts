@@ -1,14 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { CONSTANTS } from '~app/config';
 import type {
+  AuthenticatedUser,
   JwtAuthPayload,
-  oauthGoogleResponseInterface,
-  refreshResponseInterface,
-  userOauthGoogle,
-} from './auth.interface';
+  OauthGoogleResult,
+  RefreshTokenResult,
+  UserOauthGoogle,
+} from './interface/auth.interface';
+import { AvatarStorageService } from '~app/core/object-storage/avatar-storage.service';
+import { BannerStorageService } from '~app/core/object-storage/banner-storage.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +24,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly userService: UserService,
+    private readonly avatar: AvatarStorageService,
+    private readonly banner: BannerStorageService,
   ) {
     this.accessSecret = this.config.getOrThrow(
       CONSTANTS.AUTH.AUTH_JWT_ACCESS_TOKEN_SECRET,
@@ -52,13 +57,16 @@ export class AuthService {
     });
   }
 
-  async googleOauth(
-    user: userOauthGoogle,
-  ): Promise<oauthGoogleResponseInterface> {
-    const usr = await this.userService.createUserOauth(user);
+  async googleOauth(user: UserOauthGoogle): Promise<OauthGoogleResult> {
+    const usr = await this.userService.createUserOauth(
+      user,
+      this.banner.getDefaultKey(),
+      this.avatar.getDefaultKey(),
+    );
 
     const payload: JwtAuthPayload = {
       sub: usr.id,
+      channelId: usr.channel.id,
       email: usr.email,
     };
 
@@ -70,23 +78,18 @@ export class AuthService {
     };
   }
 
-  async refreshToken(
-    payloadUser: JwtAuthPayload,
-  ): Promise<refreshResponseInterface> {
-    const user = await this.userService.findUserCredensialById(payloadUser.sub);
-
-    if (!user) {
-      throw new NotFoundException('user not found');
-    }
-
+  refreshToken(user: AuthenticatedUser): RefreshTokenResult {
     const payload: JwtAuthPayload = {
-      sub: user?.id,
+      sub: user.sub,
+      channelId: user.channelId,
       email: user.email,
     };
 
+    const newAccessToken = this.signAccessToken(payload);
+
     return {
       token: {
-        accessToken: this.signAccessToken(payload),
+        accessToken: newAccessToken,
       },
     };
   }
