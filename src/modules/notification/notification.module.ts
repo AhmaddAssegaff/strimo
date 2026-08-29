@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { NotificationController } from './notification.controller';
-import { SmtpService } from '~core/smtp/smtp.service';
+import { SmtpService } from '~app/infra/smtp/smtp.service';
 
 @Module({
   controllers: [NotificationController],

@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { UploadRepository } from './upload.repository';
 import { VideoRepository } from '../video/video.repository';
-import { VideoStorageService } from '~app/core/object-storage/video-storage.service';
+import { VideoStorageService } from '~app/infra/object-storage/video-storage.service';
 import { InitiateUploadDto, RecordChunkDto } from './dto/upload.dto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';

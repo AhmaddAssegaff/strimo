@@ -1,4 +1,4 @@
-import { PrismaService } from '~app/core/prisma/prisma.service';
+import { PrismaService } from '~app/infra/prisma/prisma.service';
 import { CreateVideoDto } from './dto/create-video.dto';
 import { Injectable } from '@nestjs/common';
 import { GetVideosDto } from './dto/get-videos.dto';

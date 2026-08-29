@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthIndicatorService } from '@nestjs/terminus';
 import { PostgresHealthIndicator } from '~app/health/indicators/postgres.health';
-import { PrismaService } from '~app/core/prisma/prisma.service';
+import { PrismaService } from '~app/infra/prisma/prisma.service';
 import {
   MockHealthIndicatorService,
   MockPrismaService,

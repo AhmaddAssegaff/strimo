@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthIndicatorService } from '@nestjs/terminus';
 import { ObjectStorageHealthIndicator } from '~app/health/indicators/object-storage.health';
-import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
+import { ObjectStorageService } from '~app/infra/object-storage/object-storage.service';
 import {
   MockHealthIndicatorService,
   MockObjectStorageService,

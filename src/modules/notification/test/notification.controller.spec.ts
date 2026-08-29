@@ -11,8 +11,8 @@ import {
   createMockPrismaNotificationService,
   createMockSmtpService,
 } from './notification.factory.mock';
-import { SmtpService } from '~app/core/smtp/smtp.service';
-import { PrismaService } from '~app/core/prisma/prisma.service';
+import { SmtpService } from '~app/infra/smtp/smtp.service';
+import { PrismaService } from '~app/infra/prisma/prisma.service';
 import { GetNotificationDto } from '../dto/get-notifications.dto';
 import { AuthenticatedUser } from '~app/modules/auth/interface/auth.interface';
 

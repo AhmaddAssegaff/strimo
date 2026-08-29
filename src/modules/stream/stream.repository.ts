@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { VIDEO_STATUS, VIDEO_VISIBILITY } from '@prisma/client';
-import { PrismaService } from '~app/core/prisma/prisma.service';
+import { PrismaService } from '~app/infra/prisma/prisma.service';
 import { VideoResult } from './interface/stream.interface';
 
 @Injectable()

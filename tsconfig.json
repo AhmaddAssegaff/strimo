@@ -22,16 +22,18 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "~app/*": ["src/*"],
-      "~config/*": ["src/config/*"],
-      "~modules/*": ["src/modules/*"],
-      "~core/*": ["src/core/*"],
-      "~typeorm/*": ["src/core/typeorm/*"],
-      "~s3/*": ["src/core/object-storage/*"],
-      "~smtp/*": ["src/core/smtp/*"],
-      "~bullmq/*": ["src/core/bullmq/*"],
-      "~redis/*": ["src/core/redis/*"],
-      "generated/*": ["generated/*"]
+      "~app/*": [
+        "src/*"
+      ],
+      "~config/*": [
+        "src/config/*"
+      ],
+      "~modules/*": [
+        "src/modules/*"
+      ],
+      "~core/*": [
+        "src/core/*"
+      ]
     }
   }
 }

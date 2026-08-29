@@ -6,7 +6,7 @@ import {
   UpdateUserProfileResult,
   UserProfileResult,
 } from './interface/user.interface';
-import { ProfilePictureStorageService } from '~app/core/object-storage/profile-picture-storage.service';
+import { ProfilePictureStorageService } from '~app/infra/object-storage/profile-picture-storage.service';
 import { UserRepository } from './user.repository';
 
 @Injectable()

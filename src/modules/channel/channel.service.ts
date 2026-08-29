@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ChannelResult } from './interface/channel.interface';
 import type { AuthenticatedUser } from '../auth/interface/auth.interface';
-import { AvatarStorageService } from '~app/core/object-storage/avatar-storage.service';
-import { BannerStorageService } from '~app/core/object-storage/banner-storage.service';
+import { AvatarStorageService } from '~app/infra/object-storage/avatar-storage.service';
+import { BannerStorageService } from '~app/infra/object-storage/banner-storage.service';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { Channel } from '@prisma/client';
 import { ChannelRepository } from './channel.repository';

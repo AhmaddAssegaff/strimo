@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CONSTANTS } from '~config/index';
-import { OBJECT_STORAGE_TOKEN } from '~app/core/object-storage/object-storage.constants';
+import { OBJECT_STORAGE_TOKEN } from '~app/infra/object-storage/object-storage.constants';
 import { ObjectStorageService } from './object-storage.service';
 import { S3Client } from '@aws-sdk/client-s3';
 import { AvatarStorageService } from './avatar-storage.service';
