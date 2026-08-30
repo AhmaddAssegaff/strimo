@@ -8,10 +8,14 @@ import { ShakaPackagerService } from '~app/core/shaka-packager/shaka-packager.se
 import * as path from 'node:path';
 import { mkdir, readdir } from 'node:fs/promises';
 import { PinoLogger } from 'nestjs-pino';
-import { VideoStorageService } from '~app/core/object-storage/video-storage.service';
 import { lookup } from 'mime-types';
 import { VideoRepository } from '~app/modules/video/video.repository';
 import { VIDEO_STATUS } from '@prisma/client';
+import {
+  THUMNAIL_VIDEO_BUCKET_NAME,
+  VIDEO_BUCKET_NAME,
+} from '~app/infra/object-storage/object-storage.constants';
+import { VideoStorageService } from '~app/core/storage/video/video-storage.service';
 
 @Processor(VIDEO_PROCESSING_QUEUE_NAME)
 export class VideoTranscodingWorker extends WorkerHost {
@@ -108,13 +112,21 @@ export class VideoTranscodingWorker extends WorkerHost {
       await packager.toMax144();
     }
 
-    // TODO: generate video thumnail and upload to s3
+    // TODO: generate video thumnail and upload to s3 with `thumbnailKey`
 
     await this.uploadPackedDirectory(packedDir, job.data.videoId);
-    await this.videoRepo.updateStatusVideoById({
+
+    const dashKey = `${VIDEO_BUCKET_NAME}/${job.data.videoId}/manifest.mpd`;
+    const hlsKey = `${VIDEO_BUCKET_NAME}/${job.data.videoId}/master.m3u8`;
+    const thumbnailKey = `${THUMNAIL_VIDEO_BUCKET_NAME}/${job.data.videoId}/thumnail.png`;
+
+    await this.videoRepo.updateProcessedVideoById({
       videoId: job.data.videoId,
       status: VIDEO_STATUS.READY,
       channelId: job.data.channelId,
+      dashKey: dashKey,
+      hlsKey: hlsKey,
+      thumbnailKey: thumbnailKey,
     });
   }
 

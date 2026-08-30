@@ -1,4 +1,4 @@
-import { OtelSDK } from '~app/core/open-telemetry/instrumentation';
+import { OtelSDK } from '~app/infra/open-telemetry/instrumentation';
 OtelSDK.start();
 
 import { NestFactory } from '@nestjs/core';

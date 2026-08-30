@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthIndicatorService } from '@nestjs/terminus';
 import { RedisHealthIndicator } from '~app/health/indicators/redis.health';
-import { RedisService } from '~app/core/redis/redis.service';
+import { RedisService } from '~app/infra/redis/redis.service';
 import {
   MockHealthIndicatorService,
   MockRedisService,

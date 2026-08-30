@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ObjectStorageService } from './object-storage.service';
 import {
   AVATAR_BUCKET_NAME,
   DEFAULT_AVATAR_OBJECT_KEY,
-} from './object-storage.constants';
-import { AvatarProcessorService } from '~app/modules/channel/processor/avatar.processor.service';
+} from '~app/infra/object-storage/object-storage.constants';
+import { ObjectStorageService } from '~app/infra/object-storage/object-storage.service';
+import { AvatarProcessorService } from '~app/core/processors/avatar/avatar-processor.service';
 
 @Injectable()
 export class AvatarStorageService {

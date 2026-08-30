@@ -5,7 +5,7 @@ import {
   OnApplicationShutdown,
 } from '@nestjs/common';
 import Redis from 'ioredis';
-import { CACHE_REDIS_CLIENT } from '~redis/redis.constants';
+import { CACHE_REDIS_CLIENT } from '~app/infra/redis/redis.constants';
 
 @Injectable()
 export class RedisService implements OnApplicationShutdown {
@@ -55,20 +55,20 @@ export class RedisService implements OnApplicationShutdown {
     return this.redis.del(key);
   }
 
-  async lazyLoadCache<T>(
-    cacheKey: string,
-    load: () => Promise<T>,
-    opts?: { ttlSeconds?: number },
-  ): Promise<T> {
-    const cached = await this.get<T>(cacheKey);
+  async lazyLoadCache<T>(params: {
+    cacheKey: string;
+    load: () => Promise<T>;
+    opts?: { ttlSeconds?: number };
+  }): Promise<T> {
+    const cached = await this.get<T>(params.cacheKey);
 
     if (cached !== null) {
       return cached;
     }
 
-    const result = await load();
+    const result = await params.load();
 
-    void this.set(cacheKey, result, opts?.ttlSeconds);
+    void this.set(params.cacheKey, result, params.opts?.ttlSeconds);
 
     return result;
   }

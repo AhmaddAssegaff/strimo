@@ -1,4 +1,4 @@
-import { PrismaService } from '~app/core/prisma/prisma.service';
+import { PrismaService } from '~app/infra/prisma/prisma.service';
 import { CreateVideoDto } from './dto/create-video.dto';
 import { Injectable } from '@nestjs/common';
 import { GetVideosDto } from './dto/get-videos.dto';
@@ -117,6 +117,28 @@ export class VideoRepository {
       },
       data: {
         status: data.status,
+      },
+    });
+  }
+
+  async updateProcessedVideoById(data: {
+    videoId: string;
+    channelId: string;
+    status: VIDEO_STATUS;
+    dashKey: string;
+    hlsKey: string;
+    thumbnailKey: string;
+  }): Promise<VideoResult> {
+    return await this.prisma.video.update({
+      where: {
+        id: data.videoId,
+        channelId: data.channelId,
+      },
+      data: {
+        status: data.status,
+        hlsKey: data.hlsKey,
+        dashKey: data.dashKey,
+        thumbnail: data.thumbnailKey,
       },
     });
   }

@@ -5,4 +5,4 @@ import { ProfilePictureProcessorService } from './profile-picture.processor.serv
   providers: [ProfilePictureProcessorService],
   exports: [ProfilePictureProcessorService],
 })
-export class UserProcessorModule {}
+export class ProfilePictureProcessorModule {}

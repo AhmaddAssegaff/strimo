@@ -3,7 +3,7 @@ import {
   HealthIndicatorService,
   HealthIndicatorResult,
 } from '@nestjs/terminus';
-import { RedisService } from '~app/core/redis/redis.service';
+import { RedisService } from '~app/infra/redis/redis.service';
 
 @Injectable()
 export class RedisHealthIndicator {

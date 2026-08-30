@@ -5,6 +5,7 @@ import { ChannelModule } from '~modules/channel/channel.module';
 import { NotificationModule } from '~modules/notification/notification.module';
 import { VideoModule } from '~modules/video/video.module';
 import { UploadModule } from '~modules/upload/upload.module';
+import { StreamModule } from '~modules/stream/stream.module';
 
 @Module({})
 export class RouterModule {
@@ -19,6 +20,7 @@ export class RouterModule {
       NotificationModule,
       VideoModule,
       UploadModule,
+      StreamModule,
     );
     return {
       module: RouterModule,

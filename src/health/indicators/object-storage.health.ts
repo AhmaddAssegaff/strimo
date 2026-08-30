@@ -3,7 +3,7 @@ import {
   HealthIndicatorResult,
   HealthIndicatorService,
 } from '@nestjs/terminus';
-import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
+import { ObjectStorageService } from '~app/infra/object-storage/object-storage.service';
 
 @Injectable()
 export class ObjectStorageHealthIndicator {
