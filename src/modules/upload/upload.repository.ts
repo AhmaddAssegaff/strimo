@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '~app/core/prisma/prisma.service';
+import { PrismaService } from '~app/infra/prisma/prisma.service';
 import {
   CHUNK_STATUS,
   UPLOAD_STATUS,

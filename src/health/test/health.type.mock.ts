@@ -8,9 +8,9 @@ import { RedisHealthIndicator } from '../indicators/redis.health';
 import { PostgresHealthIndicator } from '../indicators/postgres.health';
 import { ObjectStorageHealthIndicator } from '../indicators/object-storage.health';
 
-import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
-import { PrismaService } from '~app/core/prisma/prisma.service';
-import { RedisService } from '~app/core/redis/redis.service';
+import { ObjectStorageService } from '~app/infra/object-storage/object-storage.service';
+import { PrismaService } from '~app/infra/prisma/prisma.service';
+import { RedisService } from '~app/infra/redis/redis.service';
 
 // Mock types for HealthController unit tests.
 // Each type keeps only the dependency methods used by HealthController.

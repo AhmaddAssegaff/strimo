@@ -5,8 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { AuthService } from '../auth.service';
 import { UserService } from '~app/modules/user/user.service';
-import { AvatarStorageService } from '~app/core/object-storage/avatar-storage.service';
-import { BannerStorageService } from '~app/core/object-storage/banner-storage.service';
+import { AvatarStorageService } from '~app/infra/object-storage/avatar-storage.service';
+import { BannerStorageService } from '~app/infra/object-storage/banner-storage.service';
 import {
   AuthenticatedUser,
   JwtAuthPayload,

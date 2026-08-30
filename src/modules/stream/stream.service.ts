@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { StreamRepository } from './stream.repository';
-import { RedisService } from '~app/core/redis/redis.service';
-import { CACHE_KEY } from '~app/core/redis/redis.constants';
+import { RedisService } from '~app/infra/redis/redis.service';
+import { CACHE_KEY } from '~app/infra/redis/redis.constants';
 import { VideoResult } from './interface/stream.interface';
 
 @Injectable()

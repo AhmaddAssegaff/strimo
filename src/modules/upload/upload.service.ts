@@ -7,10 +7,8 @@ import {
 import { CHUNK_STATUS, UPLOAD_STATUS, VIDEO_STATUS } from '@prisma/client';
 import { CompletedPart } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
-
 import { UploadRepository } from './upload.repository';
 import { VideoRepository } from '../video/video.repository';
-import { VideoStorageService } from '~app/core/object-storage/video-storage.service';
 import { InitiateUploadDto, RecordChunkDto } from './dto/upload.dto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -19,6 +17,7 @@ import {
   TranscodeJob,
   VIDEO_PROCESSING_JOB_NAME,
 } from '~app/core/worker/video-worker/video-worker.constants';
+import { VideoStorageService } from '~app/core/storage/video/video-storage.service';
 
 @Injectable()
 export class UploadService {

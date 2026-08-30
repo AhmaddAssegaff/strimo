@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { GetNotificationDto } from './dto/get-notifications.dto';
-import { PrismaService } from '~app/core/prisma/prisma.service';
-import { SmtpService } from '~app/core/smtp/smtp.service';
+import { PrismaService } from '~app/infra/prisma/prisma.service';
+import { SmtpService } from '~app/infra/smtp/smtp.service';
 import { AuthenticatedUser } from '../auth/interface/auth.interface';
 import { NotificationResult } from './interface/notification.interface';
 
