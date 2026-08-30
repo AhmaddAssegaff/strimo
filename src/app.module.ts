@@ -7,6 +7,7 @@ import { HealthModule } from '~app/health/health.module';
 import { RouterModule } from '~modules/router.module';
 import { WorkerModule } from './core/worker/worker.module';
 import { InfraModule } from './infra/infra.module';
+import { SchedulerModule } from './core/scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { InfraModule } from './infra/infra.module';
     PinoModule,
     HealthModule,
     WorkerModule,
+    SchedulerModule,
     RouterModule.forRoot(),
   ],
   controllers: [AppController],

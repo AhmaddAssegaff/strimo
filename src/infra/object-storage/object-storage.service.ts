@@ -21,10 +21,13 @@ import {
   HeadBucketCommand,
   HeadObjectCommand,
   ListBucketsCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
   UploadPartCommand,
   GetObjectCommand,
+  DeleteObjectsCommand,
+  type ObjectIdentifier,
 } from '@aws-sdk/client-s3';
 import { createReadStream } from 'node:fs';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -273,6 +276,28 @@ export class ObjectStorageService implements OnModuleInit {
         Key: params.objectKey,
         Body: createReadStream(params.filePath),
         ContentType: params.contentType,
+      }),
+    );
+  }
+
+  async listObject(params: { bucketName: string }) {
+    return await this.s3Client.send(
+      new ListObjectsV2Command({
+        Bucket: params.bucketName,
+      }),
+    );
+  }
+
+  async deleteObjects(params: {
+    bucketName: string;
+    objectList: ObjectIdentifier[];
+  }) {
+    return this.s3Client.send(
+      new DeleteObjectsCommand({
+        Bucket: params.bucketName,
+        Delete: {
+          Objects: params.objectList,
+        },
       }),
     );
   }
