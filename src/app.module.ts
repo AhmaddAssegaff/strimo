@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from '~app/app.controller';
 import { AppService } from '~app/app.service';
-import { ConfigurationModule } from '~app/configuration.module';
+import { ConfigurationModule } from '~app/config/configuration.module';
 import { PinoModule } from '~core/pino/pino.module';
 import { HealthModule } from '~app/health/health.module';
 import { RouterModule } from '~modules/router.module';
