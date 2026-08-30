@@ -8,7 +8,6 @@ import { ShakaPackagerService } from '~app/core/shaka-packager/shaka-packager.se
 import * as path from 'node:path';
 import { mkdir, readdir } from 'node:fs/promises';
 import { PinoLogger } from 'nestjs-pino';
-import { VideoStorageService } from '~app/infra/object-storage/video-storage.service';
 import { lookup } from 'mime-types';
 import { VideoRepository } from '~app/modules/video/video.repository';
 import { VIDEO_STATUS } from '@prisma/client';
@@ -16,6 +15,7 @@ import {
   THUMNAIL_VIDEO_BUCKET_NAME,
   VIDEO_BUCKET_NAME,
 } from '~app/infra/object-storage/object-storage.constants';
+import { VideoStorageService } from '~app/core/storage/video/video-storage.service';
 
 @Processor(VIDEO_PROCESSING_QUEUE_NAME)
 export class VideoTranscodingWorker extends WorkerHost {

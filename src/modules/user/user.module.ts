@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
-import { UserProcessorModule } from './processor/user.processor.module';
-import { ObjectStorageModule } from '~app/infra/object-storage/object-storage.module';
 import { UserRepository } from './user.repository';
+import { ProfilePictureStorageModule } from '~app/core/storage/profile-picture/profile-picture.module';
 
 @Module({
-  imports: [UserProcessorModule, ObjectStorageModule],
+  imports: [ProfilePictureStorageModule],
   controllers: [UserController],
   providers: [UserService, UserRepository],
   exports: [UserService, UserRepository],

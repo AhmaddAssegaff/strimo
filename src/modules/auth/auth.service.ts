@@ -10,8 +10,8 @@ import type {
   RefreshTokenResult,
   UserOauthGoogle,
 } from './interface/auth.interface';
-import { AvatarStorageService } from '~app/infra/object-storage/avatar-storage.service';
-import { BannerStorageService } from '~app/infra/object-storage/banner-storage.service';
+import { AvatarStorageService } from '~app/core/storage/avatar/avatar-storage.service';
+import { BannerStorageService } from '~app/core/storage/banner/banner-storage.service';
 
 @Injectable()
 export class AuthService {
