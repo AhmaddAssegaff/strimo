@@ -136,7 +136,7 @@ export class VideoTranscodingWorker extends WorkerHost {
 
     const dashKey = `${VIDEO_BUCKET_NAME}/${job.data.videoId}/manifest.mpd`;
     const hlsKey = `${VIDEO_BUCKET_NAME}/${job.data.videoId}/master.m3u8`;
-    const thumbnailKey = `${THUMBNAIL_VIDEO_BUCKET_NAME}/${job.data.videoId}/thumnail.webp`;
+    const thumbnailKey = `${THUMNAIL_VIDEO_BUCKET_NAME}/${job.data.videoId}/thumnail.webp`;
 
     await this.videoRepo.updateProcessedVideoById({
       videoId: job.data.videoId,
