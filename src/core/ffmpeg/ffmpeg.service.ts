@@ -2,11 +2,14 @@
 import * as path from 'node:path';
 import { spawn } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
+import { PinoLogger } from 'nestjs-pino';
 
 type Resolution = 144 | 360 | 480 | 720 | 1080;
 const RESOLUTIONS: Resolution[] = [144, 360, 480, 720, 1080];
 
 export class FfmpegService {
+  constructor(private readonly pino: PinoLogger) {}
+
   private runFfmpegArgs(args: string[]): Promise<void> {
     return new Promise((resolve, reject) => {
       const ffmpeg = spawn('ffmpeg', args);
@@ -17,6 +20,7 @@ export class FfmpegService {
       });
 
       ffmpeg.on('error', (error) => {
+        this.pino.error('ffmpeg error', error);
         reject(error);
       });
 
