@@ -5,7 +5,7 @@ import {
   OnApplicationShutdown,
 } from '@nestjs/common';
 import Redis from 'ioredis';
-import { CACHE_REDIS_CLIENT } from '~redis/redis.constants';
+import { CACHE_REDIS_CLIENT } from '~app/infra/redis/redis.constants';
 
 @Injectable()
 export class RedisService implements OnApplicationShutdown {

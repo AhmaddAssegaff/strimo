@@ -1,4 +1,4 @@
-import { SmtpService } from '~app/core/smtp/smtp.service';
+import { SmtpService } from '~app/infra/smtp/smtp.service';
 import { NotificationService } from '../notification.service';
 
 export type MockNotificationService = jest.Mocked<

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ObjectStorageService } from './object-storage.service';
 import {
   BANNER_BUCKET_NAME,
   DEFAULT_BANNER_OBJECT_KEY,
-} from './object-storage.constants';
-import { BannerProcessorService } from '~app/modules/channel/processor/banner.processor.service';
+} from '~app/infra/object-storage/object-storage.constants';
+import { ObjectStorageService } from '~app/infra/object-storage/object-storage.service';
+import { BannerProcessorService } from '~app/core/processors/banner/banner-processor.service';
 
 @Injectable()
 export class BannerStorageService {

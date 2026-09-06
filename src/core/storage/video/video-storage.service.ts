@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { ObjectStorageService } from '~app/core/object-storage/object-storage.service';
+import { ObjectStorageService } from '~app/infra/object-storage/object-storage.service';
 import {
   TEMP_BUCKET_NAME,
   VIDEO_BUCKET_NAME,
-} from '~app/core/object-storage/object-storage.constants';
+} from '~app/infra/object-storage/object-storage.constants';
 import { CompletedPart } from '@aws-sdk/client-s3';
 
 @Injectable()

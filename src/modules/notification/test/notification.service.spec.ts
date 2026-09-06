@@ -4,8 +4,8 @@ import {
   MockPrismaNotificationService,
   MockSmtpService,
 } from './notification.type.mock';
-import { SmtpService } from '~app/core/smtp/smtp.service';
-import { PrismaService } from '~app/core/prisma/prisma.service';
+import { SmtpService } from '~app/infra/smtp/smtp.service';
+import { PrismaService } from '~app/infra/prisma/prisma.service';
 import {
   createMockPrismaNotificationService,
   createMockSmtpService,
