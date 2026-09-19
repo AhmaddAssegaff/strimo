@@ -16,6 +16,7 @@ import {
   VIDEO_BUCKET_NAME,
 } from '~app/infra/object-storage/object-storage.constants';
 import { VideoStorageService } from '~app/core/storage/video/video-storage.service';
+import { ThumbailService } from '~app/core/storage/thumbnail/thumbnial-storage.service';
 
 @Processor(VIDEO_PROCESSING_QUEUE_NAME)
 export class VideoTranscodingWorker extends WorkerHost {
@@ -26,6 +27,7 @@ export class VideoTranscodingWorker extends WorkerHost {
     private readonly videoStorage: VideoStorageService,
     private readonly pino: PinoLogger,
     private readonly videoRepo: VideoRepository,
+    private readonly thumbnailStorage: ThumbailService,
   ) {
     super();
   }
@@ -131,12 +133,16 @@ export class VideoTranscodingWorker extends WorkerHost {
     }
 
     // TODO: generate video thumnail and upload to s3 with `thumbnailKey`
-
-    await this.uploadPackedDirectory(packedDir, job.data.videoId);
+    const generateThumbnailFilePath = path.join(workDir, 'thumbnail');
 
     const dashKey = `${VIDEO_BUCKET_NAME}/${job.data.videoId}/manifest.mpd`;
     const hlsKey = `${VIDEO_BUCKET_NAME}/${job.data.videoId}/master.m3u8`;
     const thumbnailKey = `${THUMNAIL_VIDEO_BUCKET_NAME}/${job.data.videoId}/thumnail.webp`;
+
+    await Promise.all([
+      this.thumbnailStorage.uploadGeneratedThumbnail(generateThumbnailFilePath),
+      this.uploadPackedDirectory(packedDir, job.data.videoId),
+    ]);
 
     await this.videoRepo.updateProcessedVideoById({
       videoId: job.data.videoId,
