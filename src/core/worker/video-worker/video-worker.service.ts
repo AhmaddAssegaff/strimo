@@ -12,7 +12,7 @@ import { lookup } from 'mime-types';
 import { VideoRepository } from '~app/modules/video/video.repository';
 import { VIDEO_STATUS } from '@prisma/client';
 import {
-  THUMNAIL_VIDEO_BUCKET_NAME,
+  THUMBNAIL_VIDEO_BUCKET_NAME,
   VIDEO_BUCKET_NAME,
 } from '~app/infra/object-storage/object-storage.constants';
 import { VideoStorageService } from '~app/core/storage/video/video-storage.service';
