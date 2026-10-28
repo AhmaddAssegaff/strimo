@@ -16,7 +16,7 @@ import {
   VIDEO_BUCKET_NAME,
 } from '~app/infra/object-storage/object-storage.constants';
 import { VideoStorageService } from '~app/core/storage/video/video-storage.service';
-import { ThumbailService } from '~app/core/storage/thumbnail/thumbnial-storage.service';
+import { ThumbailService } from '~app/core/storage/thumbnail/thumbnail-storage.service';
 
 @Processor(VIDEO_PROCESSING_QUEUE_NAME)
 export class VideoTranscodingWorker extends WorkerHost {
@@ -132,15 +132,20 @@ export class VideoTranscodingWorker extends WorkerHost {
       await packager.toMax144();
     }
 
-    // TODO: generate video thumnail and upload to s3 with `thumbnailKey`
-    const generateThumbnailFilePath = path.join(workDir, 'thumbnail');
+    const generatedThumbnailFilePath = path.join(
+      transcodedVideoDir,
+      'thumbnail',
+      'thumbnail.webp',
+    );
 
     const dashKey = `${VIDEO_BUCKET_NAME}/${job.data.videoId}/manifest.mpd`;
     const hlsKey = `${VIDEO_BUCKET_NAME}/${job.data.videoId}/master.m3u8`;
     const thumbnailKey = `${THUMBNAIL_VIDEO_BUCKET_NAME}/${job.data.videoId}/thumnail.webp`;
 
     await Promise.all([
-      this.thumbnailStorage.uploadGeneratedThumbnail(generateThumbnailFilePath),
+      this.thumbnailStorage.uploadGeneratedThumbnail(
+        generatedThumbnailFilePath,
+      ),
       this.uploadPackedDirectory(packedDir, job.data.videoId),
     ]);
 
