@@ -94,6 +94,25 @@ export class ObjectStorageService implements OnModuleInit {
     return true;
   }
 
+  async uploadGeneratedThumnail(params: {
+    bucketName: string;
+    objectName: string;
+    localFilePath: string;
+  }): Promise<boolean> {
+    await this.ensureBucket(params.bucketName);
+
+    const fileBuffer = await readFile(params.localFilePath);
+    await this.s3Client.send(
+      new PutObjectCommand({
+        Bucket: params.bucketName,
+        Key: params.objectName,
+        Body: fileBuffer,
+        ContentType: 'image/png',
+      }),
+    );
+    return true;
+  }
+
   async onModuleInit(): Promise<void> {
     try {
       await this.ping();

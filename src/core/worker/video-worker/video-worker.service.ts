@@ -12,10 +12,11 @@ import { lookup } from 'mime-types';
 import { VideoRepository } from '~app/modules/video/video.repository';
 import { VIDEO_STATUS } from '@prisma/client';
 import {
-  THUMNAIL_VIDEO_BUCKET_NAME,
+  THUMBNAIL_VIDEO_BUCKET_NAME,
   VIDEO_BUCKET_NAME,
 } from '~app/infra/object-storage/object-storage.constants';
 import { VideoStorageService } from '~app/core/storage/video/video-storage.service';
+import { ThumbailService } from '~app/core/storage/thumbnail/thumbnail-storage.service';
 
 @Processor(VIDEO_PROCESSING_QUEUE_NAME)
 export class VideoTranscodingWorker extends WorkerHost {
@@ -26,6 +27,7 @@ export class VideoTranscodingWorker extends WorkerHost {
     private readonly videoStorage: VideoStorageService,
     private readonly pino: PinoLogger,
     private readonly videoRepo: VideoRepository,
+    private readonly thumbnailStorage: ThumbailService,
   ) {
     super();
   }
@@ -83,8 +85,7 @@ export class VideoTranscodingWorker extends WorkerHost {
 
     const transcoder = await this.ffmpeg.transcodeVideo({
       preSignUrl: job.data.preSignUrl,
-      outputDirectory: transcodedVideoDir,
-      metadata: metadata,
+      videoOutputDir: transcodedVideoDir,
     });
 
     const packager = await this.shakaPackager.pack({
@@ -92,33 +93,61 @@ export class VideoTranscodingWorker extends WorkerHost {
       outputDirectory: packedDir,
     });
 
-    if (metadata.video.height >= 1080) {
-      await transcoder.toMax1080();
+    const shortSide = Math.min(metadata.video.width, metadata.video.height);
+
+    if (shortSide >= 1080) {
+      await Promise.all([
+        transcoder.video.toMax1080(),
+        transcoder.extractAudio(),
+        transcoder.generateThumbnail(),
+      ]);
       await packager.toMax1080();
-    } else if (metadata.video.height >= 720) {
-      await transcoder.toMax720();
+    } else if (shortSide >= 720) {
+      await Promise.all([
+        transcoder.video.toMax720(),
+        transcoder.extractAudio(),
+        transcoder.generateThumbnail(),
+      ]);
       await packager.toMax720();
-    } else if (metadata.video.height >= 480) {
-      await transcoder.toMax480();
+    } else if (shortSide >= 480) {
+      await Promise.all([
+        transcoder.video.toMax480(),
+        transcoder.extractAudio(),
+        transcoder.generateThumbnail(),
+      ]);
       await packager.toMax480();
-    } else if (metadata.video.height >= 360) {
-      await transcoder.toMax360();
+    } else if (shortSide >= 360) {
+      await Promise.all([
+        transcoder.video.toMax360(),
+        transcoder.extractAudio(),
+        transcoder.generateThumbnail(),
+      ]);
       await packager.toMax360();
-    } else if (metadata.video.height >= 144) {
-      await transcoder.toMax144();
-      await packager.toMax144();
     } else {
-      await transcoder.toMax144();
+      await Promise.all([
+        transcoder.video.toMax144(),
+        transcoder.extractAudio(),
+        transcoder.generateThumbnail(),
+      ]);
       await packager.toMax144();
     }
 
-    // TODO: generate video thumnail and upload to s3 with `thumbnailKey`
-
-    await this.uploadPackedDirectory(packedDir, job.data.videoId);
+    const generatedThumbnailFilePath = path.join(
+      transcodedVideoDir,
+      'thumbnail',
+      'thumbnail.webp',
+    );
 
     const dashKey = `${VIDEO_BUCKET_NAME}/${job.data.videoId}/manifest.mpd`;
     const hlsKey = `${VIDEO_BUCKET_NAME}/${job.data.videoId}/master.m3u8`;
-    const thumbnailKey = `${THUMNAIL_VIDEO_BUCKET_NAME}/${job.data.videoId}/thumnail.png`;
+    const thumbnailKey = `${THUMBNAIL_VIDEO_BUCKET_NAME}/${job.data.videoId}/thumnail.webp`;
+
+    await Promise.all([
+      this.thumbnailStorage.uploadGeneratedThumbnail(
+        generatedThumbnailFilePath,
+      ),
+      this.uploadPackedDirectory(packedDir, job.data.videoId),
+    ]);
 
     await this.videoRepo.updateProcessedVideoById({
       videoId: job.data.videoId,

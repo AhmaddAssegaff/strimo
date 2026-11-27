@@ -4,7 +4,7 @@ export const PROFILE_PICTURE_BUCKET_NAME = 'profile-pictures';
 export const BANNER_BUCKET_NAME = 'banners';
 export const AVATAR_BUCKET_NAME = 'avatars';
 export const VIDEO_BUCKET_NAME = 'videos';
-export const THUMNAIL_VIDEO_BUCKET_NAME = 'thumnails';
+export const THUMBNAIL_VIDEO_BUCKET_NAME = 'thumnails';
 export const TEMP_BUCKET_NAME = 'temp';
 
 export const DEFAULT_BANNER_LOCAL_PATH = 'assets/banner-default.png';
