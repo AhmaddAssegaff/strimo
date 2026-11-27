@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { createMock, DeepMocked } from '@golevelup/ts-jest';
+import { createMock, DeepMocked } from '@golevelup/ts-vitest';
 import { AuthService } from '../auth.service';
 import { UserService } from '~app/modules/user/user.service';
 import {
@@ -16,6 +17,7 @@ import { CONSTANTS } from '~app/config';
 import { CreateUserOauthResult } from '~app/modules/user/interface/user.interface';
 import { AvatarStorageService } from '~app/core/storage/avatar/avatar-storage.service';
 import { BannerStorageService } from '~app/core/storage/banner/banner-storage.service';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -31,7 +33,7 @@ describe('AuthService', () => {
         {
           provide: ConfigService,
           useValue: {
-            getOrThrow: jest.fn((key: string) => {
+            getOrThrow: vi.fn((key: string) => {
               switch (key) {
                 case CONSTANTS.AUTH.AUTH_JWT_ACCESS_TOKEN_SECRET:
                   return 'access-secret';
@@ -47,7 +49,11 @@ describe('AuthService', () => {
         },
       ],
     })
-      .useMocker(createMock)
+      .useMocker((token) => {
+        if (typeof token === 'function') {
+          return createMock();
+        }
+      })
       .compile();
 
     authService = module.get<AuthService>(AuthService);
