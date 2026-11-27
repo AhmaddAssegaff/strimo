@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createMock, DeepMocked } from '@golevelup/ts-vitest';
+
 import { StreamController } from '../stream.controller';
 import { StreamService } from '../stream.service';
-import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import type { Response } from 'express';
 
 describe('StreamController', () => {
@@ -14,7 +16,11 @@ describe('StreamController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [StreamController],
     })
-      .useMocker(createMock)
+      .useMocker((token) => {
+        if (typeof token === 'function') {
+          return createMock(token);
+        }
+      })
       .compile();
 
     controller = module.get(StreamController);
