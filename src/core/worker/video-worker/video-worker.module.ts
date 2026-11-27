@@ -7,6 +7,7 @@ import { VideoProcessingQueueModule } from '~app/core/queue/video-processing/vid
 import { ObjectStorageModule } from '~app/infra/object-storage/object-storage.module';
 import { VideoModule } from '~app/modules/video/video.module';
 import { VideoStorageModule } from '~app/core/storage/video/video-storage.module';
+import { ThumbnailStorageModule } from '~app/core/storage/thumbnail/thumbnail-storage.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { VideoStorageModule } from '~app/core/storage/video/video-storage.module
     ObjectStorageModule,
     VideoModule,
     VideoStorageModule,
+    ThumbnailStorageModule,
   ],
   providers: [VideoTranscodingWorker],
 })

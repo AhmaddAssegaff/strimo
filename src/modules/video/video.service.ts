@@ -4,10 +4,15 @@ import { VideoRepository } from './video.repository';
 import { GetVideosDto } from './dto/get-videos.dto';
 import { UpdateVideoDto } from './dto/update-video.dto';
 import { VideoResult, VideosResult } from './interface/video.interface';
+import { CACHE_KEY } from '~app/infra/redis/redis.constants';
+import { RedisService } from '~app/infra/redis/redis.service';
 
 @Injectable()
 export class VideoService {
-  constructor(private readonly videoRepo: VideoRepository) {}
+  constructor(
+    private readonly redis: RedisService,
+    private readonly videoRepo: VideoRepository,
+  ) {}
 
   async createVideo(
     channelId: string,
@@ -31,6 +36,8 @@ export class VideoService {
     channelId: string,
     updateVideoDto: UpdateVideoDto,
   ): Promise<VideoResult> {
+    const cache = CACHE_KEY.video.session(videoId);
+
     const updatedVideo = await this.videoRepo.updateVideo(
       videoId,
       channelId,
@@ -40,6 +47,8 @@ export class VideoService {
     if (!updatedVideo) {
       throw new NotFoundException('video not found');
     }
+
+    this.redis.del(cache.key);
 
     return updatedVideo;
   }
