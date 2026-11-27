@@ -5,8 +5,6 @@ import { ConfigService } from '@nestjs/config';
 import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { AuthService } from '../auth.service';
 import { UserService } from '~app/modules/user/user.service';
-import { AvatarStorageService } from '~app/infra/object-storage/avatar-storage.service';
-import { BannerStorageService } from '~app/infra/object-storage/banner-storage.service';
 import {
   AuthenticatedUser,
   JwtAuthPayload,
@@ -16,6 +14,8 @@ import {
 } from '../interface/auth.interface';
 import { CONSTANTS } from '~app/config';
 import { CreateUserOauthResult } from '~app/modules/user/interface/user.interface';
+import { AvatarStorageService } from '~app/core/storage/avatar/avatar-storage.service';
+import { BannerStorageService } from '~app/core/storage/banner/banner-storage.service';
 
 describe('AuthService', () => {
   let authService: AuthService;
