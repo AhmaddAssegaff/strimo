@@ -16,7 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
-    "test:debug": "vitest --inspect-brk",
+    "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config vitest.e2e.config.mts",
     "prepare": "husky",
     "openapi:check": "npx redocly lint openapi/openapi.yaml",
