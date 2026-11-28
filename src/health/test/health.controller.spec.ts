@@ -1,103 +1,89 @@
+/* eslint-disable @typescript-eslint/unbound-method */
+import { createMock, type DeepMocked } from '@golevelup/ts-vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { HealthController } from '../health.controller';
-import {
-  MockHealthConfigService,
-  MockHealthDiskHealthIndicator,
-  MockHealthHealthCheckService,
-  MockHealthMemoryHealthIndicator,
-  MockHealthObjectStorageHealthIndicator,
-  MockHealthPostgresHealthIndicator,
-  MockHealthRedisHealthIndicator,
-} from './health.type.mock';
-import {
-  createMockHealthConfigService,
-  createMockHealthDiskHealthIndicator,
-  createMockHealthHealthCheckService,
-  createMockHealthMemoryHealthIndicator,
-  createMockHealthObjectStorageHealthIndicator,
-  createMockHealthPostgresHealthIndicator,
-  createMockHealthRedisHealthIndicator,
-} from './health.factory.mock';
 import { ConfigService } from '@nestjs/config';
 import {
   DiskHealthIndicator,
   HealthCheckService,
   MemoryHealthIndicator,
 } from '@nestjs/terminus';
+import { HealthController } from '../health.controller';
 import { RedisHealthIndicator } from '../indicators/redis.health';
 import { PostgresHealthIndicator } from '../indicators/postgres.health';
 import { ObjectStorageHealthIndicator } from '../indicators/object-storage.health';
 import { CONSTANTS } from '~app/config';
 
+type HealthCheckIndicators = Parameters<HealthCheckService['check']>[0];
+
 describe('HealthController', () => {
   let healthController: HealthController;
-  let config: MockHealthConfigService;
-  let health: MockHealthHealthCheckService;
-  let disk: MockHealthDiskHealthIndicator;
-  let memory: MockHealthMemoryHealthIndicator;
-  let s3Client: MockHealthObjectStorageHealthIndicator;
-  let postgres: MockHealthPostgresHealthIndicator;
-  let redis: MockHealthRedisHealthIndicator;
+
+  let config: DeepMocked<ConfigService>;
+  let health: DeepMocked<HealthCheckService>;
+  let disk: DeepMocked<DiskHealthIndicator>;
+  let memory: DeepMocked<MemoryHealthIndicator>;
+  let s3Client: DeepMocked<ObjectStorageHealthIndicator>;
+  let postgres: DeepMocked<PostgresHealthIndicator>;
+  let redis: DeepMocked<RedisHealthIndicator>;
+  let indicators: HealthCheckIndicators = [];
 
   beforeEach(async () => {
-    config = createMockHealthConfigService();
-    health = createMockHealthHealthCheckService();
-    disk = createMockHealthDiskHealthIndicator();
-    memory = createMockHealthMemoryHealthIndicator();
-    s3Client = createMockHealthObjectStorageHealthIndicator();
-    postgres = createMockHealthPostgresHealthIndicator();
-    redis = createMockHealthRedisHealthIndicator();
+    config = createMock<ConfigService>();
+    health = createMock<HealthCheckService>();
+    disk = createMock<DiskHealthIndicator>();
+    memory = createMock<MemoryHealthIndicator>();
+    s3Client = createMock<ObjectStorageHealthIndicator>();
+    postgres = createMock<PostgresHealthIndicator>();
+    redis = createMock<RedisHealthIndicator>();
+    indicators = [];
+
+    config.getOrThrow.mockImplementation((key: string) => {
+      const values: Record<string, number> = {
+        [CONSTANTS.HEALTH.HEALTH_MEMORY_HEAP_LIMIT]: 0.8,
+        [CONSTANTS.HEALTH.HEALTH_MEMORY_RSS_LIMIT]: 0.8,
+        [CONSTANTS.HEALTH.HEALTH_DISK_THRESHOLD]: 0.9,
+      };
+
+      return values[key];
+    });
+
+    health.check.mockImplementation(async (checks) => {
+      indicators = checks;
+      return Promise.resolve({
+        status: 'ok',
+        info: {},
+        error: {},
+        details: {},
+      });
+    });
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
       providers: [
-        {
-          provide: ConfigService,
-          useValue: config,
-        },
-        {
-          provide: HealthCheckService,
-          useValue: health,
-        },
-        {
-          provide: MemoryHealthIndicator,
-          useValue: memory,
-        },
-        {
-          provide: DiskHealthIndicator,
-          useValue: disk,
-        },
-        {
-          provide: RedisHealthIndicator,
-          useValue: redis,
-        },
-        {
-          provide: PostgresHealthIndicator,
-          useValue: postgres,
-        },
-        {
-          provide: ObjectStorageHealthIndicator,
-          useValue: s3Client,
-        },
+        { provide: ConfigService, useValue: config },
+        { provide: HealthCheckService, useValue: health },
+        { provide: MemoryHealthIndicator, useValue: memory },
+        { provide: DiskHealthIndicator, useValue: disk },
+        { provide: RedisHealthIndicator, useValue: redis },
+        { provide: PostgresHealthIndicator, useValue: postgres },
+        { provide: ObjectStorageHealthIndicator, useValue: s3Client },
       ],
     }).compile();
 
-    healthController = module.get<HealthController>(HealthController);
+    healthController = module.get(HealthController);
   });
 
   describe('readiness', () => {
     it('should check redis, postgres, and object-storage', async () => {
       await healthController.readiness();
 
-      expect(health.check).toHaveBeenCalledTimes(1);
-
-      const [indicators] = health.check.mock.calls[0];
-
+      expect(health.check).toHaveBeenCalledOnce();
       expect(indicators).toHaveLength(3);
 
-      await indicators[0]();
-      await indicators[1]();
-      await indicators[2]();
+      for (const indicator of indicators) {
+        await indicator();
+      }
 
       expect(redis.check).toHaveBeenCalledWith('redis');
       expect(postgres.check).toHaveBeenCalledWith('postgres');
@@ -106,36 +92,34 @@ describe('HealthController', () => {
   });
 
   describe('check', () => {
-    it('should check memory checkHeap, checkRSS and check disk storage', async () => {
-      const memoryHeapLimit = config.getOrThrow(
+    it('should check memory heap, memory RSS, and disk storage', async () => {
+      const memoryHeapLimit = config.getOrThrow<number>(
         CONSTANTS.HEALTH.HEALTH_MEMORY_HEAP_LIMIT,
       );
-      const memoryRSSLimit = config.getOrThrow(
+      const memoryRSSLimit = config.getOrThrow<number>(
         CONSTANTS.HEALTH.HEALTH_MEMORY_RSS_LIMIT,
       );
-      const diskThreshold = config.getOrThrow(
+      const diskThreshold = config.getOrThrow<number>(
         CONSTANTS.HEALTH.HEALTH_DISK_THRESHOLD,
       );
 
       await healthController.check();
-      const [indicators] = health.check.mock.calls[0];
 
+      expect(health.check).toHaveBeenCalledOnce();
       expect(indicators).toHaveLength(3);
 
-      await indicators[0]();
-      await indicators[1]();
-      await indicators[2]();
+      for (const indicator of indicators) {
+        await indicator();
+      }
 
       expect(memory.checkHeap).toHaveBeenCalledWith(
         'memory_heap',
         memoryHeapLimit,
       );
-
       expect(memory.checkRSS).toHaveBeenCalledWith(
         'memory_rss',
         memoryRSSLimit,
       );
-
       expect(disk.checkStorage).toHaveBeenCalledWith('disk', {
         path: '/',
         thresholdPercent: diskThreshold,

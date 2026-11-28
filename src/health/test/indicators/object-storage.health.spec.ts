@@ -1,24 +1,24 @@
+/* eslint-disable @typescript-eslint/unbound-method */
+import { createMock } from '@golevelup/ts-vitest';
+import type { DeepMocked } from '@golevelup/ts-vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthIndicatorService } from '@nestjs/terminus';
 import { ObjectStorageHealthIndicator } from '~app/health/indicators/object-storage.health';
 import { ObjectStorageService } from '~app/infra/object-storage/object-storage.service';
-import {
-  MockHealthIndicatorService,
-  MockObjectStorageService,
-} from '../health.type.mock';
-import {
-  createMockHealthIndicatorService,
-  createMockObjectStorageService,
-} from '../health.factory.mock';
 
 describe('ObjectStorageHealthIndicator', () => {
   let objectStorageHealthIndicator: ObjectStorageHealthIndicator;
-  let health: MockHealthIndicatorService;
-  let s3Client: MockObjectStorageService;
+  let health: DeepMocked<HealthIndicatorService>;
+  let objectStorageService: DeepMocked<ObjectStorageService>;
+  let indicator: ReturnType<HealthIndicatorService['check']>;
 
   beforeEach(async () => {
-    health = createMockHealthIndicatorService();
-    s3Client = createMockObjectStorageService();
+    health = createMock<HealthIndicatorService>();
+    objectStorageService = createMock<ObjectStorageService>();
+    indicator = createMock<ReturnType<HealthIndicatorService['check']>>();
+
+    health.check.mockReturnValue(indicator);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -29,33 +29,33 @@ describe('ObjectStorageHealthIndicator', () => {
         },
         {
           provide: ObjectStorageService,
-          useValue: s3Client,
+          useValue: objectStorageService,
         },
       ],
     }).compile();
 
-    objectStorageHealthIndicator = module.get<ObjectStorageHealthIndicator>(
-      ObjectStorageHealthIndicator,
-    );
+    objectStorageHealthIndicator = module.get(ObjectStorageHealthIndicator);
   });
 
   describe('check', () => {
-    it('should return up when s3Client is healthy', async () => {
+    it('should return up when object storage is healthy', async () => {
       await objectStorageHealthIndicator.check('s3Client');
 
-      expect(s3Client.ping).toHaveBeenCalled();
-      expect(health.indicator.up).toHaveBeenCalled();
+      expect(objectStorageService.ping).toHaveBeenCalledOnce();
+      expect(health.check).toHaveBeenCalledWith('s3Client');
+      expect(indicator.up).toHaveBeenCalled();
     });
 
-    it('should return down when object-storage is unhealthy', async () => {
-      s3Client.ping.mockRejectedValueOnce(
+    it('should return down when object storage is unhealthy', async () => {
+      objectStorageService.ping.mockRejectedValueOnce(
         new Error('object-storage connection failed'),
       );
 
       await objectStorageHealthIndicator.check('s3Client');
 
-      expect(s3Client.ping).toHaveBeenCalled();
-      expect(health.indicator.down).toHaveBeenCalledWith({
+      expect(objectStorageService.ping).toHaveBeenCalledOnce();
+
+      expect(indicator.down).toHaveBeenCalledWith({
         message: 'object-storage connection failed',
       });
     });
