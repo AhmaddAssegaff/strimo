@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { createMock, DeepMocked } from '@golevelup/ts-vitest';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../../auth.service';
 import { UserService } from '~app/modules/user/user.service';
 import {
   AuthenticatedUser,
@@ -12,7 +12,7 @@ import {
   OauthGoogleResult,
   RefreshTokenResult,
   UserOauthGoogle,
-} from '../interface/auth.interface';
+} from '../../interface/auth.interface';
 import { CONSTANTS } from '~app/config';
 import { CreateUserOauthResult } from '~app/modules/user/interface/user.interface';
 import { AvatarStorageService } from '~app/core/storage/avatar/avatar-storage.service';

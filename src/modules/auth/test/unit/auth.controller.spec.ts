@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthController } from '../auth.controller';
-import { AuthService } from '../auth.service';
+import { AuthController } from '../../auth.controller';
+import { AuthService } from '../../auth.service';
 import {
   AuthenticatedUser,
   OauthGoogleResult,
   RefreshTokenResult,
   UserOauthGoogle,
-} from '../interface/auth.interface';
+} from '../../interface/auth.interface';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createMock, DeepMocked } from '@golevelup/ts-vitest';
 
-describe('AuthController', () => {
+describe('AuthController UNIT TEST', () => {
   let authController: AuthController;
   let authService: DeepMocked<AuthService>;
 
