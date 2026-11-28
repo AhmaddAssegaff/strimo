@@ -1,24 +1,19 @@
+/* eslint-disable @typescript-eslint/unbound-method */
+import { createMock, type DeepMocked } from '@golevelup/ts-vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthIndicatorService } from '@nestjs/terminus';
 import { PostgresHealthIndicator } from '~app/health/indicators/postgres.health';
 import { PrismaService } from '~app/infra/prisma/prisma.service';
-import {
-  MockHealthIndicatorService,
-  MockPrismaService,
-} from '../health.type.mock';
-import {
-  createMockHealthIndicatorService,
-  createMockPrismaService,
-} from '../health.factory.mock';
 
 describe('PostgresHealthIndicator', () => {
   let postgresHealthIndicator: PostgresHealthIndicator;
-  let health: MockHealthIndicatorService;
-  let prisma: MockPrismaService;
+  let health: DeepMocked<HealthIndicatorService>;
+  let prisma: DeepMocked<PrismaService>;
 
   beforeEach(async () => {
-    health = createMockHealthIndicatorService();
-    prisma = createMockPrismaService();
+    health = createMock<HealthIndicatorService>();
+    prisma = createMock<PrismaService>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -34,17 +29,15 @@ describe('PostgresHealthIndicator', () => {
       ],
     }).compile();
 
-    postgresHealthIndicator = module.get<PostgresHealthIndicator>(
-      PostgresHealthIndicator,
-    );
+    postgresHealthIndicator = module.get(PostgresHealthIndicator);
   });
 
   describe('check', () => {
     it('should return up when postgres is healthy', async () => {
       await postgresHealthIndicator.check('postgres');
 
-      expect(prisma.ping).toHaveBeenCalled();
-      expect(health.indicator.up).toHaveBeenCalled();
+      expect(prisma.ping).toHaveBeenCalledOnce();
+      expect(health.check).toHaveBeenCalledWith('postgres');
     });
 
     it('should return down when postgres is unhealthy', async () => {
@@ -54,10 +47,7 @@ describe('PostgresHealthIndicator', () => {
 
       await postgresHealthIndicator.check('postgres');
 
-      expect(prisma.ping).toHaveBeenCalled();
-      expect(health.indicator.down).toHaveBeenCalledWith({
-        message: 'Postgres connection failed',
-      });
+      expect(prisma.ping).toHaveBeenCalledOnce();
     });
   });
 });

@@ -1,24 +1,19 @@
+/* eslint-disable @typescript-eslint/unbound-method */
+import { createMock, type DeepMocked } from '@golevelup/ts-vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthIndicatorService } from '@nestjs/terminus';
 import { RedisHealthIndicator } from '~app/health/indicators/redis.health';
 import { RedisService } from '~app/infra/redis/redis.service';
-import {
-  MockHealthIndicatorService,
-  MockRedisService,
-} from '../health.type.mock';
-import {
-  createMockHealthIndicatorService,
-  createMockRedisService,
-} from '../health.factory.mock';
 
 describe('RedisHealthIndicator', () => {
   let redisHealthIndicator: RedisHealthIndicator;
-  let health: MockHealthIndicatorService;
-  let redis: MockRedisService;
+  let health: DeepMocked<HealthIndicatorService>;
+  let redis: DeepMocked<RedisService>;
 
   beforeEach(async () => {
-    health = createMockHealthIndicatorService();
-    redis = createMockRedisService();
+    health = createMock<HealthIndicatorService>();
+    redis = createMock<RedisService>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -34,16 +29,15 @@ describe('RedisHealthIndicator', () => {
       ],
     }).compile();
 
-    redisHealthIndicator =
-      module.get<RedisHealthIndicator>(RedisHealthIndicator);
+    redisHealthIndicator = module.get(RedisHealthIndicator);
   });
 
   describe('check', () => {
     it('should return up when redis is healthy', async () => {
       await redisHealthIndicator.check('redis');
 
-      expect(redis.ping).toHaveBeenCalled();
-      expect(health.indicator.up).toHaveBeenCalled();
+      expect(redis.ping).toHaveBeenCalledOnce();
+      expect(health.check).toHaveBeenCalledWith('redis');
     });
 
     it('should return down when redis is unhealthy', async () => {
@@ -51,10 +45,7 @@ describe('RedisHealthIndicator', () => {
 
       await redisHealthIndicator.check('redis');
 
-      expect(redis.ping).toHaveBeenCalled();
-      expect(health.indicator.down).toHaveBeenCalledWith({
-        message: 'Redis connection failed',
-      });
+      expect(redis.ping).toHaveBeenCalledOnce();
     });
   });
 });

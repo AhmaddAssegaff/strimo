@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createMock, DeepMocked } from '@golevelup/ts-vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { StreamService } from '../stream.service';
 import { RedisService } from '~app/infra/redis/redis.service';
-import { createMock, DeepMocked } from '@golevelup/ts-jest';
 import { CACHE_KEY } from '~app/infra/redis/redis.constants';
 import { ForbiddenException } from '@nestjs/common';
 
@@ -15,7 +17,11 @@ describe('StreamService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [StreamService],
     })
-      .useMocker(createMock)
+      .useMocker((token) => {
+        if (typeof token === 'function') {
+          return createMock(token);
+        }
+      })
       .compile();
 
     service = module.get(StreamService);
